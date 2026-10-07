@@ -71,6 +71,17 @@ def get_access_token(client_id, client_secret):
     return json.loads(raw)["access_token"]
 
 
+def upload_image(path, headers):
+    """参考画像を Firefly のストレージにアップロードして uploadId を返す."""
+    data = Path(path).read_bytes()
+    ext = Path(path).suffix.lower()
+    ctype = {".png": "image/png", ".webp": "image/webp"}.get(ext, "image/jpeg")
+    h = {k: v for k, v in headers.items() if k != "Content-Type"}
+    h["Content-Type"] = ctype
+    raw = http("POST", f"{FIREFLY_BASE}/v2/storage/image", h, data)
+    return json.loads(raw)["images"][0]["id"]
+
+
 def parse_size(value):
     if value in SIZES:
         return SIZES[value]
@@ -100,6 +111,12 @@ def main():
     p.add_argument("--negative", help="含めたくない要素 (negativePrompt)")
     p.add_argument("--style", action="append", default=[],
                    help="スタイルプリセット (例: watercolor, anime)。複数指定可")
+    p.add_argument("--structure-ref", help="構図・ポーズの参考画像 (この画像の形を元に生成)")
+    p.add_argument("--structure-strength", type=int, default=60,
+                   help="構図参考の強さ 0-100 (default: 60)")
+    p.add_argument("--style-ref", help="画風の参考画像")
+    p.add_argument("--style-strength", type=int, default=50,
+                   help="画風参考の強さ 1-100 (default: 50)")
     p.add_argument("--locale", default="ja-JP", help="プロンプトのロケール (default: ja-JP)")
     p.add_argument("--seed", type=int, action="append", help="シード値 (再現用、複数指定可)")
     p.add_argument("--model", help="x-model-version (例: image4_standard, image3)")
@@ -123,8 +140,6 @@ def main():
         body["contentClass"] = args.content_class
     if args.negative:
         body["negativePrompt"] = args.negative
-    if args.style:
-        body["style"] = {"presets": args.style}
     if args.seed:
         body["seeds"] = args.seed
 
@@ -137,6 +152,20 @@ def main():
     }
     if args.model:
         headers["x-model-version"] = args.model
+
+    if args.structure_ref:
+        body["structure"] = {
+            "strength": args.structure_strength,
+            "imageReference": {"source": {"uploadId": upload_image(args.structure_ref, headers)}},
+        }
+    style = {}
+    if args.style:
+        style["presets"] = args.style
+    if args.style_ref:
+        style["strength"] = args.style_strength
+        style["imageReference"] = {"source": {"uploadId": upload_image(args.style_ref, headers)}}
+    if style:
+        body["style"] = style
 
     print(f"Firefly に送信中: {args.prompt!r} ({width}x{height}, {args.num}枚)", file=sys.stderr)
     job = json.loads(http("POST", f"{FIREFLY_BASE}/v3/images/generate-async",

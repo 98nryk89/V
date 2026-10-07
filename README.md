@@ -41,6 +41,8 @@ python3 firefly/firefly_generate.py "夕焼けの富士山、水彩画風" -n 2 
 | `--content-class` | `photo` または `art` |
 | `--negative` | 含めたくない要素 |
 | `--style` | スタイルプリセット（複数可） |
+| `--structure-ref` | 構図・ポーズの参考画像（`--structure-strength` 0–100）|
+| `--style-ref` | 画風の参考画像（`--style-strength` 1–100）|
 | `--seed` | シード値（再現用） |
 | `--model` | モデル指定（例: `image4_standard`） |
 | `-o` | 保存先（既定: `output/`） |

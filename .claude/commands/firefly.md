@@ -12,6 +12,7 @@ Adobe Firefly で上記の画像を生成してください。手順:
 2. 依頼に合わせてオプションを選ぶ:
    - 写真風なら `--content-class photo`、イラスト・絵画なら `--content-class art`
    - 横長は `--size landscape`、縦長は `--size portrait`、16:9 は `--size widescreen`
+   - 参考画像があれば `--structure-ref <画像>`（ポーズ・構図を維持）や `--style-ref <画像>`（画風を維持）を付ける。元画像に近づけたいほど strength を上げる
    - 枚数指定があれば `-n`、避けたい要素があれば `--negative`
 3. 実行: `python3 firefly/firefly_generate.py "<プロンプト>" [オプション]`
 4. 出力された画像パスを Read で開いて確認し、使ったプロンプトと保存先をユーザーに伝える。
