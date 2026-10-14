@@ -1,6 +1,15 @@
 # 03. Cubism モデリング仕様
 
-使用ソフト: Live2D Cubism Editor 5.x（PRO 版。FREE 版はテクスチャ枚数などに制限があり、この装飾量では不足する見込み）
+使用ソフト: Live2D Cubism Editor 5.x（PRO 版。FREE 版は機能や規模に制限があり、この装飾量では足りない見込み）
+
+## 0. 進め方の選択
+
+| 方法 | 内容 |
+|---|---|
+| **外注（大手水準を確実に狙うなら推奨）** | Cubism のリガー（モデラー）に、`art/psd/model.psd`、この文書、`05_test_plan.md` の合格条件を渡して依頼する |
+| 自作 | Cubism 5.0 の顔の動きの半自動生成と、5.1 のデフォーマ・揺れの自動生成で骨組みを作り、手で調整する |
+
+**注意:** Cubism 5.3 で追加されたブレンドモードとオフスクリーン描画は、VTube Studio 側が対応しているかを T6 で確認するまで使わない。
 
 ## 1. 作業順序
 
@@ -68,6 +77,9 @@
 | ParamOwlHeadX / ParamOwlHeadTilt | フクロウの首振り・首かしげ | 顔の角度に少し遅れて連動（物理） + ホットキー |
 | ParamOwlWing | 羽ばたき | ホットキー（アニメーション） |
 | ParamWatchOpen | 懐中時計の蓋（任意） | ホットキー |
+| ParamCapeHem_L1..3 / R1..3 / Back1..3 | ケープの裾（全身） | 物理（大きく・ゆっくり） |
+| ParamHemCrystal1..n | 裾のクリスタルの振り子 | 物理 |
+| ParamSwayX | 全身の重心の左右移動（足は固定） | 体の角度 X と連動 |
 | ParamTear / ParamShadowFace | 涙・顔の影（表情差分） | exp3 |
 
 ## 4. 物理演算グループ（目安）
@@ -85,6 +97,8 @@
 | ケープ L / R | BodyAngleX, BodyAngleZ | ParamCapeL / R |
 | タッセル | BodyAngleX, BodyAngleZ | ParamTassel |
 | フクロウの首 | AngleX, BodyAngleX | ParamOwlHeadX |
+| ケープの裾 L / R / 後ろ | BodyAngleX, BodyAngleZ, ParamSwayX | ParamCapeHem_* |
+| 裾のクリスタル | BodyAngleX, BodyAngleZ | ParamHemCrystal* |
 
 ## 5. 表情（exp3）案
 

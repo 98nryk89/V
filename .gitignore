@@ -1,2 +1,5 @@
 __pycache__/
 .pytest_cache/
+*.pth
+*.onnx
+art/work/fullbody_x4.png

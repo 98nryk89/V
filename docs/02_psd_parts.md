@@ -6,10 +6,10 @@
 
 | 項目 | 値 |
 |---|---|
-| キャンバス | 腰上モデル: 4000×5000 前後 / 全身: 4000×8000 前後（長辺 4000px 以上） |
+| キャンバス | 4096×6144（全身、`art/work/fullbody_x4_rgba.png` と同じ） |
 | カラー | RGB / 8bit |
 | 背景 | 透明（白背景レイヤーは削除） |
-| 保存先 | `art/psd/model.psd` |
+| 保存先 | `art/psd/model.psd`（AI 分解直後の下書きは `art/psd/model_draft.psd`） |
 
 ### Cubism に取り込む前に処理しておくこと
 - テキスト・シェイプ・スマートオブジェクト・調整レイヤー → **ラスタライズ**
@@ -100,11 +100,51 @@ cape_back                  背中側のケープ
 - [ ] フクロウ: 閉じ目、羽を広げた状態（羽ばたき演出をするなら）
 - [ ] 仮面の髪飾りの下の髪
 
-## 5. 作業担当の選択肢
+## 5. 作り方（AI 下書き → 手作業で仕上げ）
 
-| 方法 | 内容 | 注意 |
-|---|---|---|
-| **外注（推奨）** | イラストレーターやパーツ分け専門の人に「清書＋パーツ分け＋描き足し」を依頼する | 本資料と `parts_manifest.json` を仕様書として渡せる |
-| 自作 | AI アップスケール → 手作業でパーツ分けと描き足し | CLIP STUDIO / Photoshop 等で、まず顔だけ作って T1→T3 を先に通すと手戻りが少ない |
+| 手順 | 内容 | 実行場所 | 状態 |
+|---|---|---|---|
+| A1 | 4 倍に拡大 `tools/upscale.py` | この環境（CPU 約 2 分） | 済 |
+| A2 | 背景透過 `tools/remove_bg.py` | この環境（約 10 秒） | 済 → `art/work/fullbody_x4_rgba.png` |
+| A3 | **See-through で自動レイヤー分解** | **GPU のある PC かクラウド** | 未 |
+| A4 | 分解 PSD を 4096×6144 に作り直す `tools/transfer_highres.py` | この環境 | A3 待ち |
+| A5 | 仕上げ: 不足パーツを分ける・名前を付ける・細部を描き直す | Photoshop / CLIP STUDIO | A4 待ち |
+| — | T1 `tools/check_psd.py art/psd/model.psd` | この環境 | |
 
-どちらの場合も、受け取った（作った）PSD で `python tools/check_psd.py art/psd/model.psd` を実行して T1 を通します。
+### A3: See-through の実行（GPU 側）
+
+```sh
+git clone https://github.com/shitagaki-lab/see-through && cd see-through
+conda create -n see_through python=3.12 -y && conda activate see_through
+pip install torch==2.8.0+cu128 torchvision==0.23.0+cu128 torchaudio==2.8.0+cu128 \
+    --index-url https://download.pytorch.org/whl/cu128
+pip install -r requirements.txt
+ln -sf common/assets assets
+
+# VRAM 16GB 以上
+python inference/scripts/inference_psd.py --srcp fullbody_x4_rgba.png --save_to_psd
+# VRAM 8GB
+pip install -r requirements-inference-bnb.txt
+python inference/scripts/inference_psd_quantized.py --srcp fullbody_x4_rgba.png --save_to_psd
+```
+
+出力は `workspace/layerdiff_output/` に出る。出力された `.psd` をこのリポジトリの `art/psd/seethrough_raw.psd` に置けば、A4 以降はこちらで進める。
+（背景が透明だとうまくいかない場合は、白背景版を入力に使う。どちらの結果がよいかを比べる）
+
+### A4: 高解像度化
+
+```sh
+python tools/transfer_highres.py art/psd/seethrough_raw.psd art/work/fullbody_x4_rgba.png art/psd/model_draft.psd
+```
+
+- 元絵で見えている部分は 4096×6144 の画素に置き換え、隠れていて AI が描き足した部分はそのレイヤーを拡大して使う。
+- 最後に表示される「再合成誤差」は、全レイヤーを重ねた結果と元絵との差（0〜255）。数値が小さいほど、見た目が元絵どおりに分解されている。
+- See-through の出力キャンバスが元絵と違う縦横比（正方形に余白を付けたものなど）の場合は、エラーで止まる。その時はスクリプトを合わせて修正する。
+
+### A5: 仕上げで手作業になる見込みの部分
+- See-through の部位分けに無い細かいパーツ: フクロウ（目・頭・羽）、タッセル、クリスタル、チェーン、耳飾り、リボン、ケープの羽の 1 枚ずつ
+- 目と口の細分化: まつ毛の上下、閉じ目、口の中、歯、舌（3 章のレイヤー構成）
+- 拡大で崩れた細部の描き直し（`01_analysis.md` 6 章）
+- 2 枚の差異の統一（`01_analysis.md` 2 章）
+
+T1 を実行すると、足りないパーツが一覧で出る。それを作業リストとして使う。

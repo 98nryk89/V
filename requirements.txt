@@ -1,3 +1,8 @@
 pillow>=10
-psd-tools>=1.9
+numpy>=1.26
+psd-tools>=1.10
 pytest>=7
+# 素材作り（upscale.py / remove_bg.py）
+torch>=2.2
+spandrel>=0.4
+onnxruntime>=1.17
