@@ -105,7 +105,8 @@ cape_back                  背中側のケープ
 | 手順 | 内容 | 実行場所 | 状態 |
 |---|---|---|---|
 | A1 | 4 倍に拡大 `tools/upscale.py` | この環境（CPU 約 2 分） | 済 |
-| A2 | 背景透過 `tools/remove_bg.py` | この環境（約 10 秒） | 済 → `art/work/fullbody_x4_rgba.png` |
+| A2 | 背景透過（ユーザー提供の透過版 `fullbody_cutout.webp` を使用） | — | 済 → `art/work/fullbody_x4_rgba.png` |
+| A2.5 | 拡大版で顔・フクロウを上書き `tools/patch_detail.py` | この環境（数秒） | 済 → `art/work/fullbody_x4_patched.png` |
 | A3 | **See-through で自動レイヤー分解** | **GPU のある PC かクラウド** | 未 |
 | A4 | 分解 PSD を 4096×6144 に作り直す `tools/transfer_highres.py` | この環境 | A3 待ち |
 | A5 | 仕上げ: 不足パーツを分ける・名前を付ける・細部を描き直す | Photoshop / CLIP STUDIO | A4 待ち |
@@ -122,10 +123,10 @@ pip install -r requirements.txt
 ln -sf common/assets assets
 
 # VRAM 16GB 以上
-python inference/scripts/inference_psd.py --srcp fullbody_x4_rgba.png --save_to_psd
+python inference/scripts/inference_psd.py --srcp fullbody_x4_patched.png --save_to_psd
 # VRAM 8GB
 pip install -r requirements-inference-bnb.txt
-python inference/scripts/inference_psd_quantized.py --srcp fullbody_x4_rgba.png --save_to_psd
+python inference/scripts/inference_psd_quantized.py --srcp fullbody_x4_patched.png --save_to_psd
 ```
 
 出力は `workspace/layerdiff_output/` に出る。出力された `.psd` をこのリポジトリの `art/psd/seethrough_raw.psd` に置けば、A4 以降はこちらで進める。
@@ -134,7 +135,7 @@ python inference/scripts/inference_psd_quantized.py --srcp fullbody_x4_rgba.png 
 ### A4: 高解像度化
 
 ```sh
-python tools/transfer_highres.py art/psd/seethrough_raw.psd art/work/fullbody_x4_rgba.png art/psd/model_draft.psd
+python tools/transfer_highres.py art/psd/seethrough_raw.psd art/work/fullbody_x4_patched.png art/psd/model_draft.psd
 ```
 
 - 元絵で見えている部分は 4096×6144 の画素に置き換え、隠れていて AI が描き足した部分はそのレイヤーを拡大して使う。

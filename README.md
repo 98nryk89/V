@@ -19,7 +19,7 @@
 
 ## 現在の状態
 
-- A1 拡大、A2 透過は**済**: `art/work/fullbody_x4_rgba.png`（4096×6144）
+- A1 拡大、A2 透過、A2.5 顔・フクロウの上書きは**済**: `art/work/fullbody_x4_patched.png`（4096×6144）
 - T0 は解像度と透過が合格。残りはパーツ分け
 - **次: A3 See-through によるレイヤー分解（GPU が必要）** → 出力 PSD を `art/psd/seethrough_raw.psd` に置く
 
@@ -42,7 +42,8 @@ pip install -r requirements.txt
 # 素材作り
 python tools/upscale.py art/reference/fullbody.webp art/work/fullbody_x4.png --weights RealESRGAN_x4plus_anime_6B.pth
 python tools/remove_bg.py art/work/fullbody_x4.png art/work/fullbody_x4_rgba.png --model isnet-anime.onnx --mask-src art/reference/fullbody.webp
-python tools/transfer_highres.py art/psd/seethrough_raw.psd art/work/fullbody_x4_rgba.png art/psd/model_draft.psd
+python tools/patch_detail.py art/work/fullbody_x4_rgba.png art/work/bustup_x4_rgba.png art/work/fullbody_x4_patched.png
+python tools/transfer_highres.py art/psd/seethrough_raw.psd art/work/fullbody_x4_patched.png art/psd/model_draft.psd
 
 # 検証
 python tools/check_source.py art/work/fullbody_x4_rgba.png   # T0

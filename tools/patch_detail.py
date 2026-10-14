@@ -6,11 +6,13 @@
 
 使い方:
     python tools/patch_detail.py art/work/fullbody_x4_rgba.png art/work/bustup_x4_rgba.png \
-        art/work/fullbody_x4_patched.png [--margin 160 --feather 120 --bottom 0.93]
+        art/work/fullbody_x4_patched.png [--margin 160 --feather 60 --bottom 0.5]
 
 --margin   拡大版の画像の端から、この幅（px, 全身側の座標）は使わない（画像の端で切れている部分を避ける）
 --feather  境目をなじませる幅（px）
---bottom   拡大版の下からどこまでを使うか（0〜1、拡大版の高さに対する割合）
+--bottom   拡大版の上からどこまでを使うか（0〜1、拡大版の高さに対する割合）。
+           既定 0.5 は首〜ネクタイの上まで。それより下は2枚で衣装の細部（ベルト・タッセル・懐中時計）
+           が違うため、重ねると二重に写る
 """
 from __future__ import annotations
 
@@ -108,8 +110,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("detail", type=Path)
     ap.add_argument("dst", type=Path)
     ap.add_argument("--margin", type=int, default=160)
-    ap.add_argument("--feather", type=int, default=120)
-    ap.add_argument("--bottom", type=float, default=0.93)
+    ap.add_argument("--feather", type=int, default=60)
+    ap.add_argument("--bottom", type=float, default=0.5)
     ap.add_argument("--no-color-match", action="store_true")
     ap.add_argument("--mask-out", type=Path, help="上書き範囲のマスクを保存（確認用）")
     args = ap.parse_args(argv)
