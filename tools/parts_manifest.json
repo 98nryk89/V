@@ -1,0 +1,28 @@
+{
+  "_comment": "PSD レイヤー名の必須/推奨リスト。fnmatch パターン(大文字小文字無視)。L/R の基準は docs/02_psd_parts.md 参照。",
+  "required": {
+    "顔": ["face", "nose", "ear_L", "ear_R"],
+    "目": [
+      "eye_white_L", "eye_white_R",
+      "iris_L", "iris_R",
+      "eye_highlight_L*", "eye_highlight_R*",
+      "lash_upper_L", "lash_upper_R",
+      "lash_lower_L", "lash_lower_R",
+      "eyelid_closed_L", "eyelid_closed_R"
+    ],
+    "眉": ["brow_L", "brow_R"],
+    "口": ["mouth_upper", "mouth_lower", "mouth_inner", "teeth_upper", "tongue"],
+    "髪": ["hair_front_*", "hair_side_L*", "hair_side_R*", "hair_back*"],
+    "体": ["neck", "collar*", "tie*", "vest*", "jacket*"]
+  },
+  "recommended": {
+    "顔(品質)": ["face_shadow*", "cheek_blush", "neck_shadow"],
+    "目(品質)": ["iris_shadow_L", "iris_shadow_R", "eye_white_shadow_*", "lash_wing_*"],
+    "髪(品質)": ["ahoge*", "hair_long_L_*", "hair_long_R_*", "hair_shadow_on_face*"],
+    "髪飾り": ["mask_ornament*", "ribbon_*", "ornament_crystal_*"],
+    "耳飾り": ["earring_L_*", "earring_R_*"],
+    "衣装": ["cape_front_L*", "cape_front_R*", "cape_back*", "tassel_*", "pocket_watch*", "chain_*", "belt*", "crystal_*"],
+    "腕": ["arm_upper_L", "arm_upper_R", "arm_lower_L", "arm_lower_R", "hand_L*", "hand_R*", "sleeve_*"],
+    "フクロウ": ["owl_body", "owl_head", "owl_eye_L", "owl_eye_R", "owl_eyelid_*", "owl_wing_*", "owl_tuft_*", "owl_pendant"]
+  }
+}
