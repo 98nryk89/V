@@ -3,10 +3,11 @@ import { IkiPlayer, IkiMotion } from "@ikijs/engine";
 import { loadIkiModel } from "@ikijs/format";
 import { combine } from "./mapping.js";
 import { OwlBlink, patchParams } from "./patches.js";
+import { Swing } from "./swing.js";
 
 const TRACKED_IDS = [
   "ParamEyeLOpen", "ParamEyeROpen", "ParamMouthOpenY", "ParamMouthForm",
-  "ParamBrowLY", "ParamBrowRY", "ParamBrowLAngle", "ParamBrowRAngle",
+  "ParamBrowLY", "ParamBrowRY", "ParamBrowLAngle", "ParamBrowRAngle", "ParamEyeBallX", "ParamEyeBallY",
 ];
 
 export class Avatar {
@@ -18,6 +19,7 @@ export class Avatar {
     this.expression = null;
     this.autoBlink = true;
     this.owl = new OwlBlink();
+    this.swing = new Swing();
   }
 
   async load(url) {
@@ -86,6 +88,11 @@ export class Avatar {
           owlBlink: this.owl.value(now),
         });
         for (const [k, v] of Object.entries(gp)) if (this.paramIds.has(k)) this.player.setParameter(k, v);
+      }
+      // 耳飾り・リボンの揺れ（頭の動きに遅れて、独立して揺れる）
+      if (this.paramIds.has("ParamEarL")) {
+        const head = { ParamAngleX: this.player.getParameter("ParamAngleX"), ParamAngleZ: this.player.getParameter("ParamAngleZ") };
+        for (const [k, v] of Object.entries(this.swing.update(head, now))) this.player.setParameter(k, v);
       }
       requestAnimationFrame(tick);
     };

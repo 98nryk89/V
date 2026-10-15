@@ -63,10 +63,9 @@ ORDER["browR"] = ORDER["browL"]
 # ---- 頭の動きのモデル（作業キャンバス = 2 倍の画素座標）-------------------------
 HEAD_C = np.array([1132.0, 690.0])  # 頭を球とみなしたときの中心（鼻の高さ）
 HEAD_R = 330.0  # 球の半径
-NECK = np.array([1135.0, 1000.0])  # 首の付け根（首をかしげる軸）
-ROLL_PIVOT = np.array([1135.0, 1050.0])
-HEAD_W = dict(center=(1150.0, 600.0), radii=(520.0, 640.0), fall=0.35)
-TRANSLATE_GAIN = 0.18  # 頭全体が向きの方向へ少しずれる割合
+ROLL_PIVOT = np.array([1050.0, 980.0])  # 首をかしげる軸（首の付け根のやや左。左肩のフクロウに近い側を動かさないため）
+ROLL_GAIN = 0.75  # 傾きの効きを弱める（フクロウや髪が引きずられすぎないように）
+TRANSLATE_GAIN = 0.35  # 輪郭や髪が、顔の特徴の動きに連れて動く割合（小さいほど、輪郭が潰れて伸びる）
 HAIR_Y0, HAIR_Y1 = 820.0, 2400.0  # 長い髪が揺れる範囲
 
 
@@ -76,16 +75,22 @@ def smoothstep(a, b, x):
 
 
 def head_weight(x, y):
-    cx, cy = HEAD_W["center"]
-    rx, ry = HEAD_W["radii"]
-    rho = np.sqrt(((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2)
-    w = 1.0 - smoothstep(1.0, 1.0 + HEAD_W["fall"], rho)
-    wy = 1.0 - smoothstep(820.0, 1150.0, y)  # あごより下は動かさない（首・肩・服）
-    wy = np.maximum(wy, 0.0)
-    # 長い髪・イヤリングは頭と一緒に少し動く。下へ行くほど弱く、1150 でゼロ
-    # フクロウ（左肩）は動かさない
-    owl = 1.0 - (1.0 - smoothstep(700.0, 900.0, x)) * smoothstep(740.0, 800.0, y)
-    return w * wy * owl
+    """頭の動きの重み。なだらかに 1 → 0 にして、髪が潰れたり折り返したりしないようにする。"""
+    rho = np.sqrt(((x - 1150.0) / 480.0) ** 2 + ((y - 580.0) / 600.0) ** 2)
+    e = 1.0 - smoothstep(1.0, 2.5, rho)
+    v = 1.0 - smoothstep(780.0, 1350.0, y)  # あごより下（首・肩・服）は動かさない
+    h = 1.0 - (1.0 - smoothstep(400.0, 1150.0, x)) * smoothstep(600.0, 1150.0, y)  # 左肩のフクロウは、あまり引きずらない
+    return e * v * h
+
+
+def face_profile(x, y):
+    """顔の中心ほど大きく、輪郭に向かって TRANSLATE_GAIN まで小さくなる動きの大きさ（視差）。"""
+    u = (x - HEAD_C[0]) / HEAD_R
+    v = (y - HEAD_C[1]) / HEAD_R
+    rho = np.sqrt(u * u + v * v)
+    inner = TRANSLATE_GAIN + (1.0 - TRANSLATE_GAIN) * np.cos(np.minimum(rho, 1.0) * np.pi / 2.0)
+    outer = 1.0 - smoothstep(1.0, 2.2, rho)  # 髪は、輪郭の外でもゆっくり減る
+    return np.where(rho <= 1.0, inner, TRANSLATE_GAIN * outer)
 
 
 def upper_weight(y):
@@ -111,22 +116,12 @@ def displacement(x, y, param: str, value: float, hair_fn=None):
     zero = np.zeros_like(x)
     if param == "ParamAngleX":
         th = np.radians(value)
-        w = head_weight(x, y)
-        u = (x - HEAD_C[0]) / HEAD_R
-        v = (y - HEAD_C[1]) / HEAD_R
-        z = np.sqrt(np.clip(1.0 - u * u - v * v, 0.0, 1.0))
-        dx = HEAD_R * (z * np.sin(th) + u * (np.cos(th) - 1.0)) + TRANSLATE_GAIN * HEAD_R * np.sin(th)
-        return dx * w, zero
+        return HEAD_R * np.sin(th) * face_profile(x, y) * head_weight(x, y), zero
     if param == "ParamAngleY":
         ph = np.radians(value)  # 正 = 上を向く（特徴が上へ動く）
-        w = head_weight(x, y)
-        u = (x - HEAD_C[0]) / HEAD_R
-        v = (y - HEAD_C[1]) / HEAD_R
-        z = np.sqrt(np.clip(1.0 - u * u - v * v, 0.0, 1.0))
-        dy = -HEAD_R * (z * np.sin(ph) + v * (np.cos(ph) - 1.0)) - TRANSLATE_GAIN * HEAD_R * np.sin(ph)
-        return zero, dy * w
+        return zero, -HEAD_R * np.sin(ph) * face_profile(x, y) * head_weight(x, y)
     if param == "ParamAngleZ":
-        a = np.radians(-value)  # 正 = 頭の上が右へ倒れる（時計回り）。画像座標で回すので符号を反転
+        a = np.radians(-value * ROLL_GAIN)  # 正 = 頭の上が右へ倒れる（時計回り）。画像座標で回すので符号を反転
         w = head_weight(x, y)
         px, py = x - ROLL_PIVOT[0], y - ROLL_PIVOT[1]
         c, s = np.cos(a), np.sin(a)
@@ -145,6 +140,18 @@ def displacement(x, y, param: str, value: float, hair_fn=None):
         return (rx - px) * wu, (ry - py) * wu
     if param == "ParamBreath":
         return zero, -5.0 * value * np.clip((2300.0 - y) / 1400.0, 0.0, 1.0)
+    if param in ("ParamEyeBallX", "ParamEyeBallY") and _GAZE["w"] is not None:
+        wgt = sample_map(_GAZE["w"], x, y)
+        if param == "ParamEyeBallX":
+            return value * GAZE_DX * wgt, zero
+        return zero, -value * GAZE_DY * wgt
+    if param in SWING and _SWING["m"].get(param) is not None:
+        piv, box = SWING[param]
+        wgt = sample_map(_SWING["m"][param], x, y) * smoothstep(piv[1], piv[1] + 70.0, y)
+        a = np.radians(-value)  # 正 = 先が右へ振れる
+        px, py = x - piv[0], y - piv[1]
+        c, s_ = np.cos(a), np.sin(a)
+        return (px * c - py * s_ - px) * wgt, (px * s_ + py * c - py) * wgt
     if param in ("ParamHairSwayX", "ParamHairSwayZ") and hair_fn is not None:
         m = hair_fn(x, y) * smoothstep(HAIR_Y0, 1300.0, y) * (1.0 - smoothstep(2100.0, HAIR_Y1, y))
         k = 1.6 if param == "ParamHairSwayX" else 1.0
@@ -152,6 +159,65 @@ def displacement(x, y, param: str, value: float, hair_fn=None):
         amp = value * k * (0.3 + 1.2 * np.clip((y - HAIR_Y0) / 900.0, 0.0, 1.0))
         return amp * m, zero
     return zero, zero
+
+
+# ---- 耳飾り・リボンの独立した揺れ（支点を中心に、色で拾った飾りだけを回す）---------------
+SWING = {  # パラメータ: (支点, 範囲 x0,y0,x1,y1)
+    "ParamEarL": ((907.0, 765.0), (870, 750, 950, 975)),
+    "ParamEarR": ((1352.0, 765.0), (1320, 750, 1385, 975)),
+    "ParamRibbon": ((1478.0, 530.0), (1385, 520, 1640, 1000)),
+}
+_SWING = {"m": {}}
+
+
+def detect_swing_masks(work):
+    hsv = cv2.cvtColor(work[..., :3], cv2.COLOR_RGB2HSV)
+    hh, ss, vv = [hsv[..., i].astype(int) for i in range(3)]
+    deco = (((hh >= 100) & (hh <= 160) & (ss >= 70)) | (vv < 70) | ((hh >= 10) & (hh <= 30) & (ss > 80) & (vv > 90))) & (work[..., 3] > 128)
+    out = {}
+    for name, (piv, (x0, y0, x1, y1)) in SWING.items():
+        m = np.zeros(deco.shape, np.uint8)
+        m[y0:y1, x0:x1] = deco[y0:y1, x0:x1]
+        m = cv2.morphologyEx(m, cv2.MORPH_CLOSE, np.ones((9, 9), np.uint8))
+        m = cv2.dilate(m, np.ones((7, 7), np.uint8))
+        out[name] = np.clip(cv2.GaussianBlur(m.astype(np.float32), (0, 0), 2.5) * 1.3, 0, 1)
+    return out
+
+
+# ---- 視線: 黒目（虹彩）の画素だけを、目の中で動かす ---------------------------------
+IRIS_THR = {"eyeL": 26, "eyeR": 40}  # 青み（虹彩）を拾うときの彩度のしきい値。左目は虹彩が淡いので低くする
+GAZE_DX, GAZE_DY = 13.0, 6.0  # 視線が最大のときの黒目の動き（作業キャンバスの画素）
+_GAZE = {"w": None}  # 黒目の重み（作業キャンバス全体、0..1）。main() が設定する
+
+
+def detect_iris_weight(work):
+    """土台の絵から黒目の位置を見つけ、動かす重み（黒目の中は 1、まわりへなだらかに 0）を返す。"""
+    rgb = work[..., :3]
+    hsv = cv2.cvtColor(rgb, cv2.COLOR_RGB2HSV)
+    hh, ss, vv = [hsv[..., i].astype(int) for i in range(3)]
+    total = np.zeros(work.shape[:2], np.float32)
+    for area, thr in IRIS_THR.items():
+        blue = (hh >= 100) & (hh <= 150) & (ss >= thr) & (vv >= 90)
+        m = area_mask(work.shape, area) > 0.3
+        cand = cv2.morphologyEx((blue & m).astype(np.uint8), cv2.MORPH_CLOSE, np.ones((5, 5), np.uint8))
+        n, lab, st, _ = cv2.connectedComponentsWithStats(cand, connectivity=8)
+        i = 1 + int(np.argmax(st[1:, cv2.CC_STAT_AREA]))
+        blob = (lab == i).astype(np.uint8)
+        cn, _ = cv2.findContours(blob, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        fill = np.zeros_like(blob)
+        cv2.drawContours(fill, cn, -1, 1, -1)  # 瞳孔・ハイライトの穴を埋める
+        soft = cv2.GaussianBlur(cv2.dilate(fill, np.ones((5, 5), np.uint8)).astype(np.float32), (0, 0), 5.0)
+        total = np.maximum(total, np.clip(soft * 1.5, 0.0, 1.0))
+    return total
+
+
+def sample_map(mp, x, y):
+    h, w = mp.shape
+    x = np.clip(x, 0, w - 1.001)
+    y = np.clip(y, 0, h - 1.001)
+    x0, y0 = np.floor(x).astype(int), np.floor(y).astype(int)
+    fx, fy = x - x0, y - y0
+    return (mp[y0, x0] * (1 - fx) * (1 - fy) + mp[y0, x0 + 1] * fx * (1 - fy) + mp[y0 + 1, x0] * (1 - fx) * fy + mp[y0 + 1, x0 + 1] * fx * fy)
 
 
 # 動かすパラメータと、キーフォームの値
@@ -165,8 +231,14 @@ KEYFORMS = {
     "ParamBreath": [0, 1],
     "ParamHairSwayX": [-20, 0, 20],
     "ParamHairSwayZ": [-20, 0, 20],
+    "ParamEyeBallX": [-1, 0, 1],
+    "ParamEyeBallY": [-1, 0, 1],
+    "ParamEarL": [-30, 0, 30],
+    "ParamEarR": [-30, 0, 30],
+    "ParamRibbon": [-30, 0, 30],
 }
 PATCH_PARAMS = ["ParamAngleX", "ParamAngleY", "ParamAngleZ", "ParamBodyAngleX", "ParamBodyAngleY", "ParamBodyAngleZ", "ParamBreath"]
+EYE_PATCH_PARAMS = PATCH_PARAMS + ["ParamEyeBallX", "ParamEyeBallY"]
 
 
 def make_warps(verts_px, size, params, hair_fn):
@@ -310,6 +382,8 @@ def main(argv=None) -> int:
     silver = ((hsv[..., 1] < 60) & (hsv[..., 2] > 120)).astype(np.float32) * (work[..., 3] > 128)
     hair_alpha = cv2.GaussianBlur(silver, (0, 0), 6)
     hair_fn = hair_mask_fn(hair_alpha)
+    _GAZE["w"] = detect_iris_weight(work)
+    _SWING["m"] = detect_swing_masks(work)
 
     # ---- パッチを切り出す -------------------------------------------------------
     patches = []  # dict(name, area, state, order, bbox, rgba)
@@ -355,6 +429,9 @@ def main(argv=None) -> int:
     # 土台: 全面。頭のまわりだけ細かい格子にする
     xs = grid_axes(0, W, 400, 1900, 32, 256)
     ys = grid_axes(0, H, 0, 1250, 32, 256)
+    # 黒目を動かす変形のために、目のまわりは 5 画素ごとに細かくする
+    xs = np.unique(np.concatenate([xs, np.arange(930, 1081, 5.0), np.arange(1180, 1331, 5.0)]))
+    ys = np.unique(np.concatenate([ys, np.arange(600, 701, 5.0)]))
     verts, uvs, idx, vpx = mesh_from_axes(xs, ys, (0.0, 0.0, 1.0, 1.0))
     base_params = list(KEYFORMS.keys())
     parts.append({
@@ -374,7 +451,7 @@ def main(argv=None) -> int:
             x0, y0, x1, y1 = p["bbox"]
             w, h = x1 - x0, y1 - y0
             px, py, aw, ah = pos[p["name"]]
-            cell = 36
+            cell = 8 if area in ("eyeL", "eyeR") else 36
             xs_p = np.unique(np.append(np.arange(0, w, cell), w)).astype(float)
             ys_p = np.unique(np.append(np.arange(0, h, cell), h)).astype(float)
             uv = (px / AW, py / AH, aw / AW, ah / AH)
@@ -388,7 +465,7 @@ def main(argv=None) -> int:
                 "bindings": [{"parameter": pid, "channel": "opacity", "from": 0, "to": 1}],
                 "texture": {"index": 1, "uv": {"x": uv[0], "y": uv[1], "width": uv[2], "height": uv[3]}},
                 "mesh": {"vertices": v, "uvs": u, "indices": i},
-                "warps": make_warps(vpx_abs, (w, h), PATCH_PARAMS, hair_fn),
+                "warps": make_warps(vpx_abs, (w, h), EYE_PATCH_PARAMS if area in ("eyeL", "eyeR") else PATCH_PARAMS, hair_fn),
             })
             order_no += 1
 
@@ -398,7 +475,8 @@ def main(argv=None) -> int:
     for area in SOURCES:
         for state in ORDER[area]:
             gp_ids.append(f"ParamGP_{area}_{state}")
-    params = std + [{"id": g, "min": 0, "max": 1, "default": 0} for g in gp_ids]
+    extra = [{"id": k, "min": -30, "max": 30, "default": 0} for k in SWING]
+    params = std + extra + [{"id": g, "min": 0, "max": 1, "default": 0} for g in gp_ids]
 
     model = {
         "version": template["version"], "name": "overlay", "canvas": {"width": W, "height": H},

@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
 const { chromium } = require("/opt/node-tools/node_modules/playwright");
-const [model = "model/iki/model.iki", outDir = "/tmp/states"] = process.argv.slice(2);
+const [model = "model/iki/overlay.iki", outDir = "/tmp/states", statesFile = path.join(path.dirname(fileURLToPath(import.meta.url)), "states.json")] = process.argv.slice(2);
 fs.mkdirSync(outDir, { recursive: true });
 const port = 8793;
 const srv = spawn(process.execPath, [path.join(here, "../server.mjs"), String(port)], { stdio: "ignore" });
@@ -19,11 +19,12 @@ const browser = await chromium.launch({
   args: ["--no-sandbox", "--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"],
 });
 try {
-  const page = await browser.newPage({ viewport: { width: 760, height: 760 } });
+  const VP = Number(process.env.VP ?? 760);
+  const page = await browser.newPage({ viewport: { width: VP, height: VP } });
   page.on("pageerror", (e) => console.log("pageerror", e.message));
-  await page.goto(`http://localhost:${port}/player.html?zoom=2.6&cy=0.28&model=/${model}`);
+  await page.goto(`http://localhost:${port}/player.html?zoom=${process.env.ZOOM ?? 2.6}&cy=${process.env.CY ?? 0.28}&cx=${process.env.CX ?? 0}&model=/${model}`);
   await page.waitForFunction(() => window.__avatar?.paramIds, null, { timeout: 120000 });
-  const states = JSON.parse(fs.readFileSync(path.join(here, "states.json"), "utf8"));
+  const states = JSON.parse(fs.readFileSync(statesFile, "utf8"));
   for (const st of states) {
     await page.evaluate(async (st) => {
       const a = window.__avatar;
