@@ -13,15 +13,17 @@
 | 1 | 素材解析 | [docs/01_analysis.md](docs/01_analysis.md) | T0 |
 | 2 | 拡大・透過・AI レイヤー分解・仕上げ（A1〜A5） | [docs/02_psd_parts.md](docs/02_psd_parts.md) | T0, TA4, T1 |
 | 3 | Cubism リギング・物理・書き出し | [docs/03_rigging.md](docs/03_rigging.md) | T2〜T5 |
+| 3' | **上半身を先に完成 → 後から全身へ拡張（現在の計画）** | [docs/06_upper_body_plan.md](docs/06_upper_body_plan.md) | |
 | 4 | VTube Studio / OBS 設定 | [docs/04_vts_obs.md](docs/04_vts_obs.md) | T6〜T9 |
 
 テストの詳細と記録: [docs/05_test_plan.md](docs/05_test_plan.md)
 
 ## 現在の状態
 
-- A1 拡大、A2 透過、A2.5 顔・フクロウの上書きは**済**: `art/work/fullbody_x4_patched.png`（4096×6144）
-- T0 は解像度と透過が合格。残りはパーツ分け
-- **次: A3 See-through によるレイヤー分解（GPU が必要）** → 出力 PSD を `art/psd/seethrough_raw.psd` に置く
+- **方針: 上半身モデルを先に完成させ、後で全身に拡張する**（[docs/06_upper_body_plan.md](docs/06_upper_body_plan.md)）
+- 上半身の基準絵: `art/reference/upper_body.webp` → 4倍・透過済み `art/work/upper_x4_rgba.png`（4580×5496）
+- 全身の素材（後で使う）: `art/work/fullbody_x4_patched.png`
+- **次: See-through によるレイヤー分解（GPU が必要）。入力は `upper_x4_rgba.png`** → 出力 PSD を `art/psd/seethrough_raw.psd` に置く
 
 ## フォルダ
 
