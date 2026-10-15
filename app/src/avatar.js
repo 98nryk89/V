@@ -4,6 +4,11 @@ import { loadIkiModel } from "@ikijs/format";
 import { combine } from "./mapping.js";
 import { OwlBlink, patchParams } from "./patches.js";
 
+const TRACKED_IDS = [
+  "ParamEyeLOpen", "ParamEyeROpen", "ParamMouthOpenY", "ParamMouthForm",
+  "ParamBrowLY", "ParamBrowRY", "ParamBrowLAngle", "ParamBrowRAngle",
+];
+
 export class Avatar {
   constructor(canvas, { zoom = 1, cx = 0, cy = 0 } = {}) {
     this.canvas = canvas;
@@ -24,6 +29,7 @@ export class Avatar {
     const player = this.player;
     this.motion = new IkiMotion(this.model, (id) => player.getParameter(id), (id, v) => player.setParameter(id, v));
     this.paramIds = new Set(player.getParameters().map((p) => p.id));
+    this.defaults = Object.fromEntries(this.model.parameters.map((p) => [p.id, p.default]));
     this.applyView();
     return this.model;
   }
@@ -60,6 +66,9 @@ export class Avatar {
   start() {
     this.player.start();
     const tick = (now) => {
+      // 追跡で動かすパラメータは、毎フレーム初期値に戻してから待機モーション・表情を適用する。
+      // こうしないと、前のフレームに自分で書いた値が「表情の値」として残り、口が開いたまま・目が閉じたままになる
+      if (this.tracked) for (const id of TRACKED_IDS) if (this.paramIds.has(id)) this.player.setParameter(id, this.defaults[id] ?? 0);
       this.motion.update(now);
       const t = this.tracked;
       if (t && now - t.time < 400) {

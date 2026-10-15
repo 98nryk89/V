@@ -1,0 +1,22 @@
+[
+ {"name":"01_rest","params":{}},
+ {"name":"02_eye75","params":{"ParamEyeLOpen":0.75,"ParamEyeROpen":0.75}},
+ {"name":"03_eye50","params":{"ParamEyeLOpen":0.5,"ParamEyeROpen":0.5}},
+ {"name":"04_eye25","params":{"ParamEyeLOpen":0.25,"ParamEyeROpen":0.25}},
+ {"name":"05_blink","params":{"ParamEyeLOpen":0,"ParamEyeROpen":0}},
+ {"name":"06_wink","params":{"ParamEyeLOpen":0,"ParamEyeROpen":1}},
+ {"name":"07_mouth_a","params":{"ParamMouthOpenY":0.6}},
+ {"name":"08_mouth_i","params":{"ParamMouthOpenY":0.6,"ParamMouthForm":0.6}},
+ {"name":"09_mouth_u","params":{"ParamMouthOpenY":0.3,"HintPucker":0.6}},
+ {"name":"10_mouth_o","params":{"ParamMouthOpenY":0.6,"HintFunnel":0.5}},
+ {"name":"11_smile","expression":"smile","params":{}},
+ {"name":"12_surprised","expression":"surprised","params":{}},
+ {"name":"13_angry","expression":"angry","params":{}},
+ {"name":"14_troubled","expression":"sad","params":{}},
+ {"name":"15_laugh","expression":"laugh","params":{}},
+ {"name":"16_turn_right","params":{"ParamAngleX":15,"ParamBodyAngleX":4}},
+ {"name":"17_turn_left","params":{"ParamAngleX":-15,"ParamBodyAngleX":-4}},
+ {"name":"18_up","params":{"ParamAngleY":12}},
+ {"name":"19_down","params":{"ParamAngleY":-12}},
+ {"name":"20_owl_blink","owl":1,"params":{}}
+]

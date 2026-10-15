@@ -58,9 +58,15 @@ export function modeFor(expression) {
 }
 
 /** パーツの重みを、モデルのパラメータの値にする（同じ状態のキーが重なったら足す）。 */
+export const EYE_STATES = ["75", "50", "25", "closed", "smileclosed", "wide", "smile"];
+export const MOUTH_STATES = ["smile", "frown", "small", "a", "i", "u", "e", "o", "big"];
+
 export function patchParams(get, { expression = null, hints = {}, owlBlink = 0 } = {}) {
   const m = modeFor(expression);
+  // 使わない状態も 0 にして返す（前のフレームの値が残って、見開きや口が出たままになるのを防ぐ）
   const out = {};
+  for (const side of ["L", "R"]) for (const k of EYE_STATES) out[`ParamGP_eye${side}_${k}`] = 0;
+  for (const k of MOUTH_STATES) out[`ParamGP_mouth_${k}`] = 0;
   for (const side of ["L", "R"]) {
     const w = eyeWeights(get(`ParamEye${side}Open`) ?? 1, m.eye);
     let shown = 0;

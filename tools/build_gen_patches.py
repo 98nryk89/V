@@ -83,14 +83,20 @@ def area_mask(shape, name):
 
 
 def color_match(src, ref, sel):
-    """sel の範囲で、src の色を ref に合わせる（チャンネルごとの一次式）。"""
+    """sel の範囲で、src の色の分布（チャンネルごとのヒストグラム）を ref に合わせる。
+    生成画像は目のまわりが全体にぼんやり明るく、まつ毛や虹彩のコントラストが落ちるので、元の絵の分布に戻す。"""
     out = src.astype(np.float32).copy()
     if sel.sum() < 200:
         return src
     for c in range(3):
-        s, r = out[..., c][sel], ref[..., c][sel].astype(np.float32)
-        a = float(np.clip(r.std() / max(s.std(), 1e-3), 0.8, 1.25))
-        out[..., c] = out[..., c] * a + (r.mean() - a * s.mean())
+        s_vals = np.sort(out[..., c][sel])
+        r_vals = np.sort(ref[..., c][sel].astype(np.float32))
+        n = min(len(s_vals), len(r_vals))
+        s_q = np.interp(np.linspace(0, 1, n), np.linspace(0, 1, len(s_vals)), s_vals)
+        r_q = np.interp(np.linspace(0, 1, n), np.linspace(0, 1, len(r_vals)), r_vals)
+        # 単調な対応表にして、全画素へ適用（0.85 の強さ）
+        mapped = np.interp(out[..., c], s_q, r_q)
+        out[..., c] = out[..., c] * 0.15 + mapped * 0.85
     return np.clip(out, 0, 255).astype(np.uint8)
 
 
@@ -125,6 +131,7 @@ def main(argv=None) -> int:
         return cache[f]
 
     # 色合わせの基準: 顔の下地（face.png）があれば、それを重ねた見た目に合わせる
+    orig = work.copy()  # 色合わせの基準は、元の絵のまま（顔の下地を重ねると、目の無い肌だけになってしまう）
     plate = args.outdir / "face.png"
     if plate.exists():
         fp = np.array(Image.open(plate).convert("RGBA")).astype(np.float32)
@@ -145,9 +152,8 @@ def main(argv=None) -> int:
             img, err = warped(f)
             for area in areas:
                 m = area_mask(work.shape, area)
-                core = m > 0.5
-                ring = cv2.dilate(core.astype(np.uint8), np.ones((19, 19), np.uint8)).astype(bool) & ~core & skin
-                rgb = color_match(img[..., :3], work[..., :3], ring)
+                sel = cv2.dilate((m > 0.3).astype(np.uint8), np.ones((9, 9), np.uint8)).astype(bool)
+                rgb = color_match(img[..., :3], orig[..., :3], sel)
                 name = f"gp_{area}_{state}"
                 Image.fromarray(np.dstack([rgb, (m * 255 + 0.5).astype(np.uint8)]), "RGBA").save(args.outdir / f"{name}.png")
                 made.append((area, state, name))

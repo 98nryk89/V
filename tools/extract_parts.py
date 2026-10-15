@@ -418,6 +418,7 @@ def main(argv=None) -> int:
     for s_ in "LR":
         used |= dilate(eyes[s_]["sclera_area"] | eyes[s_]["lash"] | eyes[s_]["blob"], 2 * K)
         used |= dilate(brows[s_], 1 * K)
+        used |= dilate(poly_mask(P.shape, BROW_POLY[s_]), 3 * K)  # 元の絵の眉が、髪として前に残らないように
     used |= dilate(mouth, 2 * K)
     face_skin_px = face_poly & ~hair_color
     hair_front_m = roi & P.opaque & ~face_skin_px & ~used
@@ -470,8 +471,9 @@ def main(argv=None) -> int:
         save(f"lash_{s}", e["lash_layer"])
         if "lash_lower_layer" in e:
             save(f"lash_lower_{s}", e["lash_lower_layer"])
-        if args.plate_src:  # 前髪の無い生成画像から、本物の眉を取り出す
-            a_, col = PP.brow_auto(s, face_rgb)
+        if args.plate_src:  # 前髪の無い生成画像から眉の形を取り出す。色は元の絵の眉の色（生成画像は薄くなる）
+            a_, _ = PP.brow_auto(s, face_rgb)
+            col = brow_info[s][1]
         else:
             a_, col = brow_info[s]
         brow_rgb = np.empty_like(P.rgb)

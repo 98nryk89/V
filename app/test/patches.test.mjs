@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { eyeWeights, mouthWeights, patchParams, OwlBlink } from "../src/patches.js";
+import { eyeWeights, mouthWeights, patchParams, OwlBlink, EYE_STATES, MOUTH_STATES } from "../src/patches.js";
 
 const near = (a, b, e = 1e-9) => Math.abs(a - b) < e;
 
@@ -52,4 +52,15 @@ test("フクロウのまばたき: 数秒おきに閉じて、すぐ開く", () 
   b.value(2000);
   assert.equal(b.value(2100), 1);
   assert.equal(b.value(2400), 0);
+});
+
+test("パラメータ: 使わない状態は 0 で返る（前の値が残らない）", () => {
+  const vals = { ParamEyeLOpen: 1, ParamEyeROpen: 1, ParamMouthOpenY: 0, ParamMouthForm: 0 };
+  const p = patchParams((k) => vals[k], { expression: "angry" });
+  for (const side of ["L", "R"]) for (const k of EYE_STATES) assert.equal(p[`ParamGP_eye${side}_${k}`], 0);
+  for (const k of MOUTH_STATES) assert.equal(p[`ParamGP_mouth_${k}`], 0);
+  const w = patchParams((k) => vals[k], { expression: "surprised" });
+  assert.equal(w.ParamGP_eyeL_wide, 1);
+  const n = patchParams((k) => vals[k], { expression: null });
+  assert.equal(n.ParamGP_eyeL_wide, 0);
 });
