@@ -148,106 +148,12 @@
     "type": "head3d",
     "center": [
      575,
-     390
+     415
     ],
-    "R": 175,
-    "zoff": 0,
-    "yaw": "AngleX",
-    "pitch": "AngleY",
-    "roll": "AngleZ",
-    "pivot": [
-     565,
-     610
-    ],
-    "idle": 0.35
-   }
-  ],
-  "head_eye": [
-   {
-    "type": "head3d",
-    "center": [
-     575,
-     390
-    ],
-    "R": 175,
-    "zoff": 6,
-    "yaw": "AngleX",
-    "pitch": "AngleY",
-    "roll": "AngleZ",
-    "pivot": [
-     565,
-     610
-    ],
-    "idle": 0.35
-   }
-  ],
-  "head_front": [
-   {
-    "type": "head3d",
-    "center": [
-     575,
-     390
-    ],
-    "R": 175,
-    "zoff": 25,
-    "yaw": "AngleX",
-    "pitch": "AngleY",
-    "roll": "AngleZ",
-    "pivot": [
-     565,
-     610
-    ],
-    "idle": 0.35
-   }
-  ],
-  "head_back": [
-   {
-    "type": "head3d",
-    "center": [
-     575,
-     390
-    ],
-    "R": 175,
-    "zoff": -25,
-    "gain": 1.0,
-    "yaw": "AngleX",
-    "pitch": "AngleY",
-    "roll": "AngleZ",
-    "pivot": [
-     565,
-     610
-    ],
-    "idle": 0.35
-   }
-  ],
-  "head_orn": [
-   {
-    "type": "head3d",
-    "center": [
-     575,
-     390
-    ],
-    "R": 175,
-    "zoff": 25,
-    "yaw": "AngleX",
-    "pitch": "AngleY",
-    "roll": "AngleZ",
-    "pivot": [
-     565,
-     610
-    ],
-    "idle": 0.35
-   }
-  ],
-  "head_hairside": [
-   {
-    "type": "head3d",
-    "center": [
-     575,
-     390
-    ],
-    "R": 175,
-    "zoff": 20,
+    "Rx": 170,
+    "Ry": 215,
+    "Rz": 170,
+    "zmin": 0.02,
     "yaw": "AngleX",
     "pitch": "AngleY",
     "roll": "AngleZ",
@@ -256,6 +162,123 @@
      610
     ],
     "idle": 0.35,
+    "zoff": 0,
+    "rigid": 0
+   }
+  ],
+  "head_eye": [
+   {
+    "type": "head3d",
+    "center": [
+     575,
+     415
+    ],
+    "Rx": 170,
+    "Ry": 215,
+    "Rz": 170,
+    "zmin": 0.02,
+    "yaw": "AngleX",
+    "pitch": "AngleY",
+    "roll": "AngleZ",
+    "pivot": [
+     565,
+     610
+    ],
+    "idle": 0.35,
+    "zoff": 6,
+    "rigid": 1
+   }
+  ],
+  "head_front": [
+   {
+    "type": "head3d",
+    "center": [
+     575,
+     415
+    ],
+    "Rx": 170,
+    "Ry": 215,
+    "Rz": 170,
+    "zmin": 0.02,
+    "yaw": "AngleX",
+    "pitch": "AngleY",
+    "roll": "AngleZ",
+    "pivot": [
+     565,
+     610
+    ],
+    "idle": 0.35,
+    "zoff": 25,
+    "rigid": 0.7
+   }
+  ],
+  "head_back": [
+   {
+    "type": "head3d",
+    "center": [
+     575,
+     415
+    ],
+    "Rx": 170,
+    "Ry": 215,
+    "Rz": 170,
+    "zmin": 0.02,
+    "yaw": "AngleX",
+    "pitch": "AngleY",
+    "roll": "AngleZ",
+    "pivot": [
+     565,
+     610
+    ],
+    "idle": 0.35,
+    "zoff": -25,
+    "rigid": 0.5
+   }
+  ],
+  "head_orn": [
+   {
+    "type": "head3d",
+    "center": [
+     575,
+     415
+    ],
+    "Rx": 170,
+    "Ry": 215,
+    "Rz": 170,
+    "zmin": 0.02,
+    "yaw": "AngleX",
+    "pitch": "AngleY",
+    "roll": "AngleZ",
+    "pivot": [
+     565,
+     610
+    ],
+    "idle": 0.35,
+    "zoff": 25,
+    "rigid": 1
+   }
+  ],
+  "head_hairside": [
+   {
+    "type": "head3d",
+    "center": [
+     575,
+     415
+    ],
+    "Rx": 170,
+    "Ry": 215,
+    "Rz": 170,
+    "zmin": 0.02,
+    "yaw": "AngleX",
+    "pitch": "AngleY",
+    "roll": "AngleZ",
+    "pivot": [
+     565,
+     610
+    ],
+    "idle": 0.35,
+    "zoff": 20,
+    "rigid": 0.5,
     "weight": {
      "mode": "y",
      "from": 900,
@@ -308,10 +331,12 @@
     "type": "head3d",
     "center": [
      575,
-     390
+     415
     ],
-    "R": 175,
-    "zoff": 4,
+    "Rx": 170,
+    "Ry": 215,
+    "Rz": 170,
+    "zmin": 0.02,
     "yaw": "AngleX",
     "pitch": "AngleY",
     "roll": "AngleZ",
@@ -319,7 +344,9 @@
      565,
      610
     ],
-    "idle": 0.35
+    "idle": 0.35,
+    "zoff": 4,
+    "rigid": 1
    }
   ]
  },
@@ -392,10 +419,12 @@
      "type": "head3d",
      "center": [
       575,
-      390
+      415
      ],
-     "R": 175,
-     "zoff": 0,
+     "Rx": 170,
+     "Ry": 215,
+     "Rz": 170,
+     "zmin": 0.02,
      "yaw": "AngleX",
      "pitch": "AngleY",
      "roll": "AngleZ",
@@ -404,6 +433,8 @@
       610
      ],
      "idle": 0.35,
+     "zoff": 0,
+     "rigid": 0,
      "weight": {
       "mode": "y",
       "from": 640,

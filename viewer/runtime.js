@@ -173,27 +173,51 @@ void main(){ vec4 c = texture(uTex, vUV); if (uCut > 0.0 && c.a < uCut) discard;
         const pv = e.param != null ? (P[e.param] || 0) : 0;
         switch (e.type) {
           case 'head3d': {
-            const yaw = ((P[e.yaw] || 0) + (P.IdleX || 0) * (e.idle || 0)) * DEG * (e.gain != null ? e.gain : 1);
-            const pit = ((P[e.pitch] || 0) + (P.IdleY || 0) * (e.idle || 0)) * DEG * (e.gain != null ? e.gain : 1);
+            // Head as an ellipsoid (Rx,Ry,Rz). Each vertex is carried by the surface point under it.
+            // rigid (0..1): blend toward the linearisation (Jacobian) of the map at `anchor`, i.e. the part moves/scales/shears
+            // as ONE piece instead of being warped non-linearly (what an illustrator does for eyes, hair locks, ornaments).
+            const g = e.gain != null ? e.gain : 1;
+            const yaw = ((P[e.yaw] || 0) + (P.IdleX || 0) * (e.idle || 0)) * DEG * g;
+            const pit = ((P[e.pitch] || 0) + (P.IdleY || 0) * (e.idle || 0)) * DEG * g;
             const rol = (P[e.roll] || 0) * DEG * (e.rgain != null ? e.rgain : 1);
             const cy = Math.cos(yaw), sy = Math.sin(yaw), cp = Math.cos(pit), sp = Math.sin(pit);
             const cr = Math.cos(rol), sr = Math.sin(rol);
-            const [cx, cyy] = e.center, R = e.R, k = e.k != null ? e.k : 1, zoff = e.zoff || 0;
+            const [cx, cyy] = e.center;
+            const Rx = e.Rx || e.R, Ry = e.Ry || e.R, Rz = e.Rz || e.R, k = e.k != null ? e.k : 1, zoff = e.zoff || 0;
+            const zmin = e.zmin || 0;
             const pv2 = e.pivot || e.center;
+            const map = (x, y, out) => {
+              const u = x - cx, v = y - cyy;
+              const r2 = (u / Rx) * (u / Rx) + (v / Ry) * (v / Ry);
+              const z = zoff + k * Rz * Math.sqrt(Math.max(1 - r2, zmin));
+              const x1 = u * cy + z * sy, z1 = -u * sy + z * cy;
+              const y1 = v * cp - z1 * sp;
+              const X = cx + x1, Y = cyy + y1, dx = X - pv2[0], dy = Y - pv2[1];
+              out[0] = pv2[0] + dx * cr - dy * sr; out[1] = pv2[1] + dx * sr + dy * cr;
+            };
+            const rigid = e.rigid || 0;
+            let a0 = null, J = null;
+            if (rigid > 0) {
+              let ax, ay;
+              if (e.anchor) { ax = e.anchor[0]; ay = e.anchor[1]; }
+              else { if (!part._anchor) { let sx = 0, sy2 = 0; for (let i = 0; i < n; i++) { sx += rest[2 * i]; sy2 += rest[2 * i + 1]; } part._anchor = [sx / n, sy2 / n]; } [ax, ay] = part._anchor; }
+              const o0 = [0, 0], o1 = [0, 0], o2 = [0, 0], h = 6;
+              map(ax, ay, o0); map(ax + h, ay, o1); map(ax, ay + h, o2);
+              a0 = [ax, ay, o0[0], o0[1]];
+              J = [(o1[0] - o0[0]) / h, (o2[0] - o0[0]) / h, (o1[1] - o0[1]) / h, (o2[1] - o0[1]) / h];
+            }
+            const o = [0, 0];
             for (let i = 0; i < n; i++) {
               const x = pos[2 * i], y = pos[2 * i + 1];
               const w = weightOf(e.weight, x, y);
               if (w <= 0) continue;
-              const u = x - cx, v = y - cyy;
-              const d2 = u * u + v * v;
-              const z = zoff + k * Math.sqrt(Math.max(R * R - d2, 0));
-              let x1 = u * cy + z * sy;
-              const z1 = -u * sy + z * cy;
-              let y1 = v * cp - z1 * sp;
-              let X = cx + x1, Y = cyy + y1;
-              // roll about pivot
-              const dx = X - pv2[0], dy = Y - pv2[1];
-              X = pv2[0] + dx * cr - dy * sr; Y = pv2[1] + dx * sr + dy * cr;
+              map(x, y, o);
+              let X = o[0], Y = o[1];
+              if (rigid > 0) {
+                const lx = a0[2] + J[0] * (x - a0[0]) + J[1] * (y - a0[1]);
+                const ly = a0[3] + J[2] * (x - a0[0]) + J[3] * (y - a0[1]);
+                X += (lx - X) * rigid; Y += (ly - Y) * rigid;
+              }
               pos[2 * i] = x + (X - x) * w; pos[2 * i + 1] = y + (Y - y) * w;
             }
             break;
