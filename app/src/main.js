@@ -13,10 +13,10 @@ const smoother = new Smoother(SMOOTH_ALPHAS);
 // ---- 保存される設定 ---------------------------------------------------
 const store = {
   load() {
-    try { return JSON.parse(localStorage.getItem("v.calib") ?? "null") ?? {}; } catch { return {}; }
+    try { return JSON.parse(localStorage.getItem("v.calib.v2") ?? "null") ?? {}; } catch { return {}; }
   },
   save(s) {
-    try { localStorage.setItem("v.calib", JSON.stringify(s)); } catch { /* 保存できなくても動く */ }
+    try { localStorage.setItem("v.calib.v2", JSON.stringify(s)); } catch { /* 保存できなくても動く */ }
   },
 };
 const saved = store.load();
@@ -100,7 +100,7 @@ async function runCalibration() {
   setTimeout(() => { if (!state.calibrating) $("prompt").textContent = ""; }, 4000);
 }
 $("calibrate").onclick = runCalibration;
-$("resetCalib").onclick = () => { localStorage.removeItem("v.calib"); location.reload(); };
+$("resetCalib").onclick = () => { localStorage.removeItem("v.calib.v2"); location.reload(); };
 
 // ---- 毎フレーム ---------------------------------------------------------
 let frames = 0, lastFps = performance.now(), lastFace = 0;

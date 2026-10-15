@@ -35,16 +35,17 @@ export function faceParams(b, { swapLR = false, baseline = {} } = {}) {
   const squintR = g(`eyeSquint${R}`);
 
   const jaw = raw("jawOpen");
-  const mouthOpen = clamp(smooth01(jaw, 0.04, 0.55) + raw("mouthFunnel") * 0.25, 0, 1);
+  // 開いた口は「閉じた口との重ね合わせ」なので、半開きの時間を短くする（半透明の口が見えないように）
+  const mouthOpen = smooth01(jaw + raw("mouthFunnel") * 0.2, 0.1, 0.32);
   const smile = (g(`mouthSmile${L}`) + g(`mouthSmile${R}`)) / 2;
   const frown = (g(`mouthFrown${L}`) + g(`mouthFrown${R}`)) / 2 + raw("mouthPucker") * 0.2;
-  const mouthForm = clamp(smile * 2.4 - frown * 2.4, -1, 1);
+  const mouthForm = clamp(smile * 1.2 - frown * 1.2, -0.7, 0.7);
 
   const browUp = (side) => Math.max(g(`browOuterUp${side}`), g("browInnerUp") * 0.9);
-  const browLY = clamp(browUp(L) * 2.0 - g(`browDown${L}`) * 2.2, -1, 1);
-  const browRY = clamp(browUp(R) * 2.0 - g(`browDown${R}`) * 2.2, -1, 1);
-  const browLAngle = clamp(g(`browDown${L}`) * 1.8 - g("browInnerUp") * 1.8, -1, 1);
-  const browRAngle = clamp(-(g(`browDown${R}`) * 1.8) + g("browInnerUp") * 1.8, -1, 1);
+  const browLY = clamp(browUp(L) * 0.9 - g(`browDown${L}`) * 0.9, -0.6, 0.6);
+  const browRY = clamp(browUp(R) * 0.9 - g(`browDown${R}`) * 0.9, -0.6, 0.6);
+  const browLAngle = clamp(g(`browDown${L}`) * 0.7 - g("browInnerUp") * 0.7, -0.5, 0.5);
+  const browRAngle = clamp(-(g(`browDown${R}`) * 0.7) + g("browInnerUp") * 0.7, -0.5, 0.5);
 
   // 視線: 本人が右を見る = 画面の右（鏡と同じ）
   const gx = ((raw("eyeLookOutRight") + raw("eyeLookInLeft")) - (raw("eyeLookOutLeft") + raw("eyeLookInRight"))) / 2;
@@ -54,8 +55,8 @@ export function faceParams(b, { swapLR = false, baseline = {} } = {}) {
   return {
     ParamEyeLOpen: clamp(eyeOpen(L) + squintL * -0.0, 0, 1),
     ParamEyeROpen: clamp(eyeOpen(R) + squintR * -0.0, 0, 1),
-    ParamEyeBallX: clamp(gx * 1.6 * sw, -1, 1),
-    ParamEyeBallY: clamp(gy * 1.6, -1, 1),
+    ParamEyeBallX: clamp(gx * 1.2 * sw, -0.7, 0.7),
+    ParamEyeBallY: clamp(gy * 1.2, -0.7, 0.7),
     ParamMouthOpenY: mouthOpen,
     ParamMouthForm: mouthForm,
     ParamBrowLY: browLY,
@@ -65,12 +66,14 @@ export function faceParams(b, { swapLR = false, baseline = {} } = {}) {
   };
 }
 
+export const ANGLE_LIMIT = { x: 15, y: 12, z: 10 };
+
 /** 顔の向きのキャリブレーション（中心・符号・倍率）。 */
 export class AngleCalibration {
   constructor(state) {
     this.neutral = state?.neutral ?? { yaw: 0, pitch: 0, roll: 0 };
     this.sign = state?.sign ?? { yaw: 1, pitch: 1, roll: 1 };
-    this.gain = state?.gain ?? { yaw: 1.4, pitch: 1.4, roll: 1.0 };
+    this.gain = state?.gain ?? { yaw: 1.0, pitch: 1.0, roll: 0.8 };
   }
   toJSON() {
     return { neutral: this.neutral, sign: this.sign, gain: this.gain };
@@ -81,7 +84,7 @@ export class AngleCalibration {
     this.neutral = { yaw: m("yaw"), pitch: m("pitch"), roll: m("roll") };
   }
   /** 「右・上・右にかしげる」を行ったときのサンプルから、符号と倍率を決める。target は、そのとき出したい角度（度） */
-  setAxis(axis, samples, target = 24) {
+  setAxis(axis, samples, target = 14) {
     let peak = 0;
     for (const s of samples) {
       const d = s[axis] - this.neutral[axis];
@@ -89,12 +92,13 @@ export class AngleCalibration {
     }
     if (Math.abs(peak) < 3) return false; // ほとんど動いていない
     this.sign[axis] = peak > 0 ? 1 : -1;
-    this.gain[axis] = clamp(target / Math.abs(peak), 0.5, 4);
+    this.gain[axis] = clamp(target / Math.abs(peak), 0.4, 1.5);
     return true;
   }
   apply(raw) {
-    const f = (k) => clamp(this.sign[k] * (raw[k] - this.neutral[k]) * this.gain[k], -30, 30);
-    return { ParamAngleX: f("yaw"), ParamAngleY: f("pitch"), ParamAngleZ: f("roll") };
+    // 1 枚絵から作ったモデルは、大きく回すと顔が崩れるので、範囲を狭くしている
+    const f = (k, lim) => clamp(this.sign[k] * (raw[k] - this.neutral[k]) * this.gain[k], -lim, lim);
+    return { ParamAngleX: f("yaw", ANGLE_LIMIT.x), ParamAngleY: f("pitch", ANGLE_LIMIT.y), ParamAngleZ: f("roll", ANGLE_LIMIT.z) };
   }
 }
 
