@@ -26,13 +26,21 @@ button:hover{border-color:var(--ac)}
 <label class="chk"><input type="checkbox" id="a_phys" checked>物理</label>
 <label class="chk"><input type="checkbox" id="a_mouse">マウス追従</label>
 <label class="chk"><input type="checkbox" id="a_wire">ワイヤー</label></div>
+<h2>Webカメラ追跡 (MediaPipe)</h2>
+<div><button id="cam">開始</button><button id="calib">正面を較正</button>
+<label class="chk"><input type="checkbox" id="invx">左右反転</label>
+<label class="chk"><input type="checkbox" id="invy">上下反転</label>
+<label class="chk"><input type="checkbox" id="invz">傾き反転</label>
+<video id="vid" playsinline muted style="width:100%;margin-top:6px;border-radius:6px;display:none;transform:scaleX(-1)"></video>
+<div id="camst" style="font-size:12px;color:var(--mut)"></div></div>
 <h2>パラメータ</h2><div id="params"></div></div></div>
 <script src="runtime.js"></script>
+<script src="tracking.js"></script>
 <script>
 const q=new URLSearchParams(location.search);
-const base=(q.get('model')||'../projects/owl_prince/out')+'/';
+const base=window.__RIG__?'':(q.get('model')||'../projects/owl_prince/out')+'/';
 (async()=>{
-  const rig=await (await fetch(base+'rig.json')).json();
+  const rig=window.__RIG__||await (await fetch(base+'rig.json')).json();
   const vq=q.get('view');const m=new L2D.Model(document.getElementById('c'),rig,base,{view:vq?vq.split(',').map(Number):(rig.view||null),preserve:true});
   window.M=m; await m.load();
   document.getElementById('msg').textContent=rig.parts.length+' parts';
@@ -57,6 +65,17 @@ const base=(q.get('model')||'../projects/owl_prince/out')+'/';
     const r=document.getElementById('c').getBoundingClientRect();
     const nx=((e.clientX-r.left)/r.width-0.5)*2, ny=((e.clientY-r.top)/r.height-0.5)*2;
     m.setParams({AngleX:nx*25,AngleY:-ny*18,AngleZ:-nx*6,EyeBallX:nx,EyeBallY:-ny});});
+  let tr=null;const camb=document.getElementById('cam'),st=document.getElementById('camst');
+  camb.onclick=async()=>{
+    if(tr&&tr.running){tr.stop();camb.textContent='開始';document.getElementById('vid').style.display='none';m.auto.blink=document.getElementById('a_blink').checked;m.auto.idle=document.getElementById('a_idle').checked;st.textContent='';return}
+    try{tr=new L2DTracker(m);const v=document.getElementById('vid');v.style.display='block';
+      m.auto.blink=false;m.auto.idle=false;
+      await tr.start(v,t=>st.textContent=t);camb.textContent='停止';
+      const sync=()=>{tr.opts.invX=document.getElementById('invx').checked;tr.opts.invY=document.getElementById('invy').checked;tr.opts.invZ=document.getElementById('invz').checked};
+      for(const id of['invx','invy','invz'])document.getElementById(id).onchange=sync;
+      document.getElementById('calib').onclick=()=>tr.calibrate();
+    }catch(e){st.textContent='失敗: '+e.message;console.error(e)}
+  };
   if(q.get('still')){ m.auto={blink:false,breath:false,idle:false,physics:false}; m.render(); window.READY=true; }
   else { m.start(); window.READY=true; }
 })();

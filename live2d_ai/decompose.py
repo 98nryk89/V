@@ -72,6 +72,11 @@ def color_gate(rgb_u8, rule):
         for r in rule:
             g = g * color_gate(rgb_u8, r)
         return g
+    if "any" in rule:              # union of rules
+        g = 0.0
+        for r in rule["any"]:
+            g = np.maximum(g, color_gate(rgb_u8, r))
+        return g
     lab = lab_of(rgb_u8)
     if "lab" in rule:
         soft = float(rule.get("soft", 3))
@@ -179,7 +184,7 @@ def decompose(rgb_u8, alpha, specs, report=None):
         hidden = np.zeros((h, w), bool)
         ext = s.get("extent")
         if ext is not None:
-            em = poly_mask((h, w), ext) > 0.5
+            em = (alpha > 0.5) if ext == "all" else poly_mask((h, w), ext) > 0.5
             hidden |= em & (front > 0.5) & ~solid
         bleed = int(s.get("bleed", 8))
         if bleed > 0 and solid.any():
