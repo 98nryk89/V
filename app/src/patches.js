@@ -1,53 +1,18 @@
-// 生成した差分パーツ（目・口・フクロウの目）を、どの状態でどれだけ出すかを決める。
-// モデルに ParamGP_* が無ければ何もしない（古いモデルでも動く）。
+// 土台の絵の上に重ねる差分パーツ（目・口・眉・フクロウの目）を、どの状態で出すかを決める。
+// 重ね順は「開いている → 閉じている」。下の層は不透明のまま残し、上の層だけを出し入れするので、
+// 切り替えの途中で土台（開いた目など）が透けて見えることがない。
+// モデルに ParamGP_* が無ければ何もしない。
 
 const clamp01 = (v) => Math.min(1, Math.max(0, v));
 
-/** 隣り合う状態の切り替え: 境目の前後 width/2 だけ重ねる（半透明の時間を短くして、二重に見えないようにする） */
-function bands(value, stops, width) {
-  // stops: [{ at, key }] を at の昇順で。value に最も近い状態を 1、境目付近だけ 2 つを混ぜる
-  const w = {};
-  for (const s of stops) w[s.key] = 0;
-  for (let i = 0; i < stops.length; i++) {
-    const lo = i === 0 ? -Infinity : (stops[i - 1].at + stops[i].at) / 2;
-    const hi = i === stops.length - 1 ? Infinity : (stops[i].at + stops[i + 1].at) / 2;
-    const up = Number.isFinite(lo) ? clamp01((value - (lo - width / 2)) / width) : 1;
-    const down = Number.isFinite(hi) ? clamp01(((hi + width / 2) - value) / width) : 1;
-    w[stops[i].key] += Math.min(up, down); // 同じ状態が 2 か所に出るときは足す
-  }
-  return w;
-}
+/** value が threshold を下回るほど 1。境目の前後 soft だけ滑らかにする。 */
+const below = (value, threshold, soft = 0.08) => clamp01((threshold + soft / 2 - value) / soft);
+/** value が threshold を上回るほど 1。 */
+const above = (value, threshold, soft = 0.08) => clamp01((value - (threshold - soft / 2)) / soft);
 
-/**
- * 目: 開き具合 open(0..1) と表情から、各状態の重みを返す。base は元の目（変形で動く目）。
- *   mode: "normal" | "smile"（笑顔: 開いているときは笑い目、閉じたら笑いの閉じ目）| "wide"（驚き）| "laugh"
- */
-export function eyeWeights(open, mode = "normal") {
-  const closedKey = mode === "laugh" || mode === "smile" ? "smileclosed" : "closed";
-  const openKey = mode === "wide" ? "wide" : mode === "smile" ? "smile" : "base";
-  const w = bands(open, [
-    { at: 0, key: closedKey }, { at: 0.25, key: "25" }, { at: 0.5, key: "50" }, { at: 0.75, key: "75" }, { at: 1, key: openKey },
-  ], 0.06);
-  return w;
-}
-
-/**
- * 口: 開き具合 open(0..1)、形 form(-1..1)、母音の手がかり（funnel: すぼめ、pucker: とがらせ）から重みを返す。
- *   base は元の口（閉じた線）。
- */
-export function mouthWeights(open, form, { funnel = 0, pucker = 0, mode = "normal" } = {}) {
-  let closedKey = "base";
-  if (form > 0.3) closedKey = "smile";
-  else if (form < -0.3) closedKey = "frown";
-  let smallKey = "small";
-  if (pucker > 0.35) smallKey = "u";
-  else if (form > 0.35) smallKey = "e";
-  let midKey = "a";
-  if (funnel > 0.3 || mode === "surprised") midKey = "o";
-  else if (form > 0.45) midKey = "i";
-  const bigKey = mode === "laugh" || form > 0.2 ? "big" : midKey;
-  return bands(open, [{ at: 0, key: closedKey }, { at: 0.3, key: smallKey }, { at: 0.6, key: midKey }, { at: 0.95, key: bigKey }], 0.08);
-}
+export const EYE_STATES = ["wide", "smile", "75", "50", "25", "closed", "smileclosed"];
+export const MOUTH_STATES = ["smile", "frown", "small", "u", "e", "i", "a", "o", "big"];
+export const BROW_STATES = ["up", "troubled", "angry"];
 
 /** 表情 id → 目と口の状態 */
 export function modeFor(expression) {
@@ -57,36 +22,68 @@ export function modeFor(expression) {
   return { eye: "normal", mouth: "normal" };
 }
 
-/** パーツの重みを、モデルのパラメータの値にする（同じ状態のキーが重なったら足す）。 */
-export const EYE_STATES = ["75", "50", "25", "closed", "smileclosed", "wide", "smile"];
-export const MOUTH_STATES = ["smile", "frown", "small", "a", "i", "u", "e", "o", "big"];
+/** 目: 開き具合 open（0..1）と表情から、各状態の不透明度を返す。 */
+export function eyeAlphas(open, mode = "normal") {
+  const happy = mode === "smile" || mode === "laugh";
+  const closedAmt = below(open, 0.125);
+  return {
+    wide: mode === "wide" ? 1 : 0,
+    smile: mode === "smile" ? 1 : 0,
+    75: below(open, 0.875),
+    50: below(open, 0.625),
+    25: below(open, 0.375),
+    closed: happy ? 0 : closedAmt,
+    smileclosed: happy ? Math.max(closedAmt, mode === "laugh" ? 1 : 0) : 0,
+  };
+}
 
+/** 口: 開き open（0..1）、形 form（-1..1）、母音の手がかりから、各状態の不透明度を返す。 */
+export function mouthAlphas(open, form, { funnel = 0, pucker = 0, mode = "normal" } = {}) {
+  const a = Object.fromEntries(MOUTH_STATES.map((k) => [k, 0]));
+  a.smile = above(form, 0.3, 0.2) * (mode === "surprised" ? 0 : 1);
+  a.frown = above(-form, 0.3, 0.2);
+  const wide = mode === "laugh" ? 1 : above(open, 0.8, 0.1);
+  const mid = above(open, 0.4, 0.1);
+  const small = above(open, 0.12, 0.08);
+  a.small = small;
+  // 小さく開いたときの形: とがらせ→う、横に引く→え
+  if (pucker > 0.35) a.u = small;
+  else if (form > 0.35) a.e = small;
+  // 大きく開いたときの形: すぼめ・驚き→お、横に引く→い、普通→あ
+  let key = "a";
+  if (funnel > 0.3 || mode === "surprised") key = "o";
+  else if (form > 0.45) key = "i";
+  a[key] = Math.max(a[key], mid);
+  a.big = mode === "surprised" ? 0 : wide;
+  for (const k of Object.keys(a)) a[k] = clamp01(a[k]);
+  return a;
+}
+
+/** 眉: 上げ下げ y（-1..1）と角度 angle（-1..1）から、各状態の不透明度を返す。 */
+export function browAlphas(y, angle) {
+  const a = { up: 0, troubled: 0, angry: 0 };
+  const angry = Math.max(above(angle, 0.2, 0.15), above(-y, 0.25, 0.15));
+  const troubled = above(-angle, 0.2, 0.15);
+  const up = above(y, 0.25, 0.15);
+  a.angry = angry;
+  a.troubled = angry > 0.5 ? 0 : troubled;
+  a.up = angry > 0.5 || troubled > 0.5 ? 0 : up;
+  return a;
+}
+
+/** モデルの ParamGP_* に書く値をまとめて返す（使わない状態は 0）。 */
 export function patchParams(get, { expression = null, hints = {}, owlBlink = 0 } = {}) {
   const m = modeFor(expression);
-  // 使わない状態も 0 にして返す（前のフレームの値が残って、見開きや口が出たままになるのを防ぐ）
   const out = {};
-  for (const side of ["L", "R"]) for (const k of EYE_STATES) out[`ParamGP_eye${side}_${k}`] = 0;
-  for (const k of MOUTH_STATES) out[`ParamGP_mouth_${k}`] = 0;
   for (const side of ["L", "R"]) {
-    const w = eyeWeights(get(`ParamEye${side}Open`) ?? 1, m.eye);
-    let shown = 0;
-    for (const [k, v] of Object.entries(w)) {
-      if (k === "base") continue;
-      out[`ParamGP_eye${side}_${k}`] = (out[`ParamGP_eye${side}_${k}`] ?? 0) + v;
-      shown += v;
-    }
-    out[`ParamGP_eye${side}_hide`] = clamp01(shown);
+    const e = eyeAlphas(get(`ParamEye${side}Open`) ?? 1, m.eye);
+    for (const k of EYE_STATES) out[`ParamGP_eye${side}_${k}`] = e[k];
+    const b = browAlphas(get(`ParamBrow${side}Y`) ?? 0, get(`ParamBrow${side}Angle`) ?? 0);
+    for (const k of BROW_STATES) out[`ParamGP_brow${side}_${k}`] = b[k];
   }
-  const mw = mouthWeights(get("ParamMouthOpenY") ?? 0, get("ParamMouthForm") ?? 0, { ...hints, mode: m.mouth });
-  let shown = 0;
-  for (const [k, v] of Object.entries(mw)) {
-    if (k === "base") continue;
-    out[`ParamGP_mouth_${k}`] = (out[`ParamGP_mouth_${k}`] ?? 0) + v;
-    shown += v;
-  }
-  out.ParamGP_mouth_hide = clamp01(shown);
+  const mo = mouthAlphas(get("ParamMouthOpenY") ?? 0, get("ParamMouthForm") ?? 0, { ...hints, mode: m.mouth });
+  for (const k of MOUTH_STATES) out[`ParamGP_mouth_${k}`] = mo[k];
   out.ParamGP_owlEyes_closed = owlBlink;
-  for (const k of Object.keys(out)) out[k] = clamp01(out[k]);
   return out;
 }
 

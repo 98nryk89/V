@@ -62,14 +62,14 @@ test("キャリブレーション: 符号と倍率が決まり、中心は 0 に
   assert.ok(c.setAxis("yaw", [{ yaw: -10, pitch: -3, roll: 1 }], 24));
   assert.equal(c.sign.yaw, -1);
   const a = c.apply({ yaw: -10, pitch: -3, roll: 1 });
-  assert.ok(Math.abs(a.ParamAngleX - 15) < 1e-6); // 目標 24 でも上限 15 で止まる
+  assert.ok(Math.abs(a.ParamAngleX - 20) < 1e-6); // 目標 24 でも上限 20 で止まる
   // ほとんど動かないと失敗する
   assert.equal(c.setAxis("pitch", [{ yaw: 5, pitch: -2, roll: 1 }]), false);
 });
 
-test("角度は上限（横 15°）に収まる", () => {
+test("角度は上限（横 20°）に収まる", () => {
   const c = new AngleCalibration();
-  assert.equal(c.apply({ yaw: 100, pitch: 0, roll: 0 }).ParamAngleX, 15);
+  assert.equal(c.apply({ yaw: 100, pitch: 0, roll: 0 }).ParamAngleX, 20);
 });
 
 test("平滑化: 最初は値そのもの、その後は近づく", () => {

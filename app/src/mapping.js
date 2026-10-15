@@ -69,7 +69,7 @@ export function faceParams(b, { swapLR = false, baseline = {} } = {}) {
   };
 }
 
-export const ANGLE_LIMIT = { x: 15, y: 12, z: 10 };
+export const ANGLE_LIMIT = { x: 20, y: 14, z: 12 };
 
 /** 顔の向きのキャリブレーション（中心・符号・倍率）。 */
 export class AngleCalibration {

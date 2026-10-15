@@ -11,7 +11,7 @@ function fit() {
 window.addEventListener("resize", fit);
 fit();
 
-await avatar.load(q.get("model") ?? "/model/iki/model.iki");
+await avatar.load(q.get("model") ?? "/model/iki/overlay.iki");
 fit();
 avatar.start();
 

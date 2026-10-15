@@ -22,9 +22,8 @@
 ## 現在の状態
 
 - **方針: 外注・手作業なし。AI の指示だけで完結させる**（[docs/07_ai_only_plan.md](docs/07_ai_only_plan.md)）
-- P0 済: 上半身の絵を 4 倍に拡大・透過済み `art/work/upper_x4_rgba.png`（4576×5500）
-- P1 パーツ分け・自動リグ: 第 1 版 済 `model/iki/upper_s.iki`
-- P3 トラッキング + OBS 用ページ: 第 1 版 済（`app/`、使い方は [docs/08_usage.md](docs/08_usage.md)）。**実機での確認待ち**
+- **モデル: 元の絵を土台にして、目・口・眉の差分を重ねる方式**（`model/iki/overlay.iki`。作り方は `tools/build_model.sh`）
+- トラッキング + OBS 用ページ: `app/`（使い方は [docs/08_usage.md](docs/08_usage.md)）。**実機での確認待ち**
 
 ## フォルダ
 

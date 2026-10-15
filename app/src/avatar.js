@@ -78,7 +78,7 @@ export class Avatar {
         for (const [k, v] of Object.entries(merged)) if (this.paramIds.has(k)) this.player.setParameter(k, v);
       }
       // 生成した差分パーツ（目・口・フクロウの目）の切り替え。モデルに無ければ何もしない
-      if (this.paramIds.has("ParamGP_eyeL_hide")) {
+      if (this.paramIds.has("ParamGP_mouth_a")) {
         const p = this.tracked?.params ?? {};
         const gp = patchParams((id) => this.player.getParameter(id), {
           expression: this.expression,
