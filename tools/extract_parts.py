@@ -366,9 +366,9 @@ def main(argv=None) -> int:
     feature = np.zeros_like(face_poly)
     for s in "LR":
         e = eyes[s]
-        feature |= dilate(e["sclera_area"] | e["lash"] | e["blob"], 4 * K)
-        feature |= dilate(brows[s], 3 * K)
-    feature |= dilate(mouth, 3 * K)
+        feature |= dilate(e["sclera_area"] | e["lash"] | e["blob"], 9 * K)
+        feature |= dilate(brows[s], 6 * K)
+    feature |= dilate(mouth, 4 * K)
     skin_ok = erode(PP.skin_clean & ~feature, 1)
     hair_on_face = face_poly & upper & ~skin_ok & ~nose_box
     lower_junk = face_poly & ~upper & ~dilate(PP.skin, 2) & ~nose_box
@@ -402,6 +402,11 @@ def main(argv=None) -> int:
     jaw = largest_component(cv2.morphologyEx(jaw.astype(np.uint8), cv2.MORPH_CLOSE, np.ones((9, 9), np.uint8)).astype(bool))
     face_alpha_mask = (face_poly & upper) | (face_poly & ~upper & jaw)
     face_alpha_mask = erode(dilate(face_alpha_mask, 2), 2)
+    # 顔の下地のまだら（生成と補完の継ぎ目）を、輪郭の線を残したまま均す
+    fy0, fy1, fx0, fx1 = y0, y1, x0, x1
+    sm = cv2.bilateralFilter(face_rgb[fy0:fy1, fx0:fx1], 9, 14, 8)
+    sm = cv2.bilateralFilter(sm, 9, 10, 6)
+    face_rgb[fy0:fy1, fx0:fx1] = sm
     face_layer = layer(face_rgb, soft(face_alpha_mask, 1.0))
 
     def save(name, arr):
@@ -414,16 +419,19 @@ def main(argv=None) -> int:
         roi |= poly_mask(P.shape, r)
     roi &= ~owl
     hair_color = (P.L < 105) | (((P.H >= 95) & (P.H <= 175)) & (P.S >= 14)) | ((P.S < 30) & (P.V < 240) & (P.V > 60))
+    brow_gen = {s_: (PP.brow_auto(s_, face_rgb)[0] if args.plate_src else brow_info[s_][0]) for s_ in "LR"}
     used = np.zeros_like(face_poly)
     for s_ in "LR":
-        used |= dilate(eyes[s_]["sclera_area"] | eyes[s_]["lash"] | eyes[s_]["blob"], 2 * K)
-        used |= dilate(brows[s_], 1 * K)
-        used |= dilate(poly_mask(P.shape, BROW_POLY[s_]), 3 * K)  # 元の絵の眉が、髪として前に残らないように
+        used |= dilate(eyes[s_]["sclera_area"] | eyes[s_]["lash"] | eyes[s_]["blob"], 3)
+        # 元の絵の眉が、髪として前に残らないように、眉の細い帯だけを髪から外す（広く外すと、眉のまわりが四角く抜けて浮く）
+        used |= dilate(brow_gen[s_] > 0.4, 1)
     used |= dilate(mouth, 2 * K)
     face_skin_px = face_poly & ~hair_color
     hair_front_m = roi & P.opaque & ~face_skin_px & ~used
     hair_front_m = hair_front_m | (roi & P.opaque & face_poly & hair_color & ~used)
-    hair_front_a = np.where(hair_front_m, P.a, 0.0)
+    hf_soft = cv2.GaussianBlur(hair_front_m.astype(np.float32), (0, 0), 0.9)
+    near_face = dilate(face_poly, 10 * K)
+    hair_front_a = np.where(near_face, np.minimum(hf_soft * 1.15, 1.0), hair_front_m.astype(np.float32)) * P.a
     save("hair_front", layer(P.rgb, hair_front_a))
 
     face_cover = face_alpha_mask | used
@@ -432,6 +440,16 @@ def main(argv=None) -> int:
     silver = (P.S < 45) & (P.V > 140)
     keep_dup = hair_front_m & silver & (np.arange(P.h)[:, None] >= 380 * K)
     body_m = P.opaque & ~face_cover & (~hair_front_m | keep_dup)
+    # 顔の輪郭（あご・頬の黒い線）が体に残っていると、顔を動かしたとき輪郭が二重に見える。輪郭の外側の帯は、周りから埋め直す
+    ring = dilate(face_cover, 6 * K) & ~face_cover & P.opaque & ~hair_front_m
+    ring_known = body_m & ~ring
+    ry, rx = np.nonzero(dilate(ring, 14))
+    ry0, ry1, rx0, rx1 = ry.min(), ry.max() + 1, rx.min(), rx.max() + 1
+    patch = P.rgb[ry0:ry1, rx0:rx1].copy()
+    patch[~ring_known[ry0:ry1, rx0:rx1]] = skin_color
+    patch = cv2.inpaint(patch, (ring[ry0:ry1, rx0:rx1] & body_m[ry0:ry1, rx0:rx1]).astype(np.uint8) * 255, 7, cv2.INPAINT_TELEA)
+    body_fix = P.rgb.copy()
+    body_fix[ry0:ry1, rx0:rx1] = np.where(ring[ry0:ry1, rx0:rx1, None], patch, body_fix[ry0:ry1, rx0:rx1])
     # 首: あごの下から上へ、頭を動かしたとき見える部分を埋める（周りの肌と襟から補う）
     neck = poly_mask(P.shape, NECK_FILL) & ~body_m
     ys2, xs2 = np.nonzero(dilate(neck, 12))
@@ -440,7 +458,7 @@ def main(argv=None) -> int:
     nb_known = body_m[ny0:ny1, nx0:nx1]
     nb_rgb[~nb_known] = skin_color
     neck_fill = inpaint(nb_rgb, neck[ny0:ny1, nx0:nx1])
-    body_rgb = P.rgb.copy()
+    body_rgb = body_fix.copy()
     body_rgb[ny0:ny1, nx0:nx1] = np.where(neck[ny0:ny1, nx0:nx1, None], neck_fill, body_rgb[ny0:ny1, nx0:nx1])
     body_a = np.where(body_m, P.a, 0.0)
     body_a = np.maximum(body_a, soft(neck, 1.0) * 1.0)
@@ -473,6 +491,7 @@ def main(argv=None) -> int:
             save(f"lash_lower_{s}", e["lash_lower_layer"])
         if args.plate_src:  # 前髪の無い生成画像から眉の形を取り出す。色は元の絵の眉の色（生成画像は薄くなる）
             a_, _ = PP.brow_auto(s, face_rgb)
+            a_ = np.clip(cv2.dilate(a_, np.ones((3, 3), np.uint8)) * 1.5, 0, 1)  # 髪の穴を覆えるよう、少し太く・濃くする
             col = brow_info[s][1]
         else:
             a_, col = brow_info[s]

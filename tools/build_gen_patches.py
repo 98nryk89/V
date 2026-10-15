@@ -100,6 +100,37 @@ def color_match(src, ref, sel):
     return np.clip(out, 0, 255).astype(np.uint8)
 
 
+def skin_shift(src, ref, sel_skin):
+    """肌の画素だけから、src → ref の平均の差を求めて全体に足す（口の中の赤などの色は変えない）。"""
+    if sel_skin.sum() < 200:
+        return src
+    d = ref[sel_skin].astype(np.float32).mean(0) - src[sel_skin].astype(np.float32).mean(0)
+    return np.clip(src.astype(np.float32) + d, 0, 255).astype(np.uint8)
+
+
+def feature_alpha(rgb, plate_rgb, lo=10.0, hi=34.0):
+    """下地（肌）との違いが大きい所だけを不透明にする。目や口のまわりの肌が「四角く浮く」のを防ぐ。"""
+    d = np.abs(rgb.astype(np.float32) - plate_rgb.astype(np.float32)).max(-1)
+    d = cv2.GaussianBlur(d, (0, 0), 0.8)
+    a = np.clip((d - lo) / (hi - lo), 0, 1)
+    a = a * a * (3 - 2 * a)
+    return cv2.dilate(a, np.ones((3, 3), np.uint8))
+
+
+def fill_under_hair(rgb, covered):
+    """前髪で隠れている画素（差し替えパーツの中に焼き込まれた髪の毛）を、周りから埋める。
+    髪は別のパーツとして動くので、焼き込まれたままだと、顔を動かしたときに髪が二重に見える。"""
+    if not covered.any():
+        return rgb
+    ys, xs = np.nonzero(cv2.dilate(covered.astype(np.uint8), np.ones((21, 21), np.uint8)))
+    y0, y1, x0, x1 = ys.min(), ys.max() + 1, xs.min(), xs.max() + 1
+    crop = np.ascontiguousarray(rgb[y0:y1, x0:x1])
+    out = cv2.inpaint(crop, covered[y0:y1, x0:x1].astype(np.uint8) * 255, 5, cv2.INPAINT_TELEA)
+    res = rgb.copy()
+    res[y0:y1, x0:x1] = out
+    return res
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("outdir", type=Path)
@@ -141,6 +172,8 @@ def main(argv=None) -> int:
         hsv = cv2.cvtColor(work[..., :3], cv2.COLOR_RGB2HSV)
         skin = (((hsv[..., 0] <= 16) | (hsv[..., 0] >= 172)) & (hsv[..., 1] >= 20) & (hsv[..., 1] <= 75) & (hsv[..., 2] >= 205))
 
+    hf_path = args.outdir / "hair_front.png"
+    hf_a = np.array(Image.open(hf_path).convert("RGBA"))[..., 3].astype(np.float32) / 255 if hf_path.exists() else np.zeros(work.shape[:2], np.float32)
     made, report = [], {}
     for group, states in GROUPS.items():
         areas = ["eyeL", "eyeR"] if group == "eye" else [group]
@@ -153,9 +186,20 @@ def main(argv=None) -> int:
             for area in areas:
                 m = area_mask(work.shape, area)
                 sel = cv2.dilate((m > 0.3).astype(np.uint8), np.ones((9, 9), np.uint8)).astype(bool)
-                rgb = color_match(img[..., :3], orig[..., :3], sel)
+                diff_alpha = area in ("eyeL", "eyeR", "mouth")  # 元のパーツを隠して差し替えるもの
+                if area == "mouth":
+                    ring = sel & ~(m > 0.6) & skin
+                    rgb = skin_shift(img[..., :3], orig[..., :3], ring)
+                else:
+                    rgb = color_match(img[..., :3], orig[..., :3], sel)
+                if diff_alpha:
+                    covered = (hf_a > 0.3) & sel
+                    rgb = fill_under_hair(rgb, covered)
+                    a = m * feature_alpha(rgb, work[..., :3])
+                else:
+                    a = m
                 name = f"gp_{area}_{state}"
-                Image.fromarray(np.dstack([rgb, (m * 255 + 0.5).astype(np.uint8)]), "RGBA").save(args.outdir / f"{name}.png")
+                Image.fromarray(np.dstack([rgb, (a * 255 + 0.5).astype(np.uint8)]), "RGBA").save(args.outdir / f"{name}.png")
                 made.append((area, state, name))
                 report[name] = {"source": Path(f).name, "align_err_px": round(err, 2)}
             print(f"[{group}/{state}] {Path(f).name} (位置合わせ誤差 {err:.2f}px)")
