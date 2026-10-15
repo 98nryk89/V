@@ -3,3 +3,10 @@ __pycache__/
 *.pth
 *.onnx
 art/work/fullbody_x4.png
+iki/node_modules/
+art/parts/upper/
+art/parts/upper_s/
+art/work/upper_x2.png
+model/iki/renders*/
+model/iki/faces*/
+model/iki/upper.iki

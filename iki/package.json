@@ -1,0 +1,10 @@
+{
+  "name": "v-iki-workspace",
+  "private": true,
+  "type": "module",
+  "description": "iki (2D puppet engine) tooling for the V character",
+  "dependencies": {
+    "@ikijs/mcp": "0.26.1",
+    "@modelcontextprotocol/sdk": "^1.29.0"
+  }
+}
