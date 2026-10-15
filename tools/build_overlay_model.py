@@ -83,6 +83,26 @@ def head_weight(x, y):
     return e * v * h
 
 
+DEPTH_GAIN = 0.25  # 前髪（手前）が、顔（奥）よりも余分に動く割合。視差で立体に見せる
+_DEPTH = {"m": None}
+
+
+def front_hair(x, y):
+    """前髪など、顔より手前にある黒い髪の塊の重み（0..1）。細い毛は薄まり、大きな塊だけが残る。"""
+    if _DEPTH["m"] is None:
+        work = np.array(Image.open(ROOT / "art/work/upper_x2.png").convert("RGBA"))
+        _DEPTH["m"] = make_front_hair(work)
+    return sample_map(_DEPTH["m"], x, y)
+
+
+def make_front_hair(work):
+    hsv = cv2.cvtColor(work[..., :3], cv2.COLOR_RGB2HSV)
+    dark = ((hsv[..., 2] < 105) & (work[..., 3] > 128)).astype(np.float32)
+    box = np.zeros_like(dark)
+    box[120:900, 650:1700] = 1.0
+    return np.clip(cv2.GaussianBlur(dark * box, (0, 0), 22) * 1.6, 0.0, 1.0)
+
+
 def face_profile(x, y):
     """顔の中心ほど大きく、輪郭に向かって TRANSLATE_GAIN まで小さくなる動きの大きさ（視差）。"""
     u = (x - HEAD_C[0]) / HEAD_R
@@ -116,10 +136,10 @@ def displacement(x, y, param: str, value: float, hair_fn=None):
     zero = np.zeros_like(x)
     if param == "ParamAngleX":
         th = np.radians(value)
-        return HEAD_R * np.sin(th) * face_profile(x, y) * head_weight(x, y), zero
+        return HEAD_R * np.sin(th) * face_profile(x, y) * head_weight(x, y) * (1.0 + DEPTH_GAIN * front_hair(x, y)), zero
     if param == "ParamAngleY":
         ph = np.radians(value)  # 正 = 上を向く（特徴が上へ動く）
-        return zero, -HEAD_R * np.sin(ph) * face_profile(x, y) * head_weight(x, y)
+        return zero, -HEAD_R * np.sin(ph) * face_profile(x, y) * head_weight(x, y) * (1.0 + DEPTH_GAIN * front_hair(x, y))
     if param == "ParamAngleZ":
         a = np.radians(-value * ROLL_GAIN)  # 正 = 頭の上が右へ倒れる（時計回り）。画像座標で回すので符号を反転
         w = head_weight(x, y)
