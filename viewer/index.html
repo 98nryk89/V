@@ -66,7 +66,7 @@ const base=window.__RIG__?'':(q.get('model')||'../projects/owl_prince/out')+'/';
     const nx=((e.clientX-r.left)/r.width-0.5)*2, ny=((e.clientY-r.top)/r.height-0.5)*2;
     m.setParams({AngleX:nx*25,AngleY:-ny*18,AngleZ:-nx*6,EyeBallX:nx,EyeBallY:-ny});});
   let tr=null;const camb=document.getElementById('cam'),st=document.getElementById('camst');
-  camb.onclick=async()=>{
+  if(camb)camb.onclick=async()=>{
     if(tr&&tr.running){tr.stop();camb.textContent='開始';document.getElementById('vid').style.display='none';m.auto.blink=document.getElementById('a_blink').checked;m.auto.idle=document.getElementById('a_idle').checked;st.textContent='';return}
     try{tr=new L2DTracker(m);const v=document.getElementById('vid');v.style.display='block';
       m.auto.blink=false;m.auto.idle=false;
