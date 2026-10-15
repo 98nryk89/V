@@ -63,6 +63,9 @@ export function faceParams(b, { swapLR = false, baseline = {} } = {}) {
     ParamBrowRY: browRY,
     ParamBrowLAngle: browLAngle,
     ParamBrowRAngle: browRAngle,
+    // 口の形の手がかり（モデルのパラメータではない。差分パーツの選択に使う）
+    HintFunnel: raw("mouthFunnel"),
+    HintPucker: raw("mouthPucker"),
   };
 }
 

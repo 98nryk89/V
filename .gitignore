@@ -12,3 +12,9 @@ model/iki/faces*/
 model/iki/upper.iki
 model/iki/lr/
 model/iki/chk/
+art/gen/aligned/
+art/gen/aligned_x2/
+model/iki/gpchk/
+model/iki/turnref/
+model/iki/upper_gp.iki
+model/iki/base.iki

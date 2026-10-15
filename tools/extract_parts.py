@@ -33,6 +33,8 @@ EYE_OPEN = {
     "R": [(590, 322), (598, 316), (610, 312), (625, 311), (642, 310), (658, 310), (670, 313), (668, 319),
           (656, 323), (642, 326), (628, 328), (614, 328), (602, 326), (594, 324)],
 }
+# 生成画像（前髪なし）の眉を探す範囲（1 倍座標）。左右の端の髪を拾わないように狭くしている
+BROW_GEN_BOX = {"L": (471, 284, 542, 303), "R": (568, 278, 634, 306)}
 # 眉: 中心線の両端 (x, y) と、両端の太さ（1 倍座標）。太い方が眉頭（鼻に近い側）
 BROW_STROKE = {"L": ((458, 296.0), (525, 299.0), 4.6, 7.0),
                "R": ((591, 295.0), (646, 283.5), 6.6, 4.4)}
@@ -145,8 +147,10 @@ def draw_mouth_open(shape, k=K, width=50.0, height=26.0) -> np.ndarray:
 
 
 class Parts:
-    def __init__(self, src: Path):
-        im = np.array(Image.open(src).convert("RGBA"))
+    def __init__(self, src, alpha: np.ndarray | None = None):
+        im = np.array(Image.open(src).convert("RGBA")) if not isinstance(src, np.ndarray) else src
+        if alpha is not None:  # 生成画像（不透明）を使うときは、元の絵の透過を借りる
+            im = np.dstack([im[..., :3], alpha])
         self.rgb = im[..., :3].copy()
         self.a = im[..., 3].astype(np.float32) / 255.0
         self.shape = self.rgb.shape
@@ -213,6 +217,90 @@ class Parts:
             "sclera": layer(scl_rgb, scl_a), "center": (cx, cy), "r": r,
         }
 
+    def eye_auto(self, side: str):
+        """生成画像の目から、開口部（白目＋虹彩）を色で自動的に求める。上下のまつ毛も分ける。"""
+        poly = poly_mask(self.shape, EYE_OPEN[side])
+        ys, xs = np.nonzero(poly)
+        x0, x1 = xs.min() - 24 * K, xs.max() + 24 * K
+        y0, y1 = ys.min() - 16 * K, ys.max() + 18 * K
+        roi = np.zeros_like(poly)
+        roi[y0:y1, x0:x1] = True
+        H, S, V, L = self.H, self.S, self.V, self.L
+        blue = (H >= 100) & (H <= 150) & (S >= 45) & (V >= 90)
+        skinlike = ((H <= 20) | (H >= 168)) & (S >= 16)
+        white = (S < 30) & (V > 170) & ~skinlike
+        lav = (H >= 100) & (H <= 165) & (S < 60) & (V > 135)
+        inner = (blue | white | lav) & roi
+        inner = cv2.morphologyEx(inner.astype(np.uint8), cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))).astype(bool)
+        n, lab, stats, _ = cv2.connectedComponentsWithStats(inner.astype(np.uint8), connectivity=8)
+        best, score = 0, -1
+        for i in range(1, n):
+            ov = (lab == i) & dilate(poly, 6 * K)
+            sc = ov.sum() + 0.5 * ((lab == i) & blue).sum()
+            if sc > score:
+                best, score = i, sc
+        opening = lab == best
+        cnts, _ = cv2.findContours(opening.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        filled = np.zeros_like(opening, np.uint8)
+        cv2.drawContours(filled, cnts, -1, 1, -1)
+        opening = filled.astype(bool)
+        # 列ごとの上端・下端
+        cols = np.nonzero(opening.any(0))[0]
+        top = np.full(self.w, -1)
+        bot = np.full(self.w, -1)
+        for x in cols:
+            yy_ = np.nonzero(opening[:, x])[0]
+            top[x], bot[x] = yy_.min(), yy_.max()
+        yy = np.arange(self.h)[:, None]
+        xx = np.arange(self.w)[None, :]
+        tt, bb = top[None, :], bot[None, :]
+        valid = (tt >= 0)
+        # まつ毛の端（目尻・目頭のはね）を拾えるよう、列の範囲を少し広げる
+        ext = dilate(opening, 10 * K) & roi
+        dark = (L < 125) & ~blue
+        upper = ext & dark & ((~valid) | (yy <= tt + 3 * K)) & ((~valid) | (yy >= tt - 9 * K)) & (yy < (ys.min() + ys.max()) / 2 + 3 * K)
+        lower = ext & (L < 175) & (S > 35) & ~blue & valid & (yy >= bb - 1 * K) & (yy <= bb + 8 * K) & ~upper
+        upper = largest_component(cv2.morphologyEx(upper.astype(np.uint8), cv2.MORPH_CLOSE, np.ones((3, 3), np.uint8)).astype(bool))
+        lower = cv2.morphologyEx(lower.astype(np.uint8), cv2.MORPH_OPEN, np.ones((2, 2), np.uint8)).astype(bool)
+        # 虹彩
+        blob = largest_component(blue & opening)
+        cn, _ = cv2.findContours(blob.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        fb = np.zeros_like(blob, np.uint8)
+        cv2.drawContours(fb, cn, -1, 1, -1)
+        blob = fb.astype(bool) & opening | (opening & (L < 70) & dilate(blob, 4))
+        by, bx = np.nonzero(blob)
+        dk = blob & (L < 70)
+        cx, cy = (np.nonzero(dk)[1].mean(), np.nonzero(dk)[0].mean()) if dk.sum() > 20 else (bx.mean(), by.mean())
+        r = max(bx.max() - cx, cx - bx.min())
+        circle = np.zeros_like(blob, np.uint8)
+        cv2.circle(circle, (int(round(cx)), int(round(cy))), int(round(r)), 1, -1)
+        iris_full = circle.astype(bool)
+        iris_rgb = cv2.inpaint(self.rgb, (iris_full & ~blob).astype(np.uint8) * 255, 4, cv2.INPAINT_TELEA)
+        # 白目: 開口部全体。虹彩・まつ毛の下は周りの白から補う
+        sclera_area = opening | blob
+        hole = (blob | upper) & dilate(sclera_area, 2)
+        scl_rgb = cv2.inpaint(self.rgb, hole.astype(np.uint8) * 255, 5, cv2.INPAINT_TELEA)
+        return {
+            "opening": opening, "iris_full": iris_full, "blob": blob, "lash": upper | lower, "sclera_area": sclera_area,
+            "iris": layer(iris_rgb, soft(iris_full, 1.0)), "lash_layer": layer(self.rgb, soft(upper, 0.8)),
+            "lash_lower_layer": layer(self.rgb, soft(lower, 0.8)),
+            "sclera": layer(scl_rgb, soft(sclera_area, 0.9)), "center": (cx, cy), "r": r,
+        }
+
+    def brow_auto(self, side: str, plate_rgb: np.ndarray):
+        """前髪の無い生成画像から眉を取り出す。下地（肌）との明るさの差から透明度を求める。"""
+        region = box_mask(self.shape, BROW_GEN_BOX[side])
+        dark = region & (self.L < 160) & (self.S < 90)
+        # 眉は横に長い帯。縦の髪の毛を落とすため、横長の形で「開く」処理をする
+        dark = cv2.morphologyEx(dark.astype(np.uint8), cv2.MORPH_OPEN, np.ones((2, 7 * K), np.uint8)).astype(bool)
+        dark = largest_component(cv2.morphologyEx(dark.astype(np.uint8), cv2.MORPH_CLOSE, np.ones((5, 9), np.uint8)).astype(bool))
+        color = np.median(self.rgb[dark & (self.L < 130)], axis=0) if (dark & (self.L < 130)).any() else np.median(self.rgb[dark], axis=0)
+        lp = luma(plate_rgb.astype(np.float32))
+        lb = float(luma(color[None, None].astype(np.float32))[0, 0])
+        a = np.clip((lp - self.L) / np.maximum(lp - lb, 1.0), 0, 1) * dilate(dark, 2)
+        a = cv2.GaussianBlur(a.astype(np.float32), (0, 0), 0.7)
+        return np.clip(a, 0, 1), color.astype(np.uint8)
+
     # --- 眉・口 -------------------------------------------------------------
     def brow(self, side: str):
         """眉は、元の絵の眉の帯に合わせた滑らかな形で描き直す（髪の線が交差していて、画素の抽出が汚くなるため）。
@@ -249,21 +337,26 @@ def main(argv=None) -> int:
     ap.add_argument("src", type=Path)
     ap.add_argument("outdir", type=Path)
     ap.add_argument("--debug", type=Path, help="途中経過の画像を書き出すフォルダ")
+    ap.add_argument("--feature-src", type=Path, help="目・口を取り出す画像（作業キャンバスに位置合わせ済みの生成画像）")
+    ap.add_argument("--plate-src", type=Path, help="顔の下地にする画像（前髪をどけた生成画像など、位置合わせ済み）")
     args = ap.parse_args(argv)
 
     from lama import inpaint
 
     P = Parts(args.src)
+    alpha8 = (P.a * 255 + 0.5).astype(np.uint8)
+    PF = Parts(np.array(Image.open(args.feature_src).convert("RGB")), alpha8) if args.feature_src else P
+    PP = Parts(np.array(Image.open(args.plate_src).convert("RGB")), alpha8) if args.plate_src else P
     out = args.outdir
     out.mkdir(parents=True, exist_ok=True)
     dbg = args.debug
     if dbg:
         dbg.mkdir(parents=True, exist_ok=True)
 
-    eyes = {s: P.eye(s) for s in "LR"}
+    eyes = {s: (PF.eye_auto(s) if args.feature_src else P.eye(s)) for s in "LR"}
     brow_info = {s: P.brow(s) for s in "LR"}
     brows = {s: brow_info[s][0] > 0.3 for s in "LR"}  # マスクとして使うときの 2 値版
-    mouth = P.mouth()
+    mouth = PF.mouth()
     face_poly = poly_mask(P.shape, FACE)
     nose_box = box_mask(P.shape, NOSE_BOX)
     yy = np.arange(P.h)[:, None]
@@ -276,24 +369,33 @@ def main(argv=None) -> int:
         feature |= dilate(e["sclera_area"] | e["lash"] | e["blob"], 4 * K)
         feature |= dilate(brows[s], 3 * K)
     feature |= dilate(mouth, 3 * K)
-    skin_ok = erode(P.skin_clean & ~feature, 1)
+    skin_ok = erode(PP.skin_clean & ~feature, 1)
     hair_on_face = face_poly & upper & ~skin_ok & ~nose_box
-    lower_junk = face_poly & ~upper & ~dilate(P.skin, 2) & ~nose_box
+    lower_junk = face_poly & ~upper & ~dilate(PP.skin, 2) & ~nose_box
     mask = hair_on_face | lower_junk | (face_poly & feature)
     mask = dilate(mask, 2) & dilate(face_poly, 4)
     mask[nose_box] = False
     # LaMa は顔まわりだけの切り抜きで実行する
     ys, xs = np.nonzero(dilate(face_poly, 12))
     y0, y1, x0, x1 = ys.min(), ys.max() + 1, xs.min(), xs.max() + 1
-    crop_rgb = P.rgb[y0:y1, x0:x1].copy()
+    crop_rgb = PP.rgb[y0:y1, x0:x1].copy()
     crop_mask = mask[y0:y1, x0:x1]
     # マスクの外側が顔の外（背景や髪）だと、肌の色が混ざるので、周りを肌色で塗って文脈を揃える
-    skin_color = np.median(P.rgb[P.skin & face_poly], axis=0).astype(np.uint8)
+    skin_color = np.median(PP.rgb[PP.skin & face_poly], axis=0).astype(np.uint8)
     ctx = ~dilate(face_poly[y0:y1, x0:x1], 0)
     crop_rgb[ctx] = skin_color
     filled = inpaint(crop_rgb, crop_mask)
-    face_rgb = P.rgb.copy()
+    face_rgb = PP.rgb.copy()
     face_rgb[y0:y1, x0:x1] = np.where(face_poly[y0:y1, x0:x1, None], filled, face_rgb[y0:y1, x0:x1])
+    if PP is not P:
+        # 下地を別の画像から作ったときは、元の絵の肌の色に合わせる（首や耳とつながるように）
+        sel = P.skin_clean & PP.skin_clean & face_poly
+        f = face_rgb.astype(np.float32)
+        for c in range(3):
+            sv, rv = f[..., c][sel], P.rgb[..., c][sel].astype(np.float32)
+            a = float(np.clip(rv.std() / max(sv.std(), 1e-3), 0.85, 1.15))
+            f[..., c] = f[..., c] * a + (rv.mean() - a * sv.mean())
+        face_rgb = np.clip(f, 0, 255).astype(np.uint8)
 
     # 顔の外形: 上半分は多角形、下半分（あご）は肌の色から
     jaw = dilate(P.skin & face_poly, 3) | (dilate(P.skin & face_poly, 5) & (P.L < 110))
@@ -366,10 +468,16 @@ def main(argv=None) -> int:
         save(f"eye_{s}", e["sclera"])
         save(f"iris_{s}", e["iris"])
         save(f"lash_{s}", e["lash_layer"])
+        if "lash_lower_layer" in e:
+            save(f"lash_lower_{s}", e["lash_lower_layer"])
+        if args.plate_src:  # 前髪の無い生成画像から、本物の眉を取り出す
+            a_, col = PP.brow_auto(s, face_rgb)
+        else:
+            a_, col = brow_info[s]
         brow_rgb = np.empty_like(P.rgb)
-        brow_rgb[:] = brow_info[s][1]
-        save(f"brow_{s}", layer(brow_rgb, brow_info[s][0]))
-    save("mouth", layer(P.rgb, soft(mouth, 0.9)))
+        brow_rgb[:] = col
+        save(f"brow_{s}", layer(brow_rgb, a_))
+    save("mouth", layer(PF.rgb, soft(mouth, 0.9)))
 
     if dbg:
         def dump(name, m):

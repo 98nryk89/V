@@ -2,6 +2,7 @@
 import { IkiPlayer, IkiMotion } from "@ikijs/engine";
 import { loadIkiModel } from "@ikijs/format";
 import { combine } from "./mapping.js";
+import { OwlBlink, patchParams } from "./patches.js";
 
 export class Avatar {
   constructor(canvas, { zoom = 1, cx = 0, cy = 0 } = {}) {
@@ -11,6 +12,7 @@ export class Avatar {
     this.tracked = null; // { params, time }
     this.expression = null;
     this.autoBlink = true;
+    this.owl = new OwlBlink();
   }
 
   async load(url) {
@@ -65,6 +67,16 @@ export class Avatar {
         for (const id of this.paramIds) cur[id] = this.player.getParameter(id);
         const merged = combine(cur, t.params, this.expression !== null);
         for (const [k, v] of Object.entries(merged)) if (this.paramIds.has(k)) this.player.setParameter(k, v);
+      }
+      // 生成した差分パーツ（目・口・フクロウの目）の切り替え。モデルに無ければ何もしない
+      if (this.paramIds.has("ParamGP_eyeL_hide")) {
+        const p = this.tracked?.params ?? {};
+        const gp = patchParams((id) => this.player.getParameter(id), {
+          expression: this.expression,
+          hints: { funnel: p.HintFunnel ?? 0, pucker: p.HintPucker ?? 0 },
+          owlBlink: this.owl.value(now),
+        });
+        for (const [k, v] of Object.entries(gp)) if (this.paramIds.has(k)) this.player.setParameter(k, v);
       }
       requestAnimationFrame(tick);
     };

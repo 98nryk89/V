@@ -142,7 +142,7 @@ $("mirror").onchange = (e) => ($("cam").style.transform = e.target.checked ? "sc
 
 async function boot() {
   $("status").textContent = "モデルを読み込み中…";
-  await avatar.load(q.get("model") ?? "/model/iki/upper_s.iki");
+  await avatar.load(q.get("model") ?? "/model/iki/model.iki");
   fit();
   avatar.start();
   $("status").textContent = "顔の認識モデルを読み込み中…";

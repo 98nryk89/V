@@ -8,7 +8,7 @@ OUT="${2:-model/iki/upper.iki}"
 R="${3:-model/iki/renders}"
 mkdir -p "$(dirname "$OUT")" "$R"
 LAYERS=""
-for role in face eye_L eye_R iris_L iris_R lash_L lash_R brow_L brow_R mouth mouth_open hair_back hair_front body; do
+for role in face eye_L eye_R iris_L iris_R lash_L lash_R lash_lower_L lash_lower_R brow_L brow_R mouth mouth_open hair_back hair_front body; do
   [ -f "$L/$role.png" ] && LAYERS="$LAYERS{\"path\":\"$L/$role.png\"},"
 done
 LAYERS="[${LAYERS%,}]"
