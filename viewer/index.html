@@ -33,7 +33,7 @@ const q=new URLSearchParams(location.search);
 const base=(q.get('model')||'../projects/owl_prince/out')+'/';
 (async()=>{
   const rig=await (await fetch(base+'rig.json')).json();
-  const m=new L2D.Model(document.getElementById('c'),rig,base,{view:rig.view||null,preserve:true});
+  const vq=q.get('view');const m=new L2D.Model(document.getElementById('c'),rig,base,{view:vq?vq.split(',').map(Number):(rig.view||null),preserve:true});
   window.M=m; await m.load();
   document.getElementById('msg').textContent=rig.parts.length+' parts';
   const box=document.getElementById('params');

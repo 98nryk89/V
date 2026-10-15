@@ -6,13 +6,15 @@ from PIL import Image
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 def serve():
-    h = functools.partial(http.server.SimpleHTTPRequestHandler, directory=ROOT)
-    h.log_message = lambda *a, **k: None
+    class Quiet(http.server.SimpleHTTPRequestHandler):
+        def log_message(self, *a, **k):
+            pass
+    h = functools.partial(Quiet, directory=ROOT)
     srv = socketserver.TCPServer(("127.0.0.1", 0), h)
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     return srv
 
-def render_poses(model_dir, poses, out_prefix, size=(700, 860), settle=0, crop=None):
+def render_poses(model_dir, poses, out_prefix, size=(700, 860), settle=0, view=None):
     srv = serve(); port = srv.server_address[1]
     files = []
     with sync_playwright() as p:
@@ -22,7 +24,7 @@ def render_poses(model_dir, poses, out_prefix, size=(700, 860), settle=0, crop=N
         logs = []
         pg.on("console", lambda m: logs.append(m.text)); pg.on("pageerror", lambda e: logs.append("ERR " + str(e)))
         rel = os.path.relpath(model_dir, ROOT)
-        pg.goto(f"http://127.0.0.1:{port}/viewer/index.html?still=1&model=../{rel}")
+        pg.goto(f"http://127.0.0.1:{port}/viewer/index.html?still=1&model=../{rel}" + (f"&view={view}" if view else ""))
         pg.wait_for_function("window.READY===true", timeout=60000)
         for i, (name, params) in enumerate(poses):
             pg.evaluate("p=>{M.reset();M.setParams(p);M.renderStill(%d)}" % settle, params)
@@ -48,11 +50,39 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("model"); ap.add_argument("--out", default="/tmp/preview")
     ap.add_argument("--poses", default="")
+    ap.add_argument("--view", default=None)
+    ap.add_argument("--cols", type=int, default=4)
+    ap.add_argument("--scale", type=float, default=0.5)
     a = ap.parse_args()
     poses = [("rest", {})]
     for s in filter(None, a.poses.split(";")):
         name, _, kv = s.partition(":")
         poses.append((name, {k: float(v) for k, v in (x.split("=") for x in kv.split(","))}))
-    fs = render_poses(a.model, poses, a.out)
-    sheet(fs, a.out + "_sheet.png")
+    fs = render_poses(a.model, poses, a.out, view=a.view)
+    sheet(fs, a.out + "_sheet.png", cols=a.cols, scale=a.scale)
     print(a.out + "_sheet.png")
+
+
+def render_anim(model_dir, expr, frames, out_prefix, size=(700, 860), view=None, fps=30):
+    """Run the live physics: expr is a JS function body of t (seconds) returning a params object.
+    Renders the requested frame indices (at `fps`) to PNGs."""
+    srv = serve(); port = srv.server_address[1]
+    files = []
+    with sync_playwright() as p:
+        exe = next((c for c in ("/opt/pw-browsers/chromium-1194/chrome-linux/chrome",) if os.path.exists(c)), None)
+        b = p.chromium.launch(executable_path=exe, args=["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"])
+        pg = b.new_page(viewport={"width": size[0] + 320, "height": size[1]})
+        rel = os.path.relpath(model_dir, ROOT)
+        pg.goto(f"http://127.0.0.1:{port}/viewer/index.html?still=1&model=../{rel}" + (f"&view={view}" if view else ""))
+        pg.wait_for_function("window.READY===true", timeout=60000)
+        pg.evaluate("()=>{M.reset();M.auto={blink:false,breath:false,idle:false,physics:true}}")
+        want = set(frames)
+        for i in range(max(frames) + 1):
+            pg.evaluate("([e,t])=>{M.setParams(new Function('t',e)(t));M._drive(1/%d)}" % fps, [expr, i / fps])
+            if i in want:
+                pg.evaluate("()=>M.render()")
+                f = f"{out_prefix}_f{i:03d}.png"
+                pg.locator("#c").screenshot(path=f, omit_background=True); files.append(f)
+        b.close()
+    srv.shutdown()
+    return files

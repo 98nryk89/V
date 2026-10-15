@@ -4,6 +4,7 @@ import numpy as np
 import cv2
 from scipy import ndimage as ndi
 from .decompose import decompose, bbox_of, push_pull_fill
+from .synth import render as synth_render
 
 
 def expand_effects(effects, templates):
@@ -65,7 +66,11 @@ def build(proj_dir, out_dir=None, verbose=True):
     rig_parts = []
     for ps in pspec["parts"]:
         pid = ps["id"]
-        L = layers[pid]
+        if "synthetic" in ps:
+            rgb_s, a_s = synth_render(ps, (H, W))
+            L = dict(rgb=rgb_s, alpha=a_s)
+        else:
+            L = layers[pid]
         bb = bbox_of(L["alpha"], pad=3)
         if bb is None:
             if verbose: print("  (empty part skipped)", pid)

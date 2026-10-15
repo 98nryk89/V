@@ -20,12 +20,30 @@ import cv2
 from scipy import ndimage as ndi
 
 
+def _ellipse_poly(cx, cy, rx, ry, deg=0, n=64):
+    t = np.linspace(0, 2 * np.pi, n, endpoint=False)
+    c, s_ = np.cos(np.radians(deg)), np.sin(np.radians(deg))
+    x, y = rx * np.cos(t), ry * np.sin(t)
+    return [[cx + x[i] * c - y[i] * s_, cy + x[i] * s_ + y[i] * c] for i in range(n)]
+
+
 def polys(spec):
+    """Normalise to a list of polygons. Accepts a polygon, a list of polygons, {"ellipse":[cx,cy,rx,ry,deg]}."""
     if spec is None:
         return []
-    if len(spec) and isinstance(spec[0][0], (int, float)):
+    if isinstance(spec, dict):
+        spec = [spec]
+    if len(spec) and isinstance(spec[0], (int, float)):
+        return []
+    if len(spec) and isinstance(spec[0], (list, tuple)) and len(spec[0]) == 2 and isinstance(spec[0][0], (int, float)):
         return [spec]
-    return spec
+    out = []
+    for item in spec:
+        if isinstance(item, dict):
+            out.append(_ellipse_poly(*item["ellipse"]))
+        else:
+            out.extend(polys(item) if not (len(item) and isinstance(item[0], (list, tuple)) and len(item[0]) == 2 and isinstance(item[0][0], (int, float))) else [item])
+    return out
 
 
 def poly_mask(shape, spec, feather=0.8):
@@ -45,9 +63,25 @@ def lab_of(rgb_u8):
 
 
 def color_gate(rgb_u8, rule):
+    """Soft 0..1 gate. rule: dict or list of dicts (AND).
+    {"near":[rgb..],"tol":T} | {"far":[rgb..],"tol":T} | {"lab":{"L":[lo,hi],"a":[..],"b":[..]},"soft":s}"""
     if not rule:
         return 1.0
+    if isinstance(rule, list):
+        g = 1.0
+        for r in rule:
+            g = g * color_gate(rgb_u8, r)
+        return g
     lab = lab_of(rgb_u8)
+    if "lab" in rule:
+        soft = float(rule.get("soft", 3))
+        g = np.ones(lab.shape[:2], np.float32)
+        for ch, name in enumerate("Lab"):
+            if name in rule["lab"]:
+                lo, hi = rule["lab"][name]
+                v = lab[..., ch]
+                g = g * np.clip((v - lo) / soft + 0.5, 0, 1) * np.clip((hi - v) / soft + 0.5, 0, 1)
+        return g
     tol = float(rule.get("tol", 14))
     key = "near" if "near" in rule else "far"
     cols = np.array(rule[key], np.uint8).reshape(-1, 1, 3)
@@ -103,13 +137,25 @@ def fill_hidden(rgb, known, hidden, method="pushpull"):
 def decompose(rgb_u8, alpha, specs, report=None):
     """rgb_u8: HxWx3 uint8 (RGB), alpha: HxW float. Returns {id: dict(rgba=full-canvas float RGBA, ...)}."""
     h, w = alpha.shape
+    specs = [s for s in specs if "synthetic" not in s]
     order = sorted(specs, key=lambda s: -s["z"])  # front first
     remaining = alpha.astype(np.float32).copy()
     vis = {}
     for s in order:
         zone = poly_mask((h, w), s["zone"]) if s.get("zone") is not None else np.ones((h, w), np.float32)
         gate = color_gate(rgb_u8, s.get("color"))
-        a = np.minimum(remaining, zone * gate * (alpha > 0))
+        a = zone * gate * (alpha > 0)
+        if s.get("close"):          # bridge small gaps / fill pinholes (dark shading inside silver hair, ...)
+            r = int(s["close"])
+            k = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * r + 1, 2 * r + 1))
+            m = cv2.morphologyEx((a > 0.5).astype(np.uint8), cv2.MORPH_CLOSE, k) > 0
+            holes = ndi.binary_fill_holes(m) & ~m
+            lab_h, nh = ndi.label(holes)
+            if nh:
+                sz = ndi.sum(holes, lab_h, range(1, nh + 1))
+                m |= np.isin(lab_h, 1 + np.flatnonzero(sz <= int(s.get("fill_holes", 150))))
+            a = np.maximum(a, m.astype(np.float32) * zone * (alpha > 0))
+        a = np.minimum(remaining, a)
         if "min_alpha" in s:
             a = np.where(a > s["min_alpha"], a, 0)
         vis[s["id"]] = a
@@ -141,7 +187,17 @@ def decompose(rgb_u8, alpha, specs, report=None):
             hidden |= near & (front > 0.5) & ~solid
         # source colour for this part: its own visible pixels, hidden ones inpainted
         known = v > 0.05
-        col = fill_hidden(src, known & ~hidden, hidden & ~known)
+        if s.get("fill_gate"):      # only these pixels may seed the reconstruction of hidden areas
+            known_src = known & (color_gate(rgb_u8, s["fill_gate"]) > 0.5)
+        else:
+            known_src = known
+        if "fill_rgb" in s:
+            col = src.copy()
+            hm = ndi.gaussian_filter((hidden & ~known).astype(np.float32), 2.0)[..., None]
+            col = col * (1 - hm) + np.array(s["fill_rgb"], np.float32) * hm
+            col = np.where((hidden & ~known)[..., None], np.array(s["fill_rgb"], np.float32), col)
+        else:
+            col = fill_hidden(src, known_src & ~hidden, hidden & ~known)
         a = np.clip(v, 0, 1)
         # alpha of the part as it sits in the stack: undo the 'over' compositing of conserved alpha
         a_layer = np.where(front < 0.999, a / np.maximum(1 - front, 1e-3), a)
