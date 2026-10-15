@@ -1,0 +1,148 @@
+{
+ "_doc": "Character-specific head shape, measured from the front art (widths) and the side-view art (depth profile). Coordinates are front-art pixels; z is distance toward the viewer from the head's rotation axis plane.",
+ "axis": {
+  "x": 562,
+  "pitch_y": 405
+ },
+ "side_to_front_y": {
+  "side": [
+   250,
+   366,
+   487,
+   556,
+   620
+  ],
+  "front": [
+   265,
+   381,
+   493,
+   575,
+   639
+  ]
+ },
+ "side_axis_x": 625,
+ "side_profile": {
+  "y": [
+   300,
+   340,
+   380,
+   396,
+   410,
+   440,
+   466,
+   480,
+   492,
+   508,
+   530,
+   556
+  ],
+  "x": [
+   786,
+   790,
+   800,
+   808,
+   814,
+   822,
+   829,
+   829,
+   816,
+   808,
+   800,
+   793
+  ]
+ },
+ "nose": {
+  "side_tip_y": 440,
+  "side_tip_x": 862,
+  "side_bridge_y": 396,
+  "side_base_y": 466,
+  "half_width": 15
+ },
+ "width": {
+  "y": [
+   270,
+   300,
+   340,
+   380,
+   420,
+   450,
+   481,
+   500,
+   519,
+   537,
+   550,
+   562,
+   574
+  ],
+  "left": [
+   105,
+   125,
+   140,
+   146,
+   148,
+   138,
+   105,
+   88,
+   71,
+   52,
+   33,
+   18,
+   4
+  ],
+  "right": [
+   118,
+   140,
+   158,
+   168,
+   170,
+   158,
+   115,
+   109,
+   96,
+   77,
+   62,
+   46,
+   14
+  ],
+  "xc": 557,
+  "exponent": 2.4
+ },
+ "hair": {
+  "front_offset": [
+   [
+    300,
+    28
+   ],
+   [
+    380,
+    40
+   ],
+   [
+    440,
+    55
+   ],
+   [
+    520,
+    55
+   ]
+  ],
+  "front_extra_width": 12,
+  "dome": {
+   "cx": 562,
+   "cy": 300,
+   "rx": 215,
+   "ry": 270,
+   "rz": 175
+  },
+  "side": {
+   "extra_width": 55,
+   "depth_ratio": 0.6
+  }
+ },
+ "neck": {
+  "cx": 565,
+  "half_width": 92,
+  "depth": 72
+ },
+ "edge_floor": 0.5
+}

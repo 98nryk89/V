@@ -99,6 +99,7 @@ void main(){ vec4 c = texture(uTex, vUV); if (uCut > 0.0 && c.a < uCut) discard;
         part._rest = Float32Array.from(part.mesh.verts);
         part._pos = new Float32Array(part._rest.length);
         part._uv = Float32Array.from(part.mesh.uvs);
+        if (part.mesh.z) { part._z = Float32Array.from(part.mesh.z); let sz = 0; for (const v of part._z) sz += v; part._zmean = sz / part._z.length; }
         part._idx = Uint16Array.from(part.mesh.tris);
         part._vbo = gl.createBuffer(); part._ubo = gl.createBuffer(); part._ibo = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, part._ubo); gl.bufferData(gl.ARRAY_BUFFER, part._uv, gl.STATIC_DRAW);
@@ -186,10 +187,12 @@ void main(){ vec4 c = texture(uTex, vUV); if (uCut > 0.0 && c.a < uCut) discard;
             const Rx = e.Rx || e.R, Ry = e.Ry || e.R, Rz = e.Rz || e.R, k = e.k != null ? e.k : 1, zoff = e.zoff || 0;
             const zmin = e.zmin || 0;
             const pv2 = e.pivot || e.center;
-            const map = (x, y, out) => {
+            const zA = e.vz ? part._z : null;
+            const map = (x, y, out, zv) => {
               const u = x - cx, v = y - cyy;
-              const r2 = (u / Rx) * (u / Rx) + (v / Ry) * (v / Ry);
-              const z = zoff + k * Rz * Math.sqrt(Math.max(1 - r2, zmin));
+              let z;
+              if (zv !== undefined) z = zoff + k * zv;
+              else { const r2 = (u / Rx) * (u / Rx) + (v / Ry) * (v / Ry); z = zoff + k * Rz * Math.sqrt(Math.max(1 - r2, zmin)); }
               const x1 = u * cy + z * sy, z1 = -u * sy + z * cy;
               const y1 = v * cp - z1 * sp;
               const X = cx + x1, Y = cyy + y1, dx = X - pv2[0], dy = Y - pv2[1];
@@ -202,7 +205,8 @@ void main(){ vec4 c = texture(uTex, vUV); if (uCut > 0.0 && c.a < uCut) discard;
               if (e.anchor) { ax = e.anchor[0]; ay = e.anchor[1]; }
               else { if (!part._anchor) { let sx = 0, sy2 = 0; for (let i = 0; i < n; i++) { sx += rest[2 * i]; sy2 += rest[2 * i + 1]; } part._anchor = [sx / n, sy2 / n]; } [ax, ay] = part._anchor; }
               const o0 = [0, 0], o1 = [0, 0], o2 = [0, 0], h = 6;
-              map(ax, ay, o0); map(ax + h, ay, o1); map(ax, ay + h, o2);
+              const za = zA ? part._zmean : undefined;
+              map(ax, ay, o0, za); map(ax + h, ay, o1, za); map(ax, ay + h, o2, za);
               a0 = [ax, ay, o0[0], o0[1]];
               J = [(o1[0] - o0[0]) / h, (o2[0] - o0[0]) / h, (o1[1] - o0[1]) / h, (o2[1] - o0[1]) / h];
             }
@@ -211,7 +215,7 @@ void main(){ vec4 c = texture(uTex, vUV); if (uCut > 0.0 && c.a < uCut) discard;
               const x = pos[2 * i], y = pos[2 * i + 1];
               const w = weightOf(e.weight, x, y);
               if (w <= 0) continue;
-              map(x, y, o);
+              map(x, y, o, zA ? zA[i] : undefined);
               let X = o[0], Y = o[1];
               if (rigid > 0) {
                 const lx = a0[2] + J[0] * (x - a0[0]) + J[1] * (y - a0[1]);

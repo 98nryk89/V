@@ -165,6 +165,20 @@ def decompose(rgb_u8, alpha, specs, report=None):
             a = np.where(a > s["min_alpha"], a, 0)
         vis[s["id"]] = a
         remaining = remaining - a
+    cleaned = {}
+    for s_ in specs:
+        c = s_.get("clean")
+        if not c:
+            continue
+        v = vis[s_["id"]]
+        gate = color_gate(rgb_u8, c["skin"])
+        zone = poly_mask((h, w), s_["zone"]) if s_.get("zone") is not None else np.ones((h, w), np.float32)
+        inner = ndi.distance_transform_edt(zone > 0.5) > float(c.get("margin", 6))
+        protect = poly_mask((h, w), c["protect"]) > 0.5 if c.get("protect") else np.zeros((h, w), bool)
+        bad = (v > 0.5) & (gate < 0.5) & inner & ~protect
+        bad = ndi.binary_dilation(bad, iterations=int(c.get("grow", 1))) & (v > 0.05) & inner & ~protect
+        cleaned[s_["id"]] = bad
+        vis[s_["id"]] = np.where(bad, 0.0, v)
     # anything unclaimed goes to the back-most part
     back = order[-1]["id"]
     vis[back] = vis[back] + np.maximum(remaining, 0)
@@ -182,6 +196,8 @@ def decompose(rgb_u8, alpha, specs, report=None):
                 front = np.maximum(front, vis[o])
         solid = v > 0.5
         hidden = np.zeros((h, w), bool)
+        if pid in cleaned:      # contaminated pixels: reconstruct as clean skin (alpha 1)
+            hidden |= cleaned[pid]
         ext = s.get("extent")
         if ext is not None:
             em = (alpha > 0.5) if ext == "all" else poly_mask((h, w), ext) > 0.5
@@ -189,6 +205,8 @@ def decompose(rgb_u8, alpha, specs, report=None):
         bleed = int(s.get("bleed", 8))
         if bleed > 0 and solid.any():
             near = ndi.binary_dilation(solid, iterations=bleed)
+            if ext is not None and ext != "all":      # under-lap only inside the part's true shape (no skin leaking past the contour)
+                near &= ndi.binary_dilation(em, iterations=2)
             hidden |= near & (front > 0.5) & ~solid
         # source colour for this part: its own visible pixels, hidden ones inpainted
         known = v > 0.05

@@ -146,14 +146,11 @@
   "head": [
    {
     "type": "head3d",
+    "vz": true,
     "center": [
-     575,
-     415
+     562,
+     405
     ],
-    "Rx": 170,
-    "Ry": 215,
-    "Rz": 170,
-    "zmin": 0.02,
     "yaw": "AngleX",
     "pitch": "AngleY",
     "roll": "AngleZ",
@@ -162,21 +159,17 @@
      610
     ],
     "idle": 0.35,
-    "zoff": 0,
     "rigid": 0
    }
   ],
   "head_eye": [
    {
     "type": "head3d",
+    "vz": true,
     "center": [
-     575,
-     415
+     562,
+     405
     ],
-    "Rx": 170,
-    "Ry": 215,
-    "Rz": 170,
-    "zmin": 0.02,
     "yaw": "AngleX",
     "pitch": "AngleY",
     "roll": "AngleZ",
@@ -185,21 +178,17 @@
      610
     ],
     "idle": 0.35,
-    "zoff": 6,
     "rigid": 1
    }
   ],
   "head_front": [
    {
     "type": "head3d",
+    "vz": true,
     "center": [
-     575,
-     415
+     562,
+     405
     ],
-    "Rx": 170,
-    "Ry": 215,
-    "Rz": 170,
-    "zmin": 0.02,
     "yaw": "AngleX",
     "pitch": "AngleY",
     "roll": "AngleZ",
@@ -208,21 +197,17 @@
      610
     ],
     "idle": 0.35,
-    "zoff": 25,
-    "rigid": 0.7
+    "rigid": 0.5
    }
   ],
   "head_back": [
    {
     "type": "head3d",
+    "vz": true,
     "center": [
-     575,
-     415
+     562,
+     405
     ],
-    "Rx": 170,
-    "Ry": 215,
-    "Rz": 170,
-    "zmin": 0.02,
     "yaw": "AngleX",
     "pitch": "AngleY",
     "roll": "AngleZ",
@@ -231,21 +216,17 @@
      610
     ],
     "idle": 0.35,
-    "zoff": -25,
-    "rigid": 0.5
+    "rigid": 0.4
    }
   ],
   "head_orn": [
    {
     "type": "head3d",
+    "vz": true,
     "center": [
-     575,
-     415
+     562,
+     405
     ],
-    "Rx": 170,
-    "Ry": 215,
-    "Rz": 170,
-    "zmin": 0.02,
     "yaw": "AngleX",
     "pitch": "AngleY",
     "roll": "AngleZ",
@@ -254,21 +235,17 @@
      610
     ],
     "idle": 0.35,
-    "zoff": 25,
     "rigid": 1
    }
   ],
   "head_hairside": [
    {
     "type": "head3d",
+    "vz": true,
     "center": [
-     575,
-     415
+     562,
+     405
     ],
-    "Rx": 170,
-    "Ry": 215,
-    "Rz": 170,
-    "zmin": 0.02,
     "yaw": "AngleX",
     "pitch": "AngleY",
     "roll": "AngleZ",
@@ -277,8 +254,7 @@
      610
     ],
     "idle": 0.35,
-    "zoff": 20,
-    "rigid": 0.5,
+    "rigid": 0.4,
     "weight": {
      "mode": "y",
      "from": 900,
@@ -329,14 +305,11 @@
   "head_ear": [
    {
     "type": "head3d",
+    "vz": true,
     "center": [
-     575,
-     415
+     562,
+     405
     ],
-    "Rx": 170,
-    "Ry": 215,
-    "Rz": 170,
-    "zmin": 0.02,
     "yaw": "AngleX",
     "pitch": "AngleY",
     "roll": "AngleZ",
@@ -345,7 +318,6 @@
      610
     ],
     "idle": 0.35,
-    "zoff": 4,
     "rigid": 1
    }
   ]
@@ -410,21 +382,22 @@
      }
     },
     "@head_back"
-   ]
+   ],
+   "depth": {
+    "layer": "dome"
+   },
+   "mesh_step": 12
   },
   "neck": {
    "effects": [
     "@breath_body",
     {
      "type": "head3d",
+     "vz": true,
      "center": [
-      575,
-      415
+      562,
+      405
      ],
-     "Rx": 170,
-     "Ry": 215,
-     "Rz": 170,
-     "zmin": 0.02,
      "yaw": "AngleX",
      "pitch": "AngleY",
      "roll": "AngleZ",
@@ -433,7 +406,6 @@
       610
      ],
      "idle": 0.35,
-     "zoff": 0,
      "rigid": 0,
      "weight": {
       "mode": "y",
@@ -441,13 +413,21 @@
       "to": 540
      }
     }
-   ]
+   ],
+   "depth": {
+    "layer": "neck"
+   },
+   "mesh_step": 10
   },
   "face": {
    "effects": [
     "@breath_head",
     "@head"
-   ]
+   ],
+   "depth": {
+    "layer": "face"
+   },
+   "mesh_step": 8
   },
   "hair_side_L": {
    "effects": [
@@ -477,7 +457,10 @@
      }
     },
     "@head_hairside"
-   ]
+   ],
+   "depth": {
+    "layer": "side"
+   }
   },
   "hair_side_R": {
    "effects": [
@@ -507,7 +490,10 @@
      }
     },
     "@head_hairside"
-   ]
+   ],
+   "depth": {
+    "layer": "side"
+   }
   },
   "hair_front": {
    "effects": [
@@ -537,7 +523,11 @@
      }
     },
     "@head_front"
-   ]
+   ],
+   "depth": {
+    "layer": "hairfront"
+   },
+   "mesh_step": 12
   },
   "earL": {
    "effects": [
@@ -570,7 +560,11 @@
      }
     },
     "@head_ear"
-   ]
+   ],
+   "depth": {
+    "layer": "const",
+    "z": -20
+   }
   },
   "earR": {
    "effects": [
@@ -603,7 +597,11 @@
      }
     },
     "@head_ear"
-   ]
+   ],
+   "depth": {
+    "layer": "const",
+    "z": -20
+   }
   },
   "ribbon": {
    "effects": [
@@ -633,7 +631,11 @@
      }
     },
     "@head_orn"
-   ]
+   ],
+   "depth": {
+    "layer": "const",
+    "z": 70
+   }
   },
   "orn_chain": {
    "effects": [
@@ -663,13 +665,21 @@
      }
     },
     "@head_orn"
-   ]
+   ],
+   "depth": {
+    "layer": "const",
+    "z": 80
+   }
   },
   "orn_mask": {
    "effects": [
     "@breath_head",
     "@head_orn"
-   ]
+   ],
+   "depth": {
+    "layer": "const",
+    "z": 90
+   }
   },
   "eyeL_white": {
    "effects": [
@@ -713,7 +723,12 @@
     },
     "@breath_head",
     "@head_eye"
-   ]
+   ],
+   "depth": {
+    "layer": "face",
+    "off": 3
+   },
+   "mesh_step": 6
   },
   "eyeL_iris": {
    "clip": "eyeL_white",
@@ -790,7 +805,12 @@
     },
     "@breath_head",
     "@head_eye"
-   ]
+   ],
+   "depth": {
+    "layer": "face",
+    "off": 3
+   },
+   "mesh_step": 6
   },
   "eyeL_lash": {
    "effects": [
@@ -834,7 +854,12 @@
     },
     "@breath_head",
     "@head_eye"
-   ]
+   ],
+   "depth": {
+    "layer": "face",
+    "off": 3
+   },
+   "mesh_step": 6
   },
   "eyeR_white": {
    "effects": [
@@ -878,7 +903,12 @@
     },
     "@breath_head",
     "@head_eye"
-   ]
+   ],
+   "depth": {
+    "layer": "face",
+    "off": 3
+   },
+   "mesh_step": 6
   },
   "eyeR_iris": {
    "clip": "eyeR_white",
@@ -955,7 +985,12 @@
     },
     "@breath_head",
     "@head_eye"
-   ]
+   ],
+   "depth": {
+    "layer": "face",
+    "off": 3
+   },
+   "mesh_step": 6
   },
   "eyeR_lash": {
    "effects": [
@@ -999,7 +1034,12 @@
     },
     "@breath_head",
     "@head_eye"
-   ]
+   ],
+   "depth": {
+    "layer": "face",
+    "off": 3
+   },
+   "mesh_step": 6
   },
   "mouth": {
    "effects": [
@@ -1019,7 +1059,11 @@
     },
     "@breath_head",
     "@head_eye"
-   ]
+   ],
+   "depth": {
+    "layer": "face",
+    "off": 2
+   }
   },
   "eyeL_closed": {
    "effects": [
@@ -1043,7 +1087,12 @@
     },
     "@breath_head",
     "@head_eye"
-   ]
+   ],
+   "depth": {
+    "layer": "face",
+    "off": 3
+   },
+   "mesh_step": 6
   },
   "eyeR_closed": {
    "effects": [
@@ -1067,7 +1116,12 @@
     },
     "@breath_head",
     "@head_eye"
-   ]
+   ],
+   "depth": {
+    "layer": "face",
+    "off": 3
+   },
+   "mesh_step": 6
   },
   "mouth_open": {
    "effects": [
@@ -1116,7 +1170,11 @@
     },
     "@breath_head",
     "@head_eye"
-   ]
+   ],
+   "depth": {
+    "layer": "face",
+    "off": 2
+   }
   },
   "tasselL": {
    "effects": [
@@ -1309,6 +1367,28 @@
      }
     }
    ]
+  },
+  "browL": {
+   "effects": [
+    "@breath_head",
+    "@head_eye"
+   ],
+   "depth": {
+    "layer": "face",
+    "off": 3
+   },
+   "mesh_step": 6
+  },
+  "browR": {
+   "effects": [
+    "@breath_head",
+    "@head_eye"
+   ],
+   "depth": {
+    "layer": "face",
+    "off": 3
+   },
+   "mesh_step": 6
   }
  },
  "physics": [
@@ -1486,5 +1566,6 @@
    "inertia": 1.1,
    "idle": 0.3
   }
- ]
+ ],
+ "head_model": "head_model.json"
 }

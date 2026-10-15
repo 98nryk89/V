@@ -5,6 +5,7 @@ import cv2
 from scipy import ndimage as ndi
 from .decompose import decompose, bbox_of, push_pull_fill
 from .synth import render as synth_render
+from .headmodel import HeadModel
 
 
 def expand_effects(effects, templates):
@@ -64,6 +65,7 @@ def build(proj_dir, out_dir=None, verbose=True):
     layers = decompose(rgb, alpha, pspec["parts"])
     templates = rspec.get("templates", {})
     rig_parts = []
+    hm = HeadModel(os.path.join(proj_dir, rspec["head_model"])) if rspec.get("head_model") else None
     for ps in pspec["parts"]:
         pid = ps["id"]
         if "synthetic" in ps:
@@ -90,6 +92,11 @@ def build(proj_dir, out_dir=None, verbose=True):
         part = dict(id=pid, tex=fn, z=ps["z"], bbox=[x0, y0, x1 - x0, y1 - y0],
                     mesh=make_mesh(a, x0, y0, step),
                     effects=expand_effects(rs.get("effects", []), templates))
+        dspec = rs.get("depth")
+        if dspec and hm is not None:
+            vv = np.array(part["mesh"]["verts"], float).reshape(-1, 2)
+            kw = {k: v for k, v in dspec.items() if k != "layer"}
+            part["mesh"]["z"] = [round(float(z), 2) for z in hm.z(vv[:, 0], vv[:, 1], dspec["layer"], **kw)]
         for k in ("clip", "maskOnly", "opacity"):
             if k in rs:
                 part[k] = rs[k]
