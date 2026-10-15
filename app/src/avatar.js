@@ -2,7 +2,7 @@
 import { IkiPlayer, IkiMotion } from "@ikijs/engine";
 import { loadIkiModel } from "@ikijs/format";
 import { combine } from "./mapping.js";
-import { OwlBlink, patchParams } from "./patches.js";
+import { OwlBlink, PatchStabilizer, patchParams } from "./patches.js";
 import { Swing } from "./swing.js";
 
 const TRACKED_IDS = [
@@ -20,6 +20,7 @@ export class Avatar {
     this.autoBlink = true;
     this.owl = new OwlBlink();
     this.swing = new Swing();
+    this.stab = new PatchStabilizer();
   }
 
   async load(url) {
@@ -87,6 +88,7 @@ export class Avatar {
           hints: { funnel: p.HintFunnel ?? 0, pucker: p.HintPucker ?? 0 },
           owlBlink: this.owl.value(now),
         });
+        this.stab.apply(gp, now);
         for (const [k, v] of Object.entries(gp)) if (this.paramIds.has(k)) this.player.setParameter(k, v);
       }
       // 耳飾り・リボンの揺れ（頭の動きに遅れて、独立して揺れる）

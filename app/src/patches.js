@@ -60,8 +60,13 @@ export function mouthAlphas(open, form, { funnel = 0, pucker = 0, mode = "normal
 }
 
 /** 眉: 上げ下げ y（-1..1）と角度 angle（-1..1）から、各状態の不透明度を返す。 */
-export function browAlphas(y, angle) {
+export function browAlphas(y, angle, expressive = true) {
   const a = { up: 0, troubled: 0, angry: 0 };
+  if (!expressive) {
+    // 表情を出していない間は、眉は基本動かさない。大きく上げたときだけ「上げ」にする
+    a.up = above(y, 0.45, 0.1);
+    return a;
+  }
   const angry = Math.max(above(angle, 0.2, 0.15), above(-y, 0.25, 0.15));
   const troubled = above(-angle, 0.2, 0.15);
   const up = above(y, 0.25, 0.15);
@@ -78,7 +83,7 @@ export function patchParams(get, { expression = null, hints = {}, owlBlink = 0 }
   for (const side of ["L", "R"]) {
     const e = eyeAlphas(get(`ParamEye${side}Open`) ?? 1, m.eye);
     for (const k of EYE_STATES) out[`ParamGP_eye${side}_${k}`] = e[k];
-    const b = browAlphas(get(`ParamBrow${side}Y`) ?? 0, get(`ParamBrow${side}Angle`) ?? 0);
+    const b = browAlphas(get(`ParamBrow${side}Y`) ?? 0, get(`ParamBrow${side}Angle`) ?? 0, expression !== null && expression !== "neutral");
     for (const k of BROW_STATES) out[`ParamGP_brow${side}_${k}`] = b[k];
   }
   const mo = mouthAlphas(get("ParamMouthOpenY") ?? 0, get("ParamMouthForm") ?? 0, { ...hints, mode: m.mouth });
@@ -107,5 +112,35 @@ export class OwlBlink {
       return t < 70 ? t / 70 : t < 190 ? 1 : 1 - (t - 190) / 70;
     }
     return 0;
+  }
+}
+
+/**
+ * 差分パーツの切り替えを安定させる。
+ * 眉と口の形は、半透明で切り替えると元の絵と重なって「二重」に見えるので、
+ * グループごとに 1 つだけ選び（0 か 1）、いったん選んだら一定時間は変えない。
+ */
+export class PatchStabilizer {
+  constructor({ holdMs = 450, confirmMs = 120 } = {}) {
+    Object.assign(this, { holdMs, confirmMs });
+    this.g = {}; // グループ名 → { cur, since, cand, candSince }
+  }
+  _pick(group, states, alphaOf, now) {
+    let best = null, bv = 0.5;
+    for (const k of states) if (alphaOf(k) > bv) { bv = alphaOf(k); best = k; }
+    const s = (this.g[group] ??= { cur: null, since: now, cand: null, candSince: now });
+    if (best !== s.cand) { s.cand = best; s.candSince = now; }
+    if (s.cand !== s.cur && now - s.candSince >= this.confirmMs && now - s.since >= this.holdMs) {
+      s.cur = s.cand; s.since = now;
+    }
+    return s.cur;
+  }
+  /** patchParams の結果 out を、眉（左右そろえる）と口の形（笑顔・への字）について 0/1 にする。 */
+  apply(out, now) {
+    const brow = this._pick("brow", BROW_STATES, (k) => Math.max(out[`ParamGP_browL_${k}`], out[`ParamGP_browR_${k}`]), now);
+    for (const side of ["L", "R"]) for (const k of BROW_STATES) out[`ParamGP_brow${side}_${k}`] = k === brow ? 1 : 0;
+    const form = this._pick("form", ["smile", "frown"], (k) => out[`ParamGP_mouth_${k}`], now);
+    for (const k of ["smile", "frown"]) out[`ParamGP_mouth_${k}`] = k === form ? 1 : 0;
+    return out;
   }
 }

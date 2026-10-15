@@ -160,9 +160,9 @@ export function combine(current, tracked, expressionActive) {
   // 口の開き: 大きい方
   out.ParamMouthOpenY = Math.max(c("ParamMouthOpenY"), tracked.ParamMouthOpenY);
   if (expressionActive) {
-    for (const k of ["ParamMouthForm", "ParamBrowLY", "ParamBrowRY", "ParamBrowLAngle", "ParamBrowRAngle"]) {
-      out[k] = clamp(c(k) + tracked[k] * 0.5, -1, 1);
-    }
+    // 表情を出している間は、眉は表情のとおりに固定する（追跡の細かい動きを混ぜると、形が頻繁に変わる）
+    for (const k of ["ParamBrowLY", "ParamBrowRY", "ParamBrowLAngle", "ParamBrowRAngle"]) out[k] = c(k);
+    out.ParamMouthForm = clamp(c("ParamMouthForm") + tracked.ParamMouthForm * 0.3, -1, 1);
   }
   return out;
 }
