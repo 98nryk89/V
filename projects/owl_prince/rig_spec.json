@@ -641,18 +641,6 @@
    },
    "mesh_step": 6
   },
-  "earR": {
-   "effects": [
-    "@breath_head",
-    "@head_ear",
-    "@body_follow"
-   ],
-   "depth": {
-    "layer": "const",
-    "z": 100
-   },
-   "mesh_step": 6
-  },
   "ribbon": {
    "effects": [
     "@breath_head",
@@ -1587,8 +1575,8 @@
      "type": "rotate",
      "param": "PhysEarR",
      "pivot": [
-      700,
-      466
+      698,
+      443
      ],
      "map": [
       [
@@ -1602,8 +1590,8 @@
      ],
      "weight": {
       "mode": "y",
-      "from": 466,
-      "to": 586,
+      "from": 443,
+      "to": 560,
       "pow": 1.0
      }
     },

@@ -110,6 +110,15 @@ def build(proj_dir, out_dir=None, verbose=True):
     rgb = rgba[..., 2::-1].copy()
     alpha = rgba[..., 3].astype(np.float32) / 255
     H, W = alpha.shape
+    def _resolve(o):                    # {"mask": "relative.png"} -> absolute path from the project dir
+        if isinstance(o, dict):
+            if "mask" in o and not os.path.isabs(o["mask"]):
+                o = dict(o, mask=os.path.normpath(os.path.join(proj_dir, o["mask"])))
+            return {k: _resolve(v) for k, v in o.items()}
+        if isinstance(o, list):
+            return [_resolve(v) for v in o]
+        return o
+    pspec = _resolve(pspec)
     layers = decompose(rgb, alpha, pspec["parts"], unmix=pspec.get("unmix"))
     edge = pspec.get("edge")
     if edge:

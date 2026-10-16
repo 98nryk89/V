@@ -46,8 +46,21 @@ def polys(spec):
     return out
 
 
+_MASK_CACHE = {}
+
+
+def _mask_file(path):
+    import os
+    if path not in _MASK_CACHE:
+        m = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+        _MASK_CACHE[path] = (m.astype(np.float32) / 255.0)
+    return _MASK_CACHE[path]
+
+
 def poly_mask(shape, spec, feather=0.8):
     h, w = shape
+    if isinstance(spec, dict) and "mask" in spec:           # painted region (user annotation) used verbatim
+        return _mask_file(spec["mask"])
     m = np.zeros((h, w), np.float32)
     S = 4
     for p in polys(spec):
