@@ -2741,7 +2741,7 @@
    "color": {
     "lab": {
      "b": [
-      127.5,
+      129.5,
       210
      ],
      "L": [
@@ -2749,7 +2749,7 @@
       255
      ]
     },
-    "soft": 2.5
+    "soft": 1.5
    },
    "close": 1,
    "fill_holes": 60,
@@ -2766,7 +2766,7 @@
     },
     "soft": 2.5
    },
-   "known_erode": 1,
+   "known_erode": 0,
    "fill_smooth": 3.5,
    "extent": [
     [
@@ -2801,7 +2801,8 @@
      372,
      410
     ]
-   ]
+   ],
+   "clean_partial": true
   },
   {
    "id": "earR_skin",
@@ -2828,7 +2829,7 @@
    "color": {
     "lab": {
      "b": [
-      127.5,
+      129.5,
       210
      ],
      "L": [
@@ -2836,7 +2837,7 @@
       255
      ]
     },
-    "soft": 2.5
+    "soft": 1.5
    },
    "close": 1,
    "fill_holes": 60,
@@ -2853,7 +2854,7 @@
     },
     "soft": 2.5
    },
-   "known_erode": 1,
+   "known_erode": 0,
    "fill_smooth": 3.5,
    "extent": [
     [
@@ -2892,7 +2893,8 @@
      640,
      472
     ]
-   ]
+   ],
+   "clean_partial": true
   }
  ],
  "unmix": [

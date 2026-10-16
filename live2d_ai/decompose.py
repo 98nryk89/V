@@ -236,7 +236,14 @@ def decompose(rgb_u8, alpha, specs, report=None, unmix=None):
             col = col * (1 - hm) + np.array(s["fill_rgb"], np.float32) * hm
             col = np.where((hidden & ~known)[..., None], np.array(s["fill_rgb"], np.float32), col)
         else:
-            col = fill_hidden(src, known_src & ~hidden, hidden & ~known)
+            if s.get("clean_partial"):
+                # skin parts: any pixel that is not PURE skin (hair/skin mixed fringes, hidden areas) is repainted from the
+                # surrounding pure skin, so nothing grey is left to show when the hair above moves differently
+                strict = known_src & (v > 0.97) & ~hidden
+                target = (known | hidden) & ~strict
+                col = fill_hidden(src, strict, target)
+            else:
+                col = fill_hidden(src, known_src & ~hidden, hidden & ~known)
             if s.get("fill_smooth"):   # hidden skin/hair should be smooth, not a copy of strand edges
                 sg = float(s["fill_smooth"])
                 hm_ = (hidden & ~known)
@@ -302,7 +309,9 @@ def unmix_pair(rgb_u8, alpha, out, vis, cfg):
     mixed = (a > 0) & (a < 1)
     out[fid]["rgb"] = np.where((R & mixed)[..., None], H, np.where((R & (a >= 1))[..., None], P, ff))
     back_zone = poly_mask((h, w), cfg.get("back_extent", cfg["region"])) > 0.5   # whole face area: back layer is complete skin
-    shade = np.linalg.norm(P - S, axis=2) < float(cfg.get("shade_max", 38))   # skin shading is kept; anything else is not skin
+    labP = cv2.cvtColor(np.clip(P, 0, 255).astype(np.uint8), cv2.COLOR_RGB2LAB).astype(np.float32)
+    # skin shading (orange/pink shadows) has a yellowish tint (Lab b >= ~127); silver hair tips are bluish (b < ~125).
+    shade = (np.linalg.norm(P - S, axis=2) < float(cfg.get("shade_max", 38))) & (labP[..., 2] >= float(cfg.get("skin_b", 127.0)))
     keep_P = (sg > 0.97) | (off_line & shade)
     new_back = np.where((a > 0)[..., None], S, np.where(keep_P[..., None], P, fb))
     # inside the face area but outside R (eyes, brows...) the back layer keeps its earlier reconstruction (clean skin fill)
