@@ -123,7 +123,7 @@ def open_mouth_line(shape, spec, rgb):
     px = np.linspace(cx - half, cx + half, 60)
     top = np.interp(px, xs, ys) + float(spec.get("gap", 1.4))
     t = (px - cx) / half
-    bot = top + h * np.clip(1 - np.abs(t) ** 2.2, 0, 1) ** 0.75
+    bot = top + h * np.clip(1 - np.abs(t) ** float(spec.get("pow", 2.2)), 0, 1) ** float(spec.get("curve", 0.75))
     poly = np.concatenate([np.stack([px, top], 1), np.stack([px[::-1], bot[::-1]], 1)])
     big = _canvas(shape)
     _cv.fillPoly(big, [(poly * SS).astype(np.int32)], 255, _cv.LINE_AA)

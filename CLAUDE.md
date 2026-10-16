@@ -106,6 +106,12 @@
 - 口: 開口部は `synthetic: open_mouth_line`。元絵の唇の線を検出し、その線を上唇として残したまま、下へ開く形を描く(`MouthOpen` で縦に拡縮)。口の線のパーツは開いても消さない。
 - 笑顔: `Smile` パラメータ。`blink_7.png`(目を細めた笑顔)の目と口を `ref_patch` でパーツ化し、不透明度でクロスフェード(目は、まばたきのパーツより手前の z)。
 
+## 首から下・母音の口
+
+- 髪(`hair_side_L/R`)のパーツに、襟の縁取りや飾りの渦が混ざると、襟だけが頭と一緒に動く。`exclude`(取ってはいけない範囲の多角形)で外し、髪への頭の影響は首の線(`weight: y 660→430`)で止める。首から下は、全パーツ共通の `@body_follow`(ごく小さく一体で動く)だけにする。
+- 母音: `VowelA/I/U/E/O`(0..1)。口のパーツ `mouth_vA..O` が不透明度でクロスフェード。元絵の唇の線は残し、その下に開く形を描く(`open_mouth_line`、形は `width/height/pow/curve`)。**現在の口の形は仮の描画。ユーザーの参考写真5枚(送信済みだが作業フォルダに保存されていない)が届いたら、`ref_patch` で差し替える。**
+- カメラ: `viewer/tracking.js` の `vowelWeights`(jawOpen・mouthFunnel・mouthPucker・mouthStretch・mouthSmile から判定)。単体試験は合成した値で行い、5母音とも正しく判定。実際の顔・声での精度は未確認。
+
 ## 検証の流儀
 
 - 休止ポーズの再現度を数値で確認する(`dist/*.html` を headless で開き、元絵との PSNR を取る。サンプルは 45 dB)。

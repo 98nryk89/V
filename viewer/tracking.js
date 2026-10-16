@@ -88,6 +88,8 @@
       const open = b => clamp(1 - (b - 0.15) / 0.5, 0, 1);
       t.EyeLOpen = open(g('eyeBlinkLeft')); t.EyeROpen = open(g('eyeBlinkRight'));
       t.MouthOpen = clamp((g('jawOpen') - 0.05) / 0.45, 0, 1);
+      Object.assign(t, vowelWeights(bs));
+      t.MouthOpen = 0;                // the vowel shapes replace the generic opening
       t.Smile = clamp(((g('mouthSmileLeft') + g('mouthSmileRight')) / 2 - 0.2) / 0.5, 0, 1);
       t.EyeBallX = clamp(((g('eyeLookOutRight') + g('eyeLookInLeft')) - (g('eyeLookOutLeft') + g('eyeLookInRight'))) / 1.2, -1, 1);
       t.EyeBallY = clamp(((g('eyeLookUpLeft') + g('eyeLookUpRight')) - (g('eyeLookDownLeft') + g('eyeLookDownRight'))) / 1.2, -1, 1);
@@ -102,5 +104,27 @@
       return true;
     }
   }
+  // Vowel classification from MediaPipe blendshapes -> weights for あ/い/う/え/お (sum <= 1, 0 when the mouth is closed).
+  // jaw = jawOpen, fun = mouthFunnel, puc = mouthPucker, str = mouthStretch (avg L/R), smi = mouthSmile (avg L/R)
+  function vowelWeights(bs, opts = {}) {
+    const g = k => bs[k] || 0, cl = (v, a, b) => Math.max(0, Math.min(1, (v - a) / (b - a)));
+    const jaw = g('jawOpen'), fun = g('mouthFunnel'), puc = g('mouthPucker');
+    const str = (g('mouthStretchLeft') + g('mouthStretchRight')) / 2, smi = (g('mouthSmileLeft') + g('mouthSmileRight')) / 2;
+    const wide = Math.max(str, smi * 0.8);                       // lateral stretch
+    const round = Math.max(fun, puc);                            // lips rounded forward
+    const amp = Math.max(cl(jaw, 0.06, 0.3), cl(round, 0.15, 0.45), cl(wide, 0.2, 0.5) * 0.8);   // how "open" the mouth is at all
+    const raw = {
+      A: cl(jaw, 0.25, 0.55) * (1 - cl(round, 0.2, 0.5)) * (1 - cl(wide, 0.3, 0.6)),
+      I: cl(wide, 0.25, 0.55) * (1 - cl(jaw, 0.25, 0.55)) * (1 - cl(round, 0.2, 0.5)),
+      U: cl(puc, 0.2, 0.5) * (1 - cl(jaw, 0.3, 0.6)),
+      E: cl(wide, 0.2, 0.5) * cl(jaw, 0.1, 0.35) * (1 - cl(round, 0.2, 0.5)),
+      O: cl(fun, 0.2, 0.5) * cl(jaw, 0.08, 0.3) * (1 - cl(puc, 0.4, 0.7)),
+    };
+    let sum = 0; for (const k in raw) sum += raw[k];
+    const out = {};
+    for (const k in raw) out['Vowel' + k] = sum > 1e-3 ? (raw[k] / Math.max(sum, 1)) * amp : 0;
+    return out;
+  }
+  Tracker.vowelWeights = vowelWeights;
   global.L2DTracker = Tracker;
 })(window);

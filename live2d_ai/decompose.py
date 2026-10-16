@@ -151,6 +151,8 @@ def decompose(rgb_u8, alpha, specs, report=None, unmix=None):
         if s.get("zone_grow"):      # let the part own a few px of outline just outside its polygon
             zone = np.maximum(zone, ndi.binary_dilation(zone > 0.5, iterations=int(s["zone_grow"])).astype(np.float32))
         gate = color_gate(rgb_u8, s.get("color"))
+        if s.get("exclude"):        # regions this part must never take (e.g. lapel trim next to a hair bundle)
+            zone = zone * (1 - poly_mask((h, w), s["exclude"]))
         a = zone * gate * (alpha > 0)
         if s.get("close"):          # bridge small gaps / fill pinholes (dark shading inside silver hair, ...)
             r = int(s["close"])
@@ -162,6 +164,16 @@ def decompose(rgb_u8, alpha, specs, report=None, unmix=None):
                 sz = ndi.sum(holes, lab_h, range(1, nh + 1))
                 m |= np.isin(lab_h, 1 + np.flatnonzero(sz <= int(s.get("fill_holes", 150))))
             a = np.maximum(a, m.astype(np.float32) * zone * (alpha > 0))
+        if s.get("keep_big"):       # only the large connected mass stays (hair bundle); thin trims/ornaments fall back to the body
+            kb = s["keep_big"]
+            m = a > 0.5
+            core = ndi.binary_opening(m, structure=np.ones((int(kb.get("open", 3)),) * 2))
+            lab_k, nk = ndi.label(core)
+            if nk:
+                sz = ndi.sum(core, lab_k, range(1, nk + 1))
+                keep = np.isin(lab_k, 1 + np.flatnonzero(sz >= float(kb.get("min_area", 4000))))
+                keep = ndi.binary_dilation(keep, iterations=int(kb.get("open", 3)) + 1) & m     # give the rims back
+                a = np.where(keep, a, 0.0)
         a = np.minimum(remaining, a)
         if "min_alpha" in s:
             a = np.where(a > s["min_alpha"], a, 0)
