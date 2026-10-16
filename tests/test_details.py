@@ -10,13 +10,15 @@ P = ROOT / 'projects/owl_prince'
 
 
 class DetailTest(unittest.TestCase):
-    def test_brow_strokes_and_black_collar_are_no_longer_hair(self):
+    def test_exposed_brows_and_black_collar_are_not_hair_but_crossing_bangs_are_intact(self):
         before = cv2.imread(str(P / 'hair_complete_alpha.png'), 0)
         after = cv2.imread(str(P / 'hair_detail_alpha.png'), 0)
-        for x, y in [(460, 348), (480, 349), (620, 343), (480, 605)]:
+        for x, y in [(480, 349), (609, 346), (620, 343), (480, 605)]:
             with self.subTest(x=x, y=y):
                 self.assertGreater(before[y, x], 240)
                 self.assertEqual(after[y, x], 0)
+        for x, y in [(440, 348), (450, 348), (460, 348), (500, 352), (639, 339), (655, 335)]:
+            self.assertEqual(after[y, x], before[y, x])
         self.assertEqual(after[800, 400], before[800, 400])
 
     def test_only_two_small_existing_tips_are_split_out(self):

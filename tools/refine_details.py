@@ -20,6 +20,10 @@ def main():
     brows = poly_mask(shape, [
         [[435,344],[459,344],[485,346],[514,350],[520,354],[509,356],[482,352],[456,351],[435,351]],
         [[594,343],[615,338],[638,333],[661,329],[669,333],[654,339],[633,343],[612,348],[594,351]]])
+    # Brows seen through the bangs belong to face; the artist's actual hair
+    # must never be sliced horizontally along the brow protection polygon.
+    artist_hair = cv2.imread(str(p / 'hair_head_alpha.png'), 0) / 255
+    brows *= artist_hair < .02
     collar = poly_mask(shape, [
         [[477,589],[500,606],[541,630],[547,650],[521,668],[487,643]],
         [[647,595],[674,573],[682,634],[653,657],[621,642],[631,622]]])
