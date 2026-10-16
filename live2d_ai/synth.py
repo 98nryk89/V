@@ -107,6 +107,27 @@ def ref_patch(shape, spec, rgb, proj_dir):
     import os, cv2 as _cv
     ref = _cv.imread(os.path.join(proj_dir, spec["ref"]), _cv.IMREAD_UNCHANGED)[..., :3][..., ::-1].astype(np.float32)
     src = rgb.astype(np.float32)
+    if "union_refs" in spec:
+        # one shared mask for every keyframe of this eye: wherever ANY keyframe differs from the source
+        def load(path):
+            return _cv.GaussianBlur(_cv.imread(os.path.join(proj_dir, path), _cv.IMREAD_UNCHANGED)[..., :3][..., ::-1].astype(np.float32), (0, 0), 1.0)
+        base = _cv.GaussianBlur(src, (0, 0), 1.0)
+        d = np.max([np.abs(load(r) - base).sum(2) for r in spec["union_refs"]], axis=0)
+        x0, y0, x1, y1 = spec["box"]
+        m = np.zeros(shape, bool)
+        m[y0:y1, x0:x1] = d[y0:y1, x0:x1] > float(spec.get("thr", 70))
+        m = _cv.morphologyEx(m.astype(np.uint8), _cv.MORPH_CLOSE, np.ones((5, 5), np.uint8)) > 0
+        m = ndi_fill(m)
+        lab_, n = _ndi().label(m)                       # keep the biggest blob(s) only
+        if n:
+            sz = _ndi().sum(m, lab_, range(1, n + 1))
+            m = np.isin(lab_, 1 + np.flatnonzero(sz >= 0.2 * sz.max()))
+        g = int(spec.get("grow", 3))
+        if g:
+            m = _cv.dilate(m.astype(np.uint8), _cv.getStructuringElement(_cv.MORPH_ELLIPSE, (2 * g + 1, 2 * g + 1))) > 0
+        box = np.zeros(shape, bool); box[y0:y1, x0:x1] = True
+        A = _cv.GaussianBlur((m & box).astype(np.float32), (0, 0), float(spec.get("feather", 1.6)))
+        return ref, np.where(box, A, 0)
     if "poly" in spec:
         m = _canvas(shape)
         _cv.fillPoly(m, [(np.array(spec["poly"], np.float32) * SS).astype(np.int32)], 255, _cv.LINE_AA)
@@ -125,6 +146,11 @@ def ref_patch(shape, spec, rgb, proj_dir):
     A = _cv.GaussianBlur((m & box).astype(np.float32), (0, 0), float(spec.get("feather", 2.0)))
     A = np.where(box, A, 0)
     return ref, A
+
+
+def _ndi():
+    from scipy import ndimage as ndi
+    return ndi
 
 
 def ndi_fill(m):

@@ -1653,108 +1653,6 @@
    }
   },
   {
-   "id": "eyeL_closed",
-   "z": 7,
-   "synthetic": {
-    "type": "ref_patch",
-    "ref": "../../samples/closed_ref.png",
-    "poly": [
-     [
-      436,
-      380
-     ],
-     [
-      452,
-      366
-     ],
-     [
-      485,
-      361
-     ],
-     [
-      515,
-      365
-     ],
-     [
-      534,
-      376
-     ],
-     [
-      534,
-      392
-     ],
-     [
-      512,
-      402
-     ],
-     [
-      485,
-      405
-     ],
-     [
-      458,
-      402
-     ],
-     [
-      438,
-      394
-     ]
-    ],
-    "feather": 2.2
-   }
-  },
-  {
-   "id": "eyeR_closed",
-   "z": 7,
-   "synthetic": {
-    "type": "ref_patch",
-    "ref": "../../samples/closed_ref.png",
-    "poly": [
-     [
-      594,
-      380
-     ],
-     [
-      612,
-      362
-     ],
-     [
-      645,
-      353
-     ],
-     [
-      678,
-      353
-     ],
-     [
-      700,
-      362
-     ],
-     [
-      702,
-      380
-     ],
-     [
-      686,
-      394
-     ],
-     [
-      650,
-      399
-     ],
-     [
-      622,
-      398
-     ],
-     [
-      598,
-      392
-     ]
-    ],
-    "feather": 2.2
-   }
-  },
-  {
    "id": "mouth_open",
    "z": 12,
    "synthetic": {
@@ -2100,119 +1998,187 @@
    }
   },
   {
-   "id": "eyeL_lid",
-   "z": 6,
+   "id": "eyeL_k1",
+   "z": 16,
    "synthetic": {
-    "type": "eyelid",
-    "poly": [
-     [
-      442,
-      381
-     ],
-     [
-      458,
-      369
-     ],
-     [
-      485,
-      366
-     ],
-     [
-      512,
-      370
-     ],
-     [
-      530,
-      379
-     ],
-     [
-      528,
-      391
-     ],
-     [
-      508,
-      398
-     ],
-     [
-      485,
-      400
-     ],
-     [
-      460,
-      397
-     ],
-     [
-      444,
-      391
-     ]
+    "type": "ref_patch",
+    "ref": "../../samples/blink_10.png",
+    "union_refs": [
+     "../../samples/blink_10.png",
+     "../../samples/blink_9.png",
+     "../../samples/blink_8.png",
+     "../../samples/blink_11.png"
     ],
-    "top": [
-     357,
-     365
+    "box": [
+     420,
+     343,
+     548,
+     414
     ],
-    "bottom": [
-     400,
-     406
-    ],
-    "feather": 1.0
+    "thr": 70,
+    "grow": 3,
+    "feather": 1.6
    }
   },
   {
-   "id": "eyeR_lid",
-   "z": 6,
+   "id": "eyeL_k2",
+   "z": 17,
    "synthetic": {
-    "type": "eyelid",
-    "poly": [
-     [
-      603,
-      379
-     ],
-     [
-      620,
-      367
-     ],
-     [
-      648,
-      360
-     ],
-     [
-      676,
-      360
-     ],
-     [
-      694,
-      368
-     ],
-     [
-      690,
-      380
-     ],
-     [
-      672,
-      388
-     ],
-     [
-      650,
-      392
-     ],
-     [
-      628,
-      392
-     ],
-     [
-      610,
-      387
-     ]
+    "type": "ref_patch",
+    "ref": "../../samples/blink_9.png",
+    "union_refs": [
+     "../../samples/blink_10.png",
+     "../../samples/blink_9.png",
+     "../../samples/blink_8.png",
+     "../../samples/blink_11.png"
     ],
-    "top": [
-     351,
-     359
+    "box": [
+     420,
+     343,
+     548,
+     414
     ],
-    "bottom": [
-     392,
-     398
+    "thr": 70,
+    "grow": 3,
+    "feather": 1.6
+   }
+  },
+  {
+   "id": "eyeL_k3",
+   "z": 18,
+   "synthetic": {
+    "type": "ref_patch",
+    "ref": "../../samples/blink_8.png",
+    "union_refs": [
+     "../../samples/blink_10.png",
+     "../../samples/blink_9.png",
+     "../../samples/blink_8.png",
+     "../../samples/blink_11.png"
     ],
-    "feather": 1.0
+    "box": [
+     420,
+     343,
+     548,
+     414
+    ],
+    "thr": 70,
+    "grow": 3,
+    "feather": 1.6
+   }
+  },
+  {
+   "id": "eyeL_k4",
+   "z": 19,
+   "synthetic": {
+    "type": "ref_patch",
+    "ref": "../../samples/blink_11.png",
+    "union_refs": [
+     "../../samples/blink_10.png",
+     "../../samples/blink_9.png",
+     "../../samples/blink_8.png",
+     "../../samples/blink_11.png"
+    ],
+    "box": [
+     420,
+     343,
+     548,
+     414
+    ],
+    "thr": 70,
+    "grow": 3,
+    "feather": 1.6
+   }
+  },
+  {
+   "id": "eyeR_k1",
+   "z": 16,
+   "synthetic": {
+    "type": "ref_patch",
+    "ref": "../../samples/blink_10.png",
+    "union_refs": [
+     "../../samples/blink_10.png",
+     "../../samples/blink_9.png",
+     "../../samples/blink_8.png",
+     "../../samples/blink_11.png"
+    ],
+    "box": [
+     582,
+     336,
+     718,
+     406
+    ],
+    "thr": 70,
+    "grow": 3,
+    "feather": 1.6
+   }
+  },
+  {
+   "id": "eyeR_k2",
+   "z": 17,
+   "synthetic": {
+    "type": "ref_patch",
+    "ref": "../../samples/blink_9.png",
+    "union_refs": [
+     "../../samples/blink_10.png",
+     "../../samples/blink_9.png",
+     "../../samples/blink_8.png",
+     "../../samples/blink_11.png"
+    ],
+    "box": [
+     582,
+     336,
+     718,
+     406
+    ],
+    "thr": 70,
+    "grow": 3,
+    "feather": 1.6
+   }
+  },
+  {
+   "id": "eyeR_k3",
+   "z": 18,
+   "synthetic": {
+    "type": "ref_patch",
+    "ref": "../../samples/blink_8.png",
+    "union_refs": [
+     "../../samples/blink_10.png",
+     "../../samples/blink_9.png",
+     "../../samples/blink_8.png",
+     "../../samples/blink_11.png"
+    ],
+    "box": [
+     582,
+     336,
+     718,
+     406
+    ],
+    "thr": 70,
+    "grow": 3,
+    "feather": 1.6
+   }
+  },
+  {
+   "id": "eyeR_k4",
+   "z": 19,
+   "synthetic": {
+    "type": "ref_patch",
+    "ref": "../../samples/blink_11.png",
+    "union_refs": [
+     "../../samples/blink_10.png",
+     "../../samples/blink_9.png",
+     "../../samples/blink_8.png",
+     "../../samples/blink_11.png"
+    ],
+    "box": [
+     582,
+     336,
+     718,
+     406
+    ],
+    "thr": 70,
+    "grow": 3,
+    "feather": 1.6
    }
   }
  ],

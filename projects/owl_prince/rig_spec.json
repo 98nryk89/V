@@ -37,20 +37,6 @@
    "label": "\u53f3\u76ee \u958b\u9589"
   },
   {
-   "id": "EyeBallX",
-   "min": -1,
-   "max": 1,
-   "default": 0,
-   "label": "\u8996\u7dda \u5de6\u53f3"
-  },
-  {
-   "id": "EyeBallY",
-   "min": -1,
-   "max": 1,
-   "default": 0,
-   "label": "\u8996\u7dda \u4e0a\u4e0b"
-  },
-  {
    "id": "MouthOpen",
    "min": 0,
    "max": 1,
@@ -690,44 +676,6 @@
   },
   "eyeL_white": {
    "effects": [
-    {
-     "type": "scale",
-     "param": "EyeLOpen",
-     "pivot": [
-      485,
-      396
-     ],
-     "map": [
-      [
-       0,
-       1,
-       0.25
-      ],
-      [
-       1,
-       1,
-       1
-      ]
-     ]
-    },
-    {
-     "type": "opacity",
-     "param": "EyeLOpen",
-     "map": [
-      [
-       0,
-       0
-      ],
-      [
-       0.22,
-       1
-      ],
-      [
-       1,
-       1
-      ]
-     ]
-    },
     "@breath_head",
     "@head_eye"
    ],
@@ -738,78 +686,7 @@
    "mesh_step": 6
   },
   "eyeL_iris": {
-   "clip": "eyeL_white",
    "effects": [
-    {
-     "type": "translate",
-     "param": "EyeBallX",
-     "map": [
-      [
-       -1,
-       -6,
-       0
-      ],
-      [
-       1,
-       6,
-       0
-      ]
-     ]
-    },
-    {
-     "type": "translate",
-     "param": "EyeBallY",
-     "map": [
-      [
-       -1,
-       0,
-       5
-      ],
-      [
-       1,
-       0,
-       -5
-      ]
-     ]
-    },
-    {
-     "type": "scale",
-     "param": "EyeLOpen",
-     "pivot": [
-      485,
-      396
-     ],
-     "map": [
-      [
-       0,
-       1,
-       0.25
-      ],
-      [
-       1,
-       1,
-       1
-      ]
-     ]
-    },
-    {
-     "type": "opacity",
-     "param": "EyeLOpen",
-     "map": [
-      [
-       0,
-       0
-      ],
-      [
-       0.22,
-       1
-      ],
-      [
-       1,
-       1
-      ]
-     ]
-    },
     "@breath_head",
     "@head_eye"
    ],
@@ -817,48 +694,11 @@
     "layer": "face",
     "off": 3
    },
-   "mesh_step": 6
+   "mesh_step": 6,
+   "clip": "eyeL_white"
   },
   "eyeL_lash": {
    "effects": [
-    {
-     "type": "scale",
-     "param": "EyeLOpen",
-     "pivot": [
-      485,
-      396
-     ],
-     "map": [
-      [
-       0,
-       1,
-       0.25
-      ],
-      [
-       1,
-       1,
-       1
-      ]
-     ]
-    },
-    {
-     "type": "opacity",
-     "param": "EyeLOpen",
-     "map": [
-      [
-       0,
-       0
-      ],
-      [
-       0.22,
-       1
-      ],
-      [
-       1,
-       1
-      ]
-     ]
-    },
     "@breath_head",
     "@head_eye"
    ],
@@ -870,44 +710,6 @@
   },
   "eyeR_white": {
    "effects": [
-    {
-     "type": "scale",
-     "param": "EyeROpen",
-     "pivot": [
-      648,
-      390
-     ],
-     "map": [
-      [
-       0,
-       1,
-       0.25
-      ],
-      [
-       1,
-       1,
-       1
-      ]
-     ]
-    },
-    {
-     "type": "opacity",
-     "param": "EyeROpen",
-     "map": [
-      [
-       0,
-       0
-      ],
-      [
-       0.22,
-       1
-      ],
-      [
-       1,
-       1
-      ]
-     ]
-    },
     "@breath_head",
     "@head_eye"
    ],
@@ -918,78 +720,7 @@
    "mesh_step": 6
   },
   "eyeR_iris": {
-   "clip": "eyeR_white",
    "effects": [
-    {
-     "type": "translate",
-     "param": "EyeBallX",
-     "map": [
-      [
-       -1,
-       -6,
-       0
-      ],
-      [
-       1,
-       6,
-       0
-      ]
-     ]
-    },
-    {
-     "type": "translate",
-     "param": "EyeBallY",
-     "map": [
-      [
-       -1,
-       0,
-       5
-      ],
-      [
-       1,
-       0,
-       -5
-      ]
-     ]
-    },
-    {
-     "type": "scale",
-     "param": "EyeROpen",
-     "pivot": [
-      648,
-      390
-     ],
-     "map": [
-      [
-       0,
-       1,
-       0.25
-      ],
-      [
-       1,
-       1,
-       1
-      ]
-     ]
-    },
-    {
-     "type": "opacity",
-     "param": "EyeROpen",
-     "map": [
-      [
-       0,
-       0
-      ],
-      [
-       0.22,
-       1
-      ],
-      [
-       1,
-       1
-      ]
-     ]
-    },
     "@breath_head",
     "@head_eye"
    ],
@@ -997,48 +728,11 @@
     "layer": "face",
     "off": 3
    },
-   "mesh_step": 6
+   "mesh_step": 6,
+   "clip": "eyeR_white"
   },
   "eyeR_lash": {
    "effects": [
-    {
-     "type": "scale",
-     "param": "EyeROpen",
-     "pivot": [
-      648,
-      390
-     ],
-     "map": [
-      [
-       0,
-       1,
-       0.25
-      ],
-      [
-       1,
-       1,
-       1
-      ]
-     ]
-    },
-    {
-     "type": "opacity",
-     "param": "EyeROpen",
-     "map": [
-      [
-       0,
-       0
-      ],
-      [
-       0.22,
-       1
-      ],
-      [
-       1,
-       1
-      ]
-     ]
-    },
     "@breath_head",
     "@head_eye"
    ],
@@ -1071,64 +765,6 @@
     "layer": "face",
     "off": 2
    }
-  },
-  "eyeL_closed": {
-   "effects": [
-    {
-     "type": "opacity",
-     "param": "EyeLOpen",
-     "map": [
-      [
-       0,
-       1
-      ],
-      [
-       0.25,
-       0
-      ],
-      [
-       1,
-       0
-      ]
-     ]
-    },
-    "@breath_head",
-    "@head_eye"
-   ],
-   "depth": {
-    "layer": "face",
-    "off": 3
-   },
-   "mesh_step": 6
-  },
-  "eyeR_closed": {
-   "effects": [
-    {
-     "type": "opacity",
-     "param": "EyeROpen",
-     "map": [
-      [
-       0,
-       1
-      ],
-      [
-       0.25,
-       0
-      ],
-      [
-       1,
-       0
-      ]
-     ]
-    },
-    "@breath_head",
-    "@head_eye"
-   ],
-   "depth": {
-    "layer": "face",
-    "off": 3
-   },
-   "mesh_step": 6
   },
   "mouth_open": {
    "effects": [
@@ -1397,27 +1033,229 @@
    },
    "mesh_step": 6
   },
-  "eyeL_lid": {
+  "eyeL_k1": {
    "effects": [
+    {
+     "type": "opacity",
+     "param": "EyeLOpen",
+     "map": [
+      [
+       0.75,
+       1
+      ],
+      [
+       1.0,
+       0
+      ]
+     ]
+    },
     "@breath_head",
     "@head_eye"
    ],
    "depth": {
     "layer": "face",
-    "off": 2
+    "off": 4
    },
-   "mesh_step": 6
+   "mesh_step": 5
   },
-  "eyeR_lid": {
+  "eyeL_k2": {
    "effects": [
+    {
+     "type": "opacity",
+     "param": "EyeLOpen",
+     "map": [
+      [
+       0.5,
+       1
+      ],
+      [
+       0.75,
+       0
+      ],
+      [
+       1.0,
+       0
+      ]
+     ]
+    },
     "@breath_head",
     "@head_eye"
    ],
    "depth": {
     "layer": "face",
-    "off": 2
+    "off": 4
    },
-   "mesh_step": 6
+   "mesh_step": 5
+  },
+  "eyeL_k3": {
+   "effects": [
+    {
+     "type": "opacity",
+     "param": "EyeLOpen",
+     "map": [
+      [
+       0.25,
+       1
+      ],
+      [
+       0.5,
+       0
+      ],
+      [
+       1.0,
+       0
+      ]
+     ]
+    },
+    "@breath_head",
+    "@head_eye"
+   ],
+   "depth": {
+    "layer": "face",
+    "off": 4
+   },
+   "mesh_step": 5
+  },
+  "eyeL_k4": {
+   "effects": [
+    {
+     "type": "opacity",
+     "param": "EyeLOpen",
+     "map": [
+      [
+       0.0,
+       1
+      ],
+      [
+       0.25,
+       0
+      ],
+      [
+       1.0,
+       0
+      ]
+     ]
+    },
+    "@breath_head",
+    "@head_eye"
+   ],
+   "depth": {
+    "layer": "face",
+    "off": 4
+   },
+   "mesh_step": 5
+  },
+  "eyeR_k1": {
+   "effects": [
+    {
+     "type": "opacity",
+     "param": "EyeROpen",
+     "map": [
+      [
+       0.75,
+       1
+      ],
+      [
+       1.0,
+       0
+      ]
+     ]
+    },
+    "@breath_head",
+    "@head_eye"
+   ],
+   "depth": {
+    "layer": "face",
+    "off": 4
+   },
+   "mesh_step": 5
+  },
+  "eyeR_k2": {
+   "effects": [
+    {
+     "type": "opacity",
+     "param": "EyeROpen",
+     "map": [
+      [
+       0.5,
+       1
+      ],
+      [
+       0.75,
+       0
+      ],
+      [
+       1.0,
+       0
+      ]
+     ]
+    },
+    "@breath_head",
+    "@head_eye"
+   ],
+   "depth": {
+    "layer": "face",
+    "off": 4
+   },
+   "mesh_step": 5
+  },
+  "eyeR_k3": {
+   "effects": [
+    {
+     "type": "opacity",
+     "param": "EyeROpen",
+     "map": [
+      [
+       0.25,
+       1
+      ],
+      [
+       0.5,
+       0
+      ],
+      [
+       1.0,
+       0
+      ]
+     ]
+    },
+    "@breath_head",
+    "@head_eye"
+   ],
+   "depth": {
+    "layer": "face",
+    "off": 4
+   },
+   "mesh_step": 5
+  },
+  "eyeR_k4": {
+   "effects": [
+    {
+     "type": "opacity",
+     "param": "EyeROpen",
+     "map": [
+      [
+       0.0,
+       1
+      ],
+      [
+       0.25,
+       0
+      ],
+      [
+       1.0,
+       0
+      ]
+     ]
+    },
+    "@breath_head",
+    "@head_eye"
+   ],
+   "depth": {
+    "layer": "face",
+    "off": 4
+   },
+   "mesh_step": 5
   }
  },
  "physics": [
