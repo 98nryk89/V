@@ -1577,6 +1577,17 @@
     "z": 100
    },
    "mesh_step": 6
+  },
+  "skin_under": {
+   "effects": [
+    "@breath_head",
+    "@head",
+    "@body_follow"
+   ],
+   "depth": {
+    "layer": "face"
+   },
+   "mesh_step": 10
   }
  },
  "physics": [
