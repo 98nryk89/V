@@ -73,6 +73,28 @@ class ViewerControlsTest(unittest.TestCase):
         }''')
         self.assertLess(ear_geometry['areaError'], .005)
         self.assertLess(ear_geometry['attachmentError'], .001)
+        # A continuous hair mesh must move below the ears without dragging body/owl.
+        hair_motion = page.evaluate('''()=>{
+          const hair=M.byId.hair_head;
+          const area=(v,a,b,c)=>(v[2*b]-v[2*a])*(v[2*c+1]-v[2*a+1])-(v[2*b+1]-v[2*a+1])*(v[2*c]-v[2*a]);
+          let minRatio=Infinity,maxRatio=0,lowerShift=0,bodyError=0;
+          for(const sign of [-1,1]){
+            M.reset();M.setParams({AngleX:sign*5,AngleY:-10,AngleZ:sign*5});M._deform(hair);
+            const t=hair.mesh.tris;
+            for(let i=0;i<t.length;i+=3){const a=area(hair._rest,t[i],t[i+1],t[i+2]);
+              if(Math.abs(a)>1){const r=area(hair._pos,t[i],t[i+1],t[i+2])/a;minRatio=Math.min(minRatio,r);maxRatio=Math.max(maxRatio,r)}}
+            const at=(part,x,y)=>{const q={...part,_rest:new Float32Array([x,y]),_pos:new Float32Array(2),_z:new Float32Array([100])};M._deform(q);return q._pos};
+            const a=at(hair,350,1100),b=at(M.byId.body,350,1100),c=at(M.byId.owl,350,1100);
+            lowerShift=Math.max(lowerShift,Math.hypot(a[0]-b[0],a[1]-b[1]));
+            bodyError=Math.max(bodyError,Math.hypot(b[0]-c[0],b[1]-c[1]));
+          }
+          return {minRatio,maxRatio,lowerShift,bodyError};
+        }''')
+        self.assertGreater(hair_motion['minRatio'], .6)
+        self.assertLess(hair_motion['maxRatio'], 1.5)
+        self.assertGreater(hair_motion['lowerShift'], 1)
+        self.assertLess(hair_motion['lowerShift'], 20)
+        self.assertLess(hair_motion['bodyError'], .001)
         # All parts must translate together, without shearing the ears or neck.
         error = page.evaluate('''()=>{
           M.reset(); const before=M.parts.map(p=>{M._deform(p);return Array.from(p._pos)});
