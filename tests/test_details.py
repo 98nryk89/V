@@ -32,6 +32,19 @@ class DetailTest(unittest.TestCase):
         np.testing.assert_allclose(z[:6], model.face(x[:6],y[:6]), atol=.01)
         np.testing.assert_allclose(z[6:], [121.839,121.839])
 
+    def test_expressions_never_replace_brows_or_crossing_bangs(self):
+        import json
+        from live2d_ai.synth import render
+        src = cv2.imread(str(ROOT / 'samples/ref12.png'))[..., ::-1].copy()
+        parts = json.loads((P / 'parts_spec.json').read_text())['parts']
+        for side, brow, iris in [('L',(480,349),(482,385)), ('R',(609,346),(630,377))]:
+            for expression in ['smile','surprise']:
+                part = next(p for p in parts if p['id'] == f'eye{side}_{expression}')
+                _, alpha = render(part, src.shape[:2], src, str(P))
+                self.assertEqual(alpha[brow[1],brow[0]], 0)
+                self.assertGreater(alpha[iris[1],iris[0]], .9)
+                self.assertEqual(alpha[350,560], 0)  # central bang
+
     def test_only_two_small_existing_tips_are_split_out(self):
         original = cv2.imread(str(P / 'hair_complete_alpha.png'), 0)
         extent = cv2.imread(str(P / 'hair_detail_extent.png'), 0)
