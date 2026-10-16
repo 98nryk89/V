@@ -664,8 +664,9 @@
    ],
    "depth": {
     "layer": "const",
-    "z": 10
-   }
+    "z": 100
+   },
+   "mesh_step": 6
   },
   "earR": {
    "effects": [
@@ -702,8 +703,9 @@
    ],
    "depth": {
     "layer": "const",
-    "z": 10
-   }
+    "z": 100
+   },
+   "mesh_step": 6
   },
   "ribbon": {
    "effects": [
@@ -1611,24 +1613,26 @@
   "earL_skin": {
    "effects": [
     "@breath_head",
-    "@head",
+    "@head_ear",
     "@body_follow"
    ],
    "depth": {
-    "layer": "face"
+    "layer": "const",
+    "z": 100
    },
-   "mesh_step": 8
+   "mesh_step": 6
   },
   "earR_skin": {
    "effects": [
     "@breath_head",
-    "@head",
+    "@head_ear",
     "@body_follow"
    ],
    "depth": {
-    "layer": "face"
+    "layer": "const",
+    "z": 100
    },
-   "mesh_step": 8
+   "mesh_step": 6
   }
  },
  "physics": [

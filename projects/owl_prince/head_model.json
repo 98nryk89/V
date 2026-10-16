@@ -145,6 +145,6 @@
   "depth": 72
  },
  "edge_floor": 0.5,
- "ear_taper": 26,
+ "ear_taper": 0,
  "ear_floor": 0.1
 }

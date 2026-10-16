@@ -133,6 +133,10 @@
 
 耳の肌(`earL_skin/earR_skin`)は、髪の房の下に隠れた部分を、周囲の画素で埋める。`fill_gate` が緩いと髪の灰色が肌に入り、うなずいて髪と肌がずれたとき灰色の筋として見える。`fill_gate: lab b≥127.5 & L≥170`(肌だけ)、`known_erode`, `fill_smooth`、耳の形の `extent` を付けて埋める。
 
+## 耳+耳飾りは1つの剛体(参考絵 `samples/nod_down_ref.png` で実測)
+
+下向きの参考絵と休止絵を位相相関で比べた実測: 顎 +15px、耳+耳飾り +9〜10px(顎の約65%)、耳の下の銀髪 ≈0.8px、ジャケット ≈0。モデルは `earL/earR/earL_skin/earR_skin` を同じ `depth const z=100` + `@head_ear`(rigid)にして、うなずき -10° で耳+耳飾りが約10px動く(参考絵と一致)。`head_model.ear_taper` は 0(耳の奥行きを絞らない。絞ると耳が顔に対して動かず、ずれて見える)。銀髪は `hair_side_*` の頭への連動を首の高さで止め、耳より下は静止に近い。
+
 ## 検証の流儀
 
 - 休止ポーズの再現度を数値で確認する(`dist/*.html` を headless で開き、元絵との PSNR を取る。サンプルは 45 dB)。
