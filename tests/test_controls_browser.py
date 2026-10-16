@@ -73,6 +73,27 @@ class ViewerControlsTest(unittest.TestCase):
         }''')
         self.assertLess(ear_geometry['areaError'], .005)
         self.assertLess(ear_geometry['attachmentError'], .001)
+        # Hair pixels crossing the brows remain attached to skin even with
+        # breathing, nodding and bangs physics. Test the built vertex depths.
+        brow_attachment = page.evaluate("""()=>{
+          const hair=M.byId.hair_head,face=M.byId.face;
+          const ids=[];
+          for(let i=0;i<hair._rest.length/2;i++){
+            const x=hair._rest[2*i],y=hair._rest[2*i+1];
+            if((x>=440&&x<=510&&y>=345&&y<=352)||(x>=605&&x<=655&&y>=337&&y<=344))ids.push(i);
+          }
+          let error=0;
+          for(const sign of [-1,1]){
+            M.reset();M.setParams({AngleX:sign*5,AngleY:-10,AngleZ:sign*5,Breath:1,PhysBangs:sign});M._deform(hair);
+            for(const i of ids){
+              const q={...face,_rest:new Float32Array(hair._rest.slice(2*i,2*i+2)),_pos:new Float32Array(2),_z:new Float32Array([hair._z[i]])};
+              M._deform(q);error=Math.max(error,Math.hypot(q._pos[0]-hair._pos[2*i],q._pos[1]-hair._pos[2*i+1]));
+            }
+          }
+          return {count:ids.length,error};
+        }""")
+        self.assertGreater(brow_attachment['count'], 10)
+        self.assertLess(brow_attachment['error'], .01)
         # A continuous hair mesh must move below the ears without dragging body/owl.
         hair_motion = page.evaluate('''()=>{
           const hair=M.byId.hair_head;

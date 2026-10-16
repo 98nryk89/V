@@ -81,6 +81,18 @@ class HeadModel:
             over = np.maximum(np.abs(u) - (wside - 6.0), 0.0)
             f = np.clip(1.0 - over / ew, float(self.s.get("ear_floor", 0.1)), 1.0)
             out = out * f
+        contour = self.s.get("jaw_plane")
+        if contour:
+            # Keep the thin drawn jaw line on one plane: the measured width
+            # curve otherwise compresses alternate edge texels during a nod.
+            def smooth(t):
+                u = np.clip(t,0,1)
+                return u*u*(3-2*u)
+            yf, yt = contour["y"]
+            rf, rt = contour["side"]
+            cf, ct = contour["chin"]
+            w = np.maximum(smooth((r-rf)/(rt-rf))*smooth((y-yf)/(yt-yf)), smooth((y-cf)/(ct-cf)))
+            out = out*(1-w) + contour["z"]*w
         return out
 
     def z(self, x, y, layer, **kw):
@@ -108,5 +120,14 @@ class HeadModel:
             r = (x - n["cx"]) / n["half_width"]
             return n["depth"] * np.sqrt(np.clip(1 - r ** 2, 0, 1)) + kw.get("off", 0.0)
         if L == "const":
-            return np.full_like(x, kw.get("z", 0.0))
+            out = np.full_like(x, kw.get("z", 0.0))
+            # Local hair pixels crossing the eyebrows must share the skin's
+            # surface, with a smooth transition back to the rigid hair plane.
+            for a in kw.get("face_attach", []):
+                cx, cy, rx, ry, feather = a
+                radius = np.sqrt(((x-cx)/rx)**2 + ((y-cy)/ry)**2)
+                t = np.clip((1 + feather - radius) / feather, 0, 1)
+                w = t*t*(3-2*t)
+                out = out*(1-w) + self.face(x,y)*w
+            return out
         raise ValueError(layer)

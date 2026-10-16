@@ -21,6 +21,17 @@ class DetailTest(unittest.TestCase):
             self.assertEqual(after[y, x], before[y, x])
         self.assertEqual(after[800, 400], before[800, 400])
 
+    def test_hair_crossing_brows_shares_the_skin_depth_only_locally(self):
+        import json
+        from live2d_ai.headmodel import HeadModel
+        model = HeadModel(json.loads((P / 'head_model.json').read_text()))
+        depth = json.loads((P / 'rig_spec.json').read_text())['parts']['hair_head']['depth']
+        x = np.array([450., 480., 500., 609., 639., 655., 400., 400.])
+        y = np.array([348., 349., 352., 346., 339., 335., 200., 900.])
+        z = model.z(x,y,**depth)
+        np.testing.assert_allclose(z[:6], model.face(x[:6],y[:6]), atol=.01)
+        np.testing.assert_allclose(z[6:], [121.839,121.839])
+
     def test_only_two_small_existing_tips_are_split_out(self):
         original = cv2.imread(str(P / 'hair_complete_alpha.png'), 0)
         extent = cv2.imread(str(P / 'hair_detail_extent.png'), 0)

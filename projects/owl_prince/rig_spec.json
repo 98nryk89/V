@@ -579,7 +579,7 @@
    "depth": {
     "layer": "face"
    },
-   "mesh_step": 8
+   "mesh_step": 4
   },
   "hair_side_L": {
    "effects": [
@@ -1484,7 +1484,23 @@
      "weight": {
       "mode": "y",
       "from": 1500,
-      "to": 400
+      "to": 400,
+      "excludeEllipses": [
+       [
+        478,
+        350,
+        65,
+        19,
+        1
+       ],
+       [
+        629,
+        341,
+        57,
+        19,
+        1
+       ]
+      ]
      }
     },
     "@head_complete_hair",
@@ -1492,7 +1508,23 @@
    ],
    "depth": {
     "layer": "const",
-    "z": 121.839
+    "z": 121.839,
+    "face_attach": [
+     [
+      478,
+      350,
+      65,
+      19,
+      1
+     ],
+     [
+      629,
+      341,
+      57,
+      19,
+      1
+     ]
+    ]
    },
    "mesh_step": 8
   },

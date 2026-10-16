@@ -38,6 +38,12 @@
     else t = 1;
     t = clamp(t, 0, 1);
     if (w.pow) t = Math.pow(t, w.pow);
+    for (const a of w.excludeEllipses || []) {
+      const [cx,cy,rx,ry,feather]=a;
+      const radius=Math.hypot((x-cx)/rx,(y-cy)/ry);
+      const u=clamp((radius-1)/feather,0,1);
+      t*=u*u*(3-2*u);
+    }
     return t;
   }
 
