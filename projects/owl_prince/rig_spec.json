@@ -23,6 +23,20 @@
    "label": "\u9996\u304b\u3057\u3052"
   },
   {
+   "id": "BodyX",
+   "min": -1,
+   "max": 1,
+   "default": 0,
+   "label": "\u4f53\u306e\u6a2a\u79fb\u52d5"
+  },
+  {
+   "id": "BodyY",
+   "min": -1,
+   "max": 1,
+   "default": 0,
+   "label": "\u4f53\u306e\u7e26\u79fb\u52d5"
+  },
+  {
    "id": "EyeLOpen",
    "min": 0,
    "max": 1,
@@ -420,6 +434,38 @@
      [
       5,
       0.12
+     ]
+    ]
+   },
+   {
+    "type": "translate",
+    "param": "BodyX",
+    "map": [
+     [
+      -1,
+      -90,
+      0
+     ],
+     [
+      1,
+      90,
+      0
+     ]
+    ]
+   },
+   {
+    "type": "translate",
+    "param": "BodyY",
+    "map": [
+     [
+      -1,
+      0,
+      -70
+     ],
+     [
+      1,
+      0,
+      70
      ]
     ]
    }

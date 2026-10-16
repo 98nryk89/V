@@ -12,8 +12,8 @@
 
   class Tracker {
     constructor(model, opts = {}) {
-      this.m = model; this.opts = Object.assign({ invX: false, invY: false, invZ: false, smooth: 0.45, gainX: 1, gainY: 1 }, opts);
-      this.neutral = { yaw: 0, pitch: 0.45 };
+      this.m = model; this.opts = Object.assign({ invX: false, invY: false, invZ: false, smooth: 0.45, gainX: 1, gainY: 1, gainMove: 1 }, opts);
+      this.neutral = { yaw: 0, pitch: 0.45, x: null, y: null, eyeDist: null };
       this.raw = null; this.state = {}; this.running = false;
     }
 
@@ -43,7 +43,12 @@
       if (this.video && this.video.srcObject) this.video.srcObject.getTracks().forEach(t => t.stop());
     }
 
-    calibrate() { if (this.raw) { this.neutral = { yaw: this.raw.yaw, pitch: this.raw.pitch }; } }
+    calibrate() {
+      if (!this.raw) return;
+      this.neutral = { ...this.raw };
+      this.state.BodyX = this.state.BodyY = 0;
+      this.m.setParams({ BodyX: 0, BodyY: 0 });
+    }
 
     _step() {
       const v = this.video; if (!v || v.readyState < 2 || v.currentTime === this._lastT) return;
@@ -71,15 +76,20 @@
       const downNose = -nx * ey + ny * ex, downChin = -cx * ey + cy * ex;     // components along "down" in the head frame
       const pitch = downNose / (downChin || 1e-3);                            // larger = looking down
       const roll = Math.atan2(eL.y - eR.y, eL.x - eR.x) * 180 / Math.PI;
-      this.raw = { yaw, pitch };
+      this.raw = { yaw, pitch, x: mid.x, y: mid.y, eyeDist };
+      if (this.neutral.x == null) Object.assign(this.neutral, { x: mid.x, y: mid.y, eyeDist });
       const o = this.opts;
       // mirrored preview: user turning to their right (nose to image-left) => avatar turns to screen-right (+AngleX)
       let ax = -(yaw - this.neutral.yaw) * 13 * o.gainX;
       let ay = -(pitch - this.neutral.pitch) * 30 * o.gainY;
       let az = -roll * 0.18;
       if (o.invX) ax = -ax; if (o.invY) ay = -ay; if (o.invZ) az = -az;
+      // Translation comes from face position, independently of nose/eye angles.
+      const bx = -(mid.x - this.neutral.x) / this.neutral.eyeDist * 1.5 * o.gainMove * (o.invX ? -1 : 1);
+      const by = (mid.y - this.neutral.y) / this.neutral.eyeDist * 1.5 * o.gainMove * (o.invY ? -1 : 1);
       const t = {
         AngleX: clamp(ax, -5, 5), AngleY: clamp(ay, -10, 5), AngleZ: clamp(az, -5, 5),
+        BodyX: clamp(bx, -1, 1), BodyY: clamp(by, -1, 1),
       };
       const bs = {};
       if (res.faceBlendshapes && res.faceBlendshapes[0]) for (const c of res.faceBlendshapes[0].categories) bs[c.categoryName] = c.score;

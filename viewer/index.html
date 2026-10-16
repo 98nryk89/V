@@ -33,6 +33,7 @@ button:hover{border-color:var(--ac)}
 <label class="chk"><input type="checkbox" id="invz">傾き反転</label>
 <div class="row"><label>感度 左右</label><input type=range id="gx" min=0.5 max=4 step=0.1 value=1><output id="gxo">1.0</output></div>
 <div class="row"><label>感度 上下</label><input type=range id="gy" min=0.5 max=4 step=0.1 value=1><output id="gyo">1.0</output></div>
+<div class="row"><label>移動の感度</label><input type=range id="gm" min=0.5 max=3 step=0.1 value=1><output id="gmo">1.0</output></div>
 <video id="vid" playsinline muted style="width:100%;margin-top:6px;border-radius:6px;display:none;transform:scaleX(-1)"></video>
 <div id="camst" style="font-size:12px;color:var(--mut)"></div></div>
 <h2>パラメータ</h2><div id="params"></div></div></div>
@@ -65,8 +66,8 @@ const base=window.__RIG__?'':(q.get('model')||'../projects/owl_prince/out')+'/';
   let mouse=false;document.getElementById('a_mouse').onchange=e=>mouse=e.target.checked;
   window.addEventListener('pointermove',e=>{ if(!mouse)return;
     const r=document.getElementById('c').getBoundingClientRect();
-    const nx=((e.clientX-r.left)/r.width-0.5)*2, ny=((e.clientY-r.top)/r.height-0.5)*2;
-    m.setParams({AngleX:nx*5,AngleY:(ny>0?-ny*10:-ny*5),AngleZ:-nx*1.5,EyeBallX:nx,EyeBallY:-ny});});
+    const nx=Math.max(-1,Math.min(1,((e.clientX-r.left)/r.width-0.5)*2)), ny=Math.max(-1,Math.min(1,((e.clientY-r.top)/r.height-0.5)*2));
+    m.setParams({AngleX:nx*5,AngleY:(ny>0?-ny*10:-ny*5),AngleZ:-nx*1.5,BodyX:nx,BodyY:ny});});
   let tr=null;const camb=document.getElementById('cam'),st=document.getElementById('camst');
   if(camb)camb.onclick=async()=>{
     if(tr&&tr.running){tr.stop();camb.textContent='開始';document.getElementById('vid').style.display='none';m.auto.blink=document.getElementById('a_blink').checked;m.auto.idle=document.getElementById('a_idle').checked;st.textContent='';return}
@@ -76,7 +77,7 @@ const base=window.__RIG__?'':(q.get('model')||'../projects/owl_prince/out')+'/';
       const sync=()=>{tr.opts.invX=document.getElementById('invx').checked;tr.opts.invY=document.getElementById('invy').checked;tr.opts.invZ=document.getElementById('invz').checked};
       for(const id of['invx','invy','invz'])document.getElementById(id).onchange=sync;
       document.getElementById('calib').onclick=()=>tr.calibrate();
-      for(const [id,key] of [['gx','gainX'],['gy','gainY']]){const e=document.getElementById(id),o=document.getElementById(id+'o');e.oninput=()=>{tr.opts[key]=+e.value;o.textContent=(+e.value).toFixed(1)};tr.opts[key]=+e.value}
+      for(const [id,key] of [['gx','gainX'],['gy','gainY'],['gm','gainMove']]){const e=document.getElementById(id),o=document.getElementById(id+'o');e.oninput=()=>{tr.opts[key]=+e.value;o.textContent=(+e.value).toFixed(1)};tr.opts[key]=+e.value}
     }catch(e){st.textContent='失敗: '+e.message;console.error(e)}
   };
   if(q.get('still')){ m.auto={blink:false,breath:false,idle:false,physics:false}; m.render(); window.READY=true; }
