@@ -107,3 +107,9 @@ python tools/fidelity.py projects/owl_prince/out samples/ref12.png /tmp/err.png 
 - 眉の保護領域で前髪を切らない。提供hair_head_alphaで髪を保護し、髪がない露出した眉だけを顔へ戻す。
 - カメラはMediaPipeの3D顔行列から角度を取り、正面の較正姿勢との差で左右5度・上5度・下10度、首かしげ±5度に追従。最初の有効な姿勢を初期基準にし、正面を較正すると移動・回転とも0へ戻る。行列が不正/なしなら2D追跡へ戻る。
 - BodyX/Y、全体リグ・耳・物理・フクロウ・毛先は維持。Python20件＋Node10件、比較は docs/brows-rotation.md。実機カメラは未確認。
+
+## 最新: 下向きの眉・手動の驚き顔（2026-10-17）
+
+- 露出した眉だけでなく目/まぶたも髪から顔へ戻す。前髪は提供アルファで保護。tools/refine_details.py で再生成。
+- 正解画像に samples/surprised_ref.png（ユーザー提供ZIP内の元PNG）を追加。キー2/驚きボタン、1/笑顔と排他、0/真顔/リセットで解除。驚きでも瞬き・Eの口で発話可能。デフォルト真顔。
+- 44パーツ、Python20件＋Node10件。比較と戻し方は docs/surprise.md。回転は左右/上5度・下10度を維持。未完了は実機カメラでの確認と必要な微調整。
