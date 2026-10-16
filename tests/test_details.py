@@ -13,7 +13,7 @@ class DetailTest(unittest.TestCase):
     def test_exposed_brows_and_black_collar_are_not_hair_but_crossing_bangs_are_intact(self):
         before = cv2.imread(str(P / 'hair_complete_alpha.png'), 0)
         after = cv2.imread(str(P / 'hair_detail_alpha.png'), 0)
-        for x, y in [(480, 349), (609, 346), (620, 343), (480, 605)]:
+        for x, y in [(480, 349), (609, 346), (620, 343), (483, 383), (630, 377), (480, 605)]:
             with self.subTest(x=x, y=y):
                 self.assertGreater(before[y, x], 240)
                 self.assertEqual(after[y, x], 0)

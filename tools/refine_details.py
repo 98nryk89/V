@@ -23,7 +23,13 @@ def main():
     # Brows seen through the bangs belong to face; the artist's actual hair
     # must never be sliced horizontally along the brow protection polygon.
     artist_hair = cv2.imread(str(p / 'hair_head_alpha.png'), 0) / 255
-    brows *= artist_hair < .02
+    # Cool eye/brow shadows were also caught by the complete-hair colour gate.
+    # Return the whole exposed expression area to the face, following the
+    # artist hair silhouette rather than cutting a horizontal strip.
+    expression = poly_mask(shape, [
+        [[420,327],[548,327],[548,416],[420,416]],
+        [[582,322],[718,322],[718,408],[582,408]]])
+    brows = np.maximum(brows, expression) * (artist_hair < .02)
     collar = poly_mask(shape, [
         [[477,589],[500,606],[541,630],[547,650],[521,668],[487,643]],
         [[647,595],[674,573],[682,634],[653,657],[621,642],[631,622]]])
