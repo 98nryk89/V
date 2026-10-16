@@ -5,24 +5,9 @@
    "id": "body",
    "z": 0,
    "zone": null,
-   "extent": [
-    [
-     0,
-     610
-    ],
-    [
-     1145,
-     610
-    ],
-    [
-     1145,
-     1374
-    ],
-    [
-     0,
-     1374
-    ]
-   ],
+   "extent": {
+    "mask": "body_detail_extent.png"
+   },
    "extent_in_figure": true,
    "fade_exposed": [
     [
@@ -45,7 +30,10 @@
     ]
    ],
    "known_erode": 3,
-   "fill_smooth": 3
+   "fill_smooth": 3,
+   "fill_layer": {
+    "mask": "collar_underlap.png"
+   }
   },
   {
    "id": "owl",
@@ -1841,11 +1829,11 @@
    "z": 8.5,
    "bleed": 3,
    "zone": {
-    "mask": "hair_complete_alpha.png"
+    "mask": "hair_detail_alpha.png"
    },
    "preserve_source": true,
    "extent": {
-    "mask": "hair_complete_extent.png"
+    "mask": "hair_detail_extent.png"
    },
    "fill_layer": {
     "mask": "earring_hair_backing.png",
