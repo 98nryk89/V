@@ -2895,6 +2895,136 @@
     ]
    ],
    "clean_partial": true
+  },
+  {
+   "id": "earNodR",
+   "z": 21,
+   "synthetic": {
+    "type": "ref_gate",
+    "ref": "../../samples/nod_down_ref.png",
+    "regions": [
+     {
+      "box": [
+       664,
+       404,
+       772,
+       540
+      ],
+      "gate": {
+       "lab": {
+        "b": [
+         129.5,
+         210
+        ],
+        "L": [
+         120,
+         255
+        ]
+       },
+       "soft": 1.5
+      }
+     },
+     {
+      "box": [
+       690,
+       452,
+       730,
+       640
+      ],
+      "gate": {
+       "any": [
+        {
+         "lab": {
+          "b": [
+           0,
+           113
+          ]
+         },
+         "soft": 3
+        },
+        {
+         "lab": {
+          "L": [
+           0,
+           85
+          ]
+         },
+         "soft": 4
+        }
+       ]
+      }
+     }
+    ],
+    "close": 2,
+    "grow": 1,
+    "feather": 1.2,
+    "min_area": 160
+   }
+  },
+  {
+   "id": "earNodL",
+   "z": 21,
+   "synthetic": {
+    "type": "ref_gate",
+    "ref": "../../samples/nod_down_ref.png",
+    "regions": [
+     {
+      "box": [
+       372,
+       404,
+       478,
+       540
+      ],
+      "gate": {
+       "lab": {
+        "b": [
+         129.5,
+         210
+        ],
+        "L": [
+         120,
+         255
+        ]
+       },
+       "soft": 1.5
+      }
+     },
+     {
+      "box": [
+       408,
+       452,
+       452,
+       640
+      ],
+      "gate": {
+       "any": [
+        {
+         "lab": {
+          "b": [
+           0,
+           113
+          ]
+         },
+         "soft": 3
+        },
+        {
+         "lab": {
+          "L": [
+           0,
+           85
+          ]
+         },
+         "soft": 4
+        }
+       ]
+      }
+     }
+    ],
+    "close": 2,
+    "grow": 1,
+    "feather": 1.2,
+    "min_area": 160
+   }
   }
  ],
  "unmix": [

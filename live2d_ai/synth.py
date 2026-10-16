@@ -150,6 +150,36 @@ def open_mouth_line(shape, spec, rgb):
     return col, A, dict(pivot_y=float(np.median(ys)), cx=cx, top=ytop, bottom=ybot)
 
 
+def ref_gate(shape, spec, rgb, proj_dir):
+    """Pixels of a reference drawing selected by colour inside boxes (e.g. ear skin + earring in the nod-down drawing).
+    spec["regions"]: list of {"box":[x0,y0,x1,y1], "gate": colour rule (decompose.color_gate)}; alpha = union, closed, feathered."""
+    import os, cv2 as _cv
+    from .decompose import color_gate
+    ref = _cv.imread(os.path.join(proj_dir, spec["ref"]), _cv.IMREAD_UNCHANGED)[..., :3][..., ::-1].copy()
+    m = np.zeros(shape, np.float32)
+    for r in spec["regions"]:
+        x0, y0, x1, y1 = r["box"]
+        g = color_gate(ref, r["gate"]) if r.get("gate") else np.ones(shape, np.float32)
+        box = np.zeros(shape, np.float32); box[y0:y1, x0:x1] = 1
+        m = np.maximum(m, g * box)
+    mb = (m > 0.5).astype(np.uint8)
+    c = int(spec.get("close", 2))
+    if c:
+        mb = _cv.morphologyEx(mb, _cv.MORPH_CLOSE, _cv.getStructuringElement(_cv.MORPH_ELLIPSE, (2 * c + 1, 2 * c + 1)))
+    mb = ndi_fill(mb > 0).astype(np.uint8) if spec.get("fill", True) else mb
+    ma = float(spec.get("min_area", 0))
+    if ma:
+        lab_, n = _ndi().label(mb > 0)
+        if n:
+            sz = _ndi().sum(mb > 0, lab_, range(1, n + 1))
+            mb = np.isin(lab_, 1 + np.flatnonzero(sz >= ma)).astype(np.uint8)
+    g_ = int(spec.get("grow", 1))
+    if g_:
+        mb = _cv.dilate(mb, _cv.getStructuringElement(_cv.MORPH_ELLIPSE, (2 * g_ + 1, 2 * g_ + 1)))
+    A = _cv.GaussianBlur(mb.astype(np.float32), (0, 0), float(spec.get("feather", 1.2)))
+    return ref.astype(np.float32), A
+
+
 def ref_patch(shape, spec, rgb, proj_dir):
     """Pixels taken from a reference drawing that is the same art with only some area redrawn (e.g. closed eyes).
     The patch is where the reference differs from the source inside `box` (grown + feathered), so everything else
@@ -218,6 +248,8 @@ def render(spec, shape, rgb=None, proj_dir=None):
     s = spec["synthetic"]
     if s["type"] == "open_mouth_line":
         return open_mouth_line(shape, s, rgb)[:2]
+    if s["type"] == "ref_gate":
+        return ref_gate(shape, s, rgb, proj_dir)
     if s["type"] == "ref_patch":
         return ref_patch(shape, s, rgb, proj_dir)
     if s["type"] == "eyelid":
