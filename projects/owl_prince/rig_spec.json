@@ -1579,6 +1579,78 @@
     "z": 100
    },
    "mesh_step": 6
+  },
+  "earR_drop": {
+   "effects": [
+    "@breath_head",
+    {
+     "type": "rotate",
+     "param": "PhysEarR",
+     "pivot": [
+      700,
+      466
+     ],
+     "map": [
+      [
+       -1,
+       10
+      ],
+      [
+       1,
+       -10
+      ]
+     ],
+     "weight": {
+      "mode": "y",
+      "from": 466,
+      "to": 586,
+      "pow": 1.0
+     }
+    },
+    "@head_ear",
+    "@body_follow"
+   ],
+   "depth": {
+    "layer": "const",
+    "z": 100
+   },
+   "mesh_step": 6
+  },
+  "earL_drop": {
+   "effects": [
+    "@breath_head",
+    {
+     "type": "rotate",
+     "param": "PhysEarL",
+     "pivot": [
+      425,
+      476
+     ],
+     "map": [
+      [
+       -1,
+       10
+      ],
+      [
+       1,
+       -10
+      ]
+     ],
+     "weight": {
+      "mode": "y",
+      "from": 476,
+      "to": 596,
+      "pow": 1.0
+     }
+    },
+    "@head_ear",
+    "@body_follow"
+   ],
+   "depth": {
+    "layer": "const",
+    "z": 100
+   },
+   "mesh_step": 6
   }
  },
  "physics": [
