@@ -18,7 +18,8 @@ def render_poses(model_dir, poses, out_prefix, size=(700, 860), settle=0, view=N
     srv = serve(); port = srv.server_address[1]
     files = []
     with sync_playwright() as p:
-        exe = next((c for c in ("/opt/pw-browsers/chromium-1194/chrome-linux/chrome",) if os.path.exists(c)), None)
+        import glob
+        exe = os.environ.get("CHROME_PATH") or next(iter(sorted(glob.glob("/opt/pw-browsers/chromium-*/chrome-linux/chrome"))), None)
         b = p.chromium.launch(executable_path=exe, args=["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"])
         pg = b.new_page(viewport={"width": size[0] + 320, "height": size[1]})
         logs = []
@@ -69,7 +70,8 @@ def render_anim(model_dir, expr, frames, out_prefix, size=(700, 860), view=None,
     srv = serve(); port = srv.server_address[1]
     files = []
     with sync_playwright() as p:
-        exe = next((c for c in ("/opt/pw-browsers/chromium-1194/chrome-linux/chrome",) if os.path.exists(c)), None)
+        import glob
+        exe = os.environ.get("CHROME_PATH") or next(iter(sorted(glob.glob("/opt/pw-browsers/chromium-*/chrome-linux/chrome"))), None)
         b = p.chromium.launch(executable_path=exe, args=["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"])
         pg = b.new_page(viewport={"width": size[0] + 320, "height": size[1]})
         rel = os.path.relpath(model_dir, ROOT)
