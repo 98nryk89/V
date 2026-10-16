@@ -430,26 +430,6 @@
      ]
     ]
    }
-  ],
-  "head_ear_nopitch": [
-   {
-    "type": "head3d",
-    "vz": true,
-    "center": [
-     562,
-     405
-    ],
-    "yaw": "AngleX",
-    "pitch": "__none__",
-    "roll": "AngleZ",
-    "pivot": [
-     565,
-     610
-    ],
-    "idle": 0,
-    "rigid": 1,
-    "k": 0.5
-   }
   ]
  },
  "parts": {
@@ -651,28 +631,6 @@
   },
   "earL": {
    "effects": [
-    {
-     "type": "opacity",
-     "param": "AngleY",
-     "map": [
-      [
-       -10,
-       0
-      ],
-      [
-       -1,
-       0.9
-      ],
-      [
-       0,
-       1
-      ],
-      [
-       5,
-       1
-      ]
-     ]
-    },
     "@breath_head",
     {
      "type": "rotate",
@@ -712,28 +670,6 @@
   },
   "earR": {
    "effects": [
-    {
-     "type": "opacity",
-     "param": "AngleY",
-     "map": [
-      [
-       -10,
-       0
-      ],
-      [
-       -1,
-       0.9
-      ],
-      [
-       0,
-       1
-      ],
-      [
-       5,
-       1
-      ]
-     ]
-    },
     "@breath_head",
     {
      "type": "rotate",
@@ -1676,28 +1612,6 @@
   },
   "earL_skin": {
    "effects": [
-    {
-     "type": "opacity",
-     "param": "AngleY",
-     "map": [
-      [
-       -10,
-       0
-      ],
-      [
-       -1,
-       0.9
-      ],
-      [
-       0,
-       1
-      ],
-      [
-       5,
-       1
-      ]
-     ]
-    },
     "@breath_head",
     "@head_ear",
     "@body_follow"
@@ -1710,130 +1624,8 @@
   },
   "earR_skin": {
    "effects": [
-    {
-     "type": "opacity",
-     "param": "AngleY",
-     "map": [
-      [
-       -10,
-       0
-      ],
-      [
-       -1,
-       0.9
-      ],
-      [
-       0,
-       1
-      ],
-      [
-       5,
-       1
-      ]
-     ]
-    },
     "@breath_head",
     "@head_ear",
-    "@body_follow"
-   ],
-   "depth": {
-    "layer": "const",
-    "z": 100
-   },
-   "mesh_step": 6
-  },
-  "earNodR": {
-   "effects": [
-    {
-     "type": "opacity",
-     "param": "AngleY",
-     "map": [
-      [
-       -10,
-       1
-      ],
-      [
-       -1,
-       0.0
-      ],
-      [
-       5,
-       0
-      ]
-     ]
-    },
-    "@breath_head",
-    {
-     "type": "translate",
-     "param": "AngleY",
-     "map": [
-      [
-       -10,
-       -5.5,
-       0
-      ],
-      [
-       0,
-       -5.5,
-       -10.2
-      ],
-      [
-       5,
-       -5.5,
-       -15.299999999999999
-      ]
-     ]
-    },
-    "@body_follow"
-   ],
-   "depth": {
-    "layer": "const",
-    "z": 100
-   },
-   "mesh_step": 6
-  },
-  "earNodL": {
-   "effects": [
-    {
-     "type": "opacity",
-     "param": "AngleY",
-     "map": [
-      [
-       -10,
-       1
-      ],
-      [
-       -1,
-       0.0
-      ],
-      [
-       5,
-       0
-      ]
-     ]
-    },
-    "@breath_head",
-    {
-     "type": "translate",
-     "param": "AngleY",
-     "map": [
-      [
-       -10,
-       -3.3,
-       0
-      ],
-      [
-       0,
-       -3.3,
-       -10.2
-      ],
-      [
-       5,
-       -3.3,
-       -15.299999999999999
-      ]
-     ]
-    },
     "@body_follow"
    ],
    "depth": {
