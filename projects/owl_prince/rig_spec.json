@@ -1607,6 +1607,28 @@
     "off": 2
    },
    "mesh_step": 4
+  },
+  "earL_skin": {
+   "effects": [
+    "@breath_head",
+    "@head",
+    "@body_follow"
+   ],
+   "depth": {
+    "layer": "face"
+   },
+   "mesh_step": 8
+  },
+  "earR_skin": {
+   "effects": [
+    "@breath_head",
+    "@head",
+    "@body_follow"
+   ],
+   "depth": {
+    "layer": "face"
+   },
+   "mesh_step": 8
   }
  },
  "physics": [

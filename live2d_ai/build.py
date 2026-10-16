@@ -71,6 +71,8 @@ def _apply_edge(L, pid, ctx, edge):
     if st:
         a = np.where(ctx["zone"], _smoothstep(a, st[0], st[1]), a)
     ol = edge.get("outline")
+    if ol and pid in edge.get("no_outline", []):
+        ol = None                     # parts that already carry a clean outline in the art (ornaments) keep it as is
     if ol:
         mine = ctx["owner"] == ctx["ids"].index(pid)
         w = float(ol.get("width", 1.5))
@@ -84,6 +86,8 @@ def _apply_edge(L, pid, ctx, edge):
         rgb = np.where(use[..., None], near, rgb)
         a = new_a
     sh = edge.get("sharpen")
+    if sh and pid in edge.get("no_sharpen", []):
+        sh = None
     if sh:
         blur = cv2.GaussianBlur(rgb, (0, 0), float(sh.get("sigma", 1.0)))
         rgb = np.clip(rgb + float(sh.get("amount", 0.5)) * (rgb - blur), 0, 255)

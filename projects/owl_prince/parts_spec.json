@@ -2576,146 +2576,247 @@
    "id": "mouth_vA",
    "z": 13,
    "synthetic": {
-    "type": "open_mouth_line",
+    "type": "ref_patch",
+    "ref": "../../samples/vowel_a.png",
+    "union_refs": [
+     "../../samples/vowel_a.png"
+    ],
     "box": [
-     515,
-     480,
-     615,
-     502
+     498,
+     452,
+     628,
+     522
     ],
-    "line_thr": 200,
-    "cx": 561,
-    "inner": [
-     104,
-     48,
-     60
-    ],
-    "inner_low": [
-     150,
-     74,
-     86
-    ],
-    "width": 38,
-    "height": 20,
-    "pow": 2.2,
-    "curve": 0.75
+    "thr": 45,
+    "grow": 3,
+    "feather": 1.4
    }
   },
   {
    "id": "mouth_vI",
    "z": 13,
    "synthetic": {
-    "type": "open_mouth_line",
+    "type": "ref_patch",
+    "ref": "../../samples/vowel_i.png",
+    "union_refs": [
+     "../../samples/vowel_i.png"
+    ],
     "box": [
-     515,
-     480,
-     615,
-     502
+     498,
+     452,
+     628,
+     522
     ],
-    "line_thr": 200,
-    "cx": 561,
-    "inner": [
-     104,
-     48,
-     60
-    ],
-    "inner_low": [
-     150,
-     74,
-     86
-    ],
-    "width": 46,
-    "height": 6,
-    "pow": 3.0,
-    "curve": 0.9
+    "thr": 45,
+    "grow": 3,
+    "feather": 1.4
    }
   },
   {
    "id": "mouth_vU",
    "z": 13,
    "synthetic": {
-    "type": "open_mouth_line",
+    "type": "ref_patch",
+    "ref": "../../samples/vowel_u.png",
+    "union_refs": [
+     "../../samples/vowel_u.png"
+    ],
     "box": [
-     515,
-     480,
-     615,
-     502
+     498,
+     452,
+     628,
+     522
     ],
-    "line_thr": 200,
-    "cx": 561,
-    "inner": [
-     104,
-     48,
-     60
-    ],
-    "inner_low": [
-     150,
-     74,
-     86
-    ],
-    "width": 16,
-    "height": 13,
-    "pow": 2.0,
-    "curve": 0.6
+    "thr": 45,
+    "grow": 3,
+    "feather": 1.4
    }
   },
   {
    "id": "mouth_vE",
    "z": 13,
    "synthetic": {
-    "type": "open_mouth_line",
+    "type": "ref_patch",
+    "ref": "../../samples/vowel_e.png",
+    "union_refs": [
+     "../../samples/vowel_e.png"
+    ],
     "box": [
-     515,
-     480,
-     615,
-     502
+     498,
+     452,
+     628,
+     522
     ],
-    "line_thr": 200,
-    "cx": 561,
-    "inner": [
-     104,
-     48,
-     60
-    ],
-    "inner_low": [
-     150,
-     74,
-     86
-    ],
-    "width": 42,
-    "height": 10,
-    "pow": 2.6,
-    "curve": 0.8
+    "thr": 45,
+    "grow": 3,
+    "feather": 1.4
    }
   },
   {
    "id": "mouth_vO",
    "z": 13,
    "synthetic": {
-    "type": "open_mouth_line",
+    "type": "ref_patch",
+    "ref": "../../samples/vowel_o.png",
+    "union_refs": [
+     "../../samples/vowel_o.png"
+    ],
     "box": [
-     515,
-     480,
-     615,
-     502
+     498,
+     452,
+     628,
+     522
     ],
-    "line_thr": 200,
-    "cx": 561,
-    "inner": [
-     104,
-     48,
-     60
-    ],
-    "inner_low": [
-     150,
-     74,
-     86
-    ],
-    "width": 22,
-    "height": 17,
-    "pow": 2.0,
-    "curve": 0.6
+    "thr": 45,
+    "grow": 3,
+    "feather": 1.4
    }
+  },
+  {
+   "id": "earL_skin",
+   "z": 5.5,
+   "bleed": 4,
+   "zone": [
+    [
+     380,
+     360
+    ],
+    [
+     455,
+     360
+    ],
+    [
+     462,
+     440
+    ],
+    [
+     452,
+     466
+    ],
+    [
+     428,
+     468
+    ],
+    [
+     408,
+     456
+    ],
+    [
+     388,
+     440
+    ],
+    [
+     372,
+     410
+    ]
+   ],
+   "color": {
+    "near": [
+     [
+      250,
+      230,
+      221
+     ],
+     [
+      237,
+      215,
+      205
+     ],
+     [
+      245,
+      226,
+      218
+     ],
+     [
+      236,
+      200,
+      190
+     ],
+     [
+      228,
+      190,
+      180
+     ]
+    ],
+    "tol": 20
+   },
+   "close": 2,
+   "fill_holes": 120
+  },
+  {
+   "id": "earR_skin",
+   "z": 5.5,
+   "bleed": 4,
+   "zone": [
+    [
+     684,
+     352
+    ],
+    [
+     746,
+     352
+    ],
+    [
+     756,
+     396
+    ],
+    [
+     748,
+     436
+    ],
+    [
+     728,
+     452
+    ],
+    [
+     709,
+     460
+    ],
+    [
+     690,
+     463
+    ],
+    [
+     676,
+     472
+    ],
+    [
+     640,
+     472
+    ]
+   ],
+   "color": {
+    "near": [
+     [
+      250,
+      230,
+      221
+     ],
+     [
+      237,
+      215,
+      205
+     ],
+     [
+      245,
+      226,
+      218
+     ],
+     [
+      236,
+      200,
+      190
+     ],
+     [
+      228,
+      190,
+      180
+     ]
+    ],
+    "tol": 20
+   },
+   "close": 2,
+   "fill_holes": 120
   }
  ],
  "unmix": [
@@ -3125,6 +3226,23 @@
   "sharpen": {
    "sigma": 1.0,
    "amount": 0.45
-  }
+  },
+  "no_outline": [
+   "orn_mask",
+   "ribbon",
+   "orn_chain",
+   "earL",
+   "earR",
+   "tasselL",
+   "tasselR1",
+   "tasselR2",
+   "hangR3",
+   "watch",
+   "watch_gems",
+   "owl"
+  ],
+  "no_sharpen": [
+   "orn_mask"
+  ]
  }
 }
