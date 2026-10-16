@@ -69,7 +69,8 @@
    "min": 0,
    "max": 1,
    "default": 0,
-   "label": "\u7b11\u9854"
+   "label": "\u7b11\u9854",
+   "step": 1
   },
   {
    "id": "PhysHairR",
@@ -146,35 +147,8 @@
    "min": 0,
    "max": 1,
    "default": 0,
-   "label": "\u6bcd\u97f3 \u3042"
-  },
-  {
-   "id": "VowelI",
-   "min": 0,
-   "max": 1,
-   "default": 0,
-   "label": "\u6bcd\u97f3 \u3044"
-  },
-  {
-   "id": "VowelU",
-   "min": 0,
-   "max": 1,
-   "default": 0,
-   "label": "\u6bcd\u97f3 \u3046"
-  },
-  {
-   "id": "VowelE",
-   "min": 0,
-   "max": 1,
-   "default": 0,
-   "label": "\u6bcd\u97f3 \u3048"
-  },
-  {
-   "id": "VowelO",
-   "min": 0,
-   "max": 1,
-   "default": 0,
-   "label": "\u6bcd\u97f3 \u304a"
+   "label": "\u53e3\u306e\u958b\u9589\uff08\u3042\uff09",
+   "step": 1
   }
  ],
  "templates": {
@@ -1352,32 +1326,6 @@
    },
    "mesh_step": 5
   },
-  "mouth_smile": {
-   "effects": [
-    {
-     "type": "opacity",
-     "param": "Smile",
-     "map": [
-      [
-       0,
-       0
-      ],
-      [
-       1,
-       1
-      ]
-     ]
-    },
-    "@breath_head",
-    "@head_eye",
-    "@body_follow"
-   ],
-   "depth": {
-    "layer": "face",
-    "off": 4
-   },
-   "mesh_step": 5
-  },
   "mouth_vA": {
    "effects": [
     {
@@ -1389,127 +1337,11 @@
        0
       ],
       [
-       0.15,
-       1
-      ],
-      [
-       1,
-       1
-      ]
-     ]
-    },
-    "@breath_head",
-    "@head_eye",
-    "@body_follow"
-   ],
-   "depth": {
-    "layer": "face",
-    "off": 2
-   },
-   "mesh_step": 4
-  },
-  "mouth_vI": {
-   "effects": [
-    {
-     "type": "opacity",
-     "param": "VowelI",
-     "map": [
-      [
-       0,
+       0.5,
        0
       ],
       [
-       0.15,
-       1
-      ],
-      [
-       1,
-       1
-      ]
-     ]
-    },
-    "@breath_head",
-    "@head_eye",
-    "@body_follow"
-   ],
-   "depth": {
-    "layer": "face",
-    "off": 2
-   },
-   "mesh_step": 4
-  },
-  "mouth_vU": {
-   "effects": [
-    {
-     "type": "opacity",
-     "param": "VowelU",
-     "map": [
-      [
-       0,
-       0
-      ],
-      [
-       0.15,
-       1
-      ],
-      [
-       1,
-       1
-      ]
-     ]
-    },
-    "@breath_head",
-    "@head_eye",
-    "@body_follow"
-   ],
-   "depth": {
-    "layer": "face",
-    "off": 2
-   },
-   "mesh_step": 4
-  },
-  "mouth_vE": {
-   "effects": [
-    {
-     "type": "opacity",
-     "param": "VowelE",
-     "map": [
-      [
-       0,
-       0
-      ],
-      [
-       0.15,
-       1
-      ],
-      [
-       1,
-       1
-      ]
-     ]
-    },
-    "@breath_head",
-    "@head_eye",
-    "@body_follow"
-   ],
-   "depth": {
-    "layer": "face",
-    "off": 2
-   },
-   "mesh_step": 4
-  },
-  "mouth_vO": {
-   "effects": [
-    {
-     "type": "opacity",
-     "param": "VowelO",
-     "map": [
-      [
-       0,
-       0
-      ],
-      [
-       0.15,
+       0.50001,
        1
       ],
       [

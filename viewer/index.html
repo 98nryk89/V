@@ -26,6 +26,8 @@ button:hover{border-color:var(--ac)}
 <label class="chk"><input type="checkbox" id="a_phys" checked>物理</label>
 <label class="chk"><input type="checkbox" id="a_mouse">マウス追従</label>
 <label class="chk"><input type="checkbox" id="a_wire">ワイヤー</label></div>
+<h2>表情</h2>
+<div><button id="smile" aria-pressed="false">笑顔 [1]</button><button id="neutral">真顔 [0]</button></div>
 <h2>Webカメラ追跡 (MediaPipe)</h2>
 <div><button id="cam">開始</button><button id="calib">正面を較正</button>
 <label class="chk"><input type="checkbox" id="invx">左右反転</label>
@@ -47,12 +49,27 @@ const base=window.__RIG__?'':(q.get('model')||'../projects/owl_prince/out')+'/';
   const vq=q.get('view');const m=new L2D.Model(document.getElementById('c'),rig,base,{view:vq?vq.split(',').map(Number):(rig.view||null),preserve:true});
   window.M=m; await m.load();
   document.getElementById('msg').textContent=rig.parts.length+' parts';
+  const smileButton=document.getElementById('smile');
+  function setSmile(value){
+    m.setParam('Smile',value?1:0);
+    smileButton.setAttribute('aria-pressed',value?'true':'false');
+    smileButton.textContent=value?'笑顔 ON [1]':'笑顔 [1]';
+  }
+  smileButton.onclick=()=>setSmile(m.params.Smile<0.5);
+  document.getElementById('neutral').onclick=()=>setSmile(0);
+  window.addEventListener('keydown',e=>{
+    if(e.repeat||e.isComposing||e.ctrlKey||e.altKey||e.metaKey)return;
+    if(e.target?.isContentEditable||e.target?.closest?.('textarea,select,input:not([type=range]):not([type=checkbox])'))return;
+    if(e.key==='1'){e.preventDefault();setSmile(m.params.Smile<0.5)}
+    if(e.key==='0'){e.preventDefault();setSmile(0)}
+  });
+  setSmile(0);
   const box=document.getElementById('params');
   for(const p of rig.params){ if(p.hidden) continue;
     const r=document.createElement('div');r.className='row';
-    r.innerHTML=`<label>${p.label||p.id}</label><input type=range min=${p.min} max=${p.max} step=${(p.max-p.min)/200} value=${p.default}><output>${p.default}</output>`;
+    r.innerHTML=`<label>${p.label||p.id}</label><input type=range min=${p.min} max=${p.max} step=${p.step||(p.max-p.min)/200} value=${p.default}><output>${p.default}</output>`;
     const s=r.querySelector('input'),o=r.querySelector('output');
-    s.oninput=()=>{m.setParam(p.id,+s.value);o.textContent=(+s.value).toFixed(2)};
+    s.oninput=()=>{if(p.id==='Smile')setSmile(+s.value);else m.setParam(p.id,+s.value);o.textContent=(+s.value).toFixed(2)};
     p._s=s;p._o=o;box.appendChild(r);
   }
   // keep sliders in sync with auto-driven params
@@ -60,7 +77,7 @@ const base=window.__RIG__?'':(q.get('model')||'../projects/owl_prince/out')+'/';
   const A=(id,k)=>document.getElementById(id).onchange=e=>{m.auto[k]=e.target.checked};
   A('a_blink','blink');A('a_breath','breath');A('a_idle','idle');A('a_phys','physics');
   document.getElementById('a_wire').onchange=e=>m.wire=e.target.checked;
-  document.getElementById('reset').onclick=()=>m.reset();
+  document.getElementById('reset').onclick=()=>{m.reset();setSmile(0)};
   const bgs=['#2b2836','#ffffff','#101010','#6fcf97'];let bi=0;
   document.getElementById('bg').onclick=()=>{bi=(bi+1)%bgs.length;document.getElementById('stage').style.setProperty('--stagebg',bgs[bi])};
   let mouse=false;document.getElementById('a_mouse').onchange=e=>mouse=e.target.checked;
@@ -76,6 +93,7 @@ const base=window.__RIG__?'':(q.get('model')||'../projects/owl_prince/out')+'/';
       await tr.start(v,t=>st.textContent=t);camb.textContent='停止';
       const sync=()=>{tr.opts.invX=document.getElementById('invx').checked;tr.opts.invY=document.getElementById('invy').checked;tr.opts.invZ=document.getElementById('invz').checked};
       for(const id of['invx','invy','invz'])document.getElementById(id).onchange=sync;
+      sync();
       document.getElementById('calib').onclick=()=>tr.calibrate();
       for(const [id,key] of [['gx','gainX'],['gy','gainY'],['gm','gainMove']]){const e=document.getElementById(id),o=document.getElementById(id+'o');e.oninput=()=>{tr.opts[key]=+e.value;o.textContent=(+e.value).toFixed(1)};tr.opts[key]=+e.value}
     }catch(e){st.textContent='失敗: '+e.message;console.error(e)}
