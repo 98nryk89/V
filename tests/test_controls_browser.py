@@ -48,7 +48,7 @@ class ViewerControlsTest(unittest.TestCase):
         page.evaluate('M.stop(); M.auto={blink:false,breath:false,idle:false,physics:false}; M.reset();M.render()')
         self.assertEqual(page.evaluate('M.params.Smile'), 0)
         self.assertEqual(page.evaluate('M.params.VowelE'), 0)
-        self.assertEqual(page.evaluate('M.rig.parts.filter(p=>p.id.startsWith("mouth")).map(p=>p.id).sort()'), ['mouth', 'mouth_vE'])
+        self.assertEqual(page.evaluate('M.rig.parts.filter(p=>p.id.startsWith("mouth")).map(p=>p.id).sort()'), ['mouth', 'mouth_surprise', 'mouth_vE'])
         self.assertEqual(page.evaluate('M.rig.params.filter(p=>/^Vowel/.test(p.id)).map(p=>p.id)'), ['VowelE'])
         heights = page.evaluate('''()=>{
           const p=M.parts.find(p=>p.id==='mouth_vE');
@@ -170,6 +170,32 @@ class ViewerControlsTest(unittest.TestCase):
         page.locator('#smile').click()
         page.locator('#neutral').click()
         self.assertEqual(page.evaluate('M.params.Smile'), 0)
+        # Manual expressions are exclusive, survive tracking, and close cleanly.
+        page.keyboard.press('2')
+        self.assertEqual(page.evaluate('[M.params.Smile,M.params.Surprise]'), [0,1])
+        self.assertEqual(page.locator('#surprise').get_attribute('aria-pressed'), 'true')
+        page.evaluate('feedFace(0,1)')
+        self.assertEqual(page.evaluate('M.params.Surprise'), 1)
+        states = page.evaluate("""()=>{
+          M.setParams({EyeLOpen:1,EyeROpen:1,VowelE:0});M.render();
+          const open=[M.byId.eyeL_surprise._opacity,M.byId.eyeR_surprise._opacity,M.byId.mouth_surprise._opacity];
+          M.setParams({EyeLOpen:0,EyeROpen:0,VowelE:1});M.render();
+          return {open,closed:[M.byId.eyeL_surprise._opacity,M.byId.eyeR_surprise._opacity,M.byId.mouth_surprise._opacity],blink:M.byId.eyeL_k4._opacity,mouth:M.byId.mouth_vE._opacity};
+        }""")
+        self.assertEqual(states, dict(open=[1,1,1],closed=[0,0,0],blink=1,mouth=1))
+        page.keyboard.press('1')
+        self.assertEqual(page.evaluate('[M.params.Smile,M.params.Surprise]'), [1,0])
+        page.locator('#surprise').click()
+        self.assertEqual(page.evaluate('[M.params.Smile,M.params.Surprise]'), [0,1])
+        page.keyboard.press('2')
+        self.assertEqual(page.evaluate('M.params.Surprise'), 0)
+        page.locator('#surprise').click()
+        page.keyboard.press('0')
+        self.assertEqual(page.evaluate('[M.params.Smile,M.params.Surprise]'), [0,0])
+        page.locator('#surprise').click()
+        page.locator('#reset').click()
+        self.assertEqual(page.evaluate('M.params.Surprise'), 0)
+
         # Text entry must not unexpectedly change the expression.
         page.evaluate('document.body.insertAdjacentHTML("beforeend", "<input id=test-text>")')
         page.locator('#test-text').focus()

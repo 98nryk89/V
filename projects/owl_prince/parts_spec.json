@@ -2020,6 +2020,71 @@
      572
     ]
    }
+  },
+  {
+   "id": "eyeL_surprise",
+   "z": 15.5,
+   "synthetic": {
+    "type": "ref_patch",
+    "ref": "../../samples/surprised_ref.png",
+    "union_refs": [
+     "../../samples/surprised_ref.png"
+    ],
+    "base": "../../samples/source.png",
+    "box": [
+     420,
+     324,
+     548,
+     424
+    ],
+    "thr": 40,
+    "grow": 3,
+    "feather": 0.7,
+    "exclude_mask": "hair_head_alpha.png"
+   }
+  },
+  {
+   "id": "eyeR_surprise",
+   "z": 15.5,
+   "synthetic": {
+    "type": "ref_patch",
+    "ref": "../../samples/surprised_ref.png",
+    "union_refs": [
+     "../../samples/surprised_ref.png"
+    ],
+    "base": "../../samples/source.png",
+    "box": [
+     582,
+     316,
+     718,
+     416
+    ],
+    "thr": 40,
+    "grow": 3,
+    "feather": 0.7,
+    "exclude_mask": "hair_head_alpha.png"
+   }
+  },
+  {
+   "id": "mouth_surprise",
+   "z": 12.5,
+   "synthetic": {
+    "type": "ref_patch",
+    "ref": "../../samples/surprised_ref.png",
+    "union_refs": [
+     "../../samples/surprised_ref.png"
+    ],
+    "base": "../../samples/source.png",
+    "box": [
+     520,
+     478,
+     611,
+     510
+    ],
+    "thr": 25,
+    "grow": 3,
+    "feather": 1
+   }
   }
  ],
  "edge": {

@@ -157,6 +157,14 @@
    "default": 1,
    "step": 0.01,
    "label": "\u30d5\u30af\u30ed\u30a6\u306e\u76ee \u958b\u9589"
+  },
+  {
+   "id": "Surprise",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "label": "\u9a5a\u304d\u9854",
+   "step": 1
   }
  ],
  "templates": {
@@ -1801,6 +1809,138 @@
     "@body_follow"
    ],
    "mesh_step": 4
+  },
+  "eyeL_surprise": {
+   "effects": [
+    {
+     "type": "opacity",
+     "param": "Surprise",
+     "map": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       1
+      ]
+     ]
+    },
+    {
+     "type": "opacity",
+     "param": "EyeLOpen",
+     "map": [
+      [
+       0,
+       0
+      ],
+      [
+       0.875,
+       0
+      ],
+      [
+       1,
+       1
+      ]
+     ]
+    },
+    "@breath_head",
+    "@head_eye",
+    "@body_follow"
+   ],
+   "depth": {
+    "layer": "face",
+    "off": 4
+   },
+   "mesh_step": 5
+  },
+  "eyeR_surprise": {
+   "effects": [
+    {
+     "type": "opacity",
+     "param": "Surprise",
+     "map": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       1
+      ]
+     ]
+    },
+    {
+     "type": "opacity",
+     "param": "EyeROpen",
+     "map": [
+      [
+       0,
+       0
+      ],
+      [
+       0.875,
+       0
+      ],
+      [
+       1,
+       1
+      ]
+     ]
+    },
+    "@breath_head",
+    "@head_eye",
+    "@body_follow"
+   ],
+   "depth": {
+    "layer": "face",
+    "off": 4
+   },
+   "mesh_step": 5
+  },
+  "mouth_surprise": {
+   "effects": [
+    {
+     "type": "opacity",
+     "param": "Surprise",
+     "map": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       1
+      ]
+     ]
+    },
+    {
+     "type": "opacity",
+     "param": "VowelE",
+     "map": [
+      [
+       0,
+       1
+      ],
+      [
+       0.06,
+       0
+      ],
+      [
+       1,
+       0
+      ]
+     ]
+    },
+    "@breath_head",
+    "@head",
+    "@body_follow"
+   ],
+   "depth": {
+    "layer": "face",
+    "off": 4
+   },
+   "mesh_step": 5
   }
  },
  "physics": [
