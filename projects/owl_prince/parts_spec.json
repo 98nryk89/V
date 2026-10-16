@@ -2481,33 +2481,6 @@
    }
   },
   {
-   "id": "mouth_open",
-   "z": 13,
-   "synthetic": {
-    "type": "open_mouth_line",
-    "box": [
-     515,
-     480,
-     615,
-     502
-    ],
-    "line_thr": 200,
-    "width": 38,
-    "height": 17,
-    "cx": 561,
-    "inner": [
-     104,
-     48,
-     60
-    ],
-    "inner_low": [
-     150,
-     74,
-     86
-    ]
-   }
-  },
-  {
    "id": "eyeL_smile",
    "z": 20,
    "synthetic": {

@@ -87,9 +87,7 @@
       // mirror: user's left eye shows on screen-left -> EyeL
       const open = b => clamp(1 - (b - 0.15) / 0.5, 0, 1);
       t.EyeLOpen = open(g('eyeBlinkLeft')); t.EyeROpen = open(g('eyeBlinkRight'));
-      t.MouthOpen = clamp((g('jawOpen') - 0.05) / 0.45, 0, 1);
       Object.assign(t, vowelWeights(bs));
-      t.MouthOpen = 0;                // the vowel shapes replace the generic opening
       t.Smile = clamp(((g('mouthSmileLeft') + g('mouthSmileRight')) / 2 - 0.2) / 0.5, 0, 1);
       t.EyeBallX = clamp(((g('eyeLookOutRight') + g('eyeLookInLeft')) - (g('eyeLookOutLeft') + g('eyeLookInRight'))) / 1.2, -1, 1);
       t.EyeBallY = clamp(((g('eyeLookUpLeft') + g('eyeLookUpRight')) - (g('eyeLookDownLeft') + g('eyeLookDownRight'))) / 1.2, -1, 1);

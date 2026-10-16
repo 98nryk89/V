@@ -37,13 +37,6 @@
    "label": "\u53f3\u76ee \u958b\u9589"
   },
   {
-   "id": "MouthOpen",
-   "min": 0,
-   "max": 1,
-   "default": 0,
-   "label": "\u53e3 \u958b\u304d"
-  },
-  {
    "id": "Breath",
    "min": 0,
    "max": 1,
@@ -548,7 +541,7 @@
      ],
      "weight": {
       "mode": "y",
-      "from": 450,
+      "from": 560,
       "to": 1100,
       "pow": 1.4
      }
@@ -582,7 +575,7 @@
      ],
      "weight": {
       "mode": "y",
-      "from": 450,
+      "from": 560,
       "to": 1100,
       "pow": 1.4
      }
@@ -806,61 +799,6 @@
     "layer": "face",
     "off": 2
    }
-  },
-  "mouth_open": {
-   "effects": [
-    {
-     "type": "scale",
-     "param": "MouthOpen",
-     "pivot": [
-      561,
-      490
-     ],
-     "map": [
-      [
-       0,
-       0.75,
-       0.04
-      ],
-      [
-       0.4,
-       0.9,
-       0.55
-      ],
-      [
-       1,
-       1,
-       1
-      ]
-     ]
-    },
-    {
-     "type": "opacity",
-     "param": "MouthOpen",
-     "map": [
-      [
-       0,
-       0
-      ],
-      [
-       0.08,
-       1
-      ],
-      [
-       1,
-       1
-      ]
-     ]
-    },
-    "@breath_head",
-    "@head_eye",
-    "@body_follow"
-   ],
-   "depth": {
-    "layer": "face",
-    "off": 2
-   },
-   "mesh_step": 4
   },
   "tasselL": {
    "effects": [
@@ -1576,22 +1514,22 @@
      "param": "PhysEarR",
      "pivot": [
       698,
-      443
+      466
      ],
      "map": [
       [
        -1,
-       10
+       8
       ],
       [
        1,
-       -10
+       -8
       ]
      ],
      "weight": {
       "mode": "y",
-      "from": 443,
-      "to": 560,
+      "from": 466,
+      "to": 540,
       "pow": 1.0
      }
     },
@@ -1617,17 +1555,17 @@
      "map": [
       [
        -1,
-       10
+       8
       ],
       [
        1,
-       -10
+       -8
       ]
      ],
      "weight": {
       "mode": "y",
       "from": 476,
-      "to": 596,
+      "to": 550,
       "pow": 1.0
      }
     },
