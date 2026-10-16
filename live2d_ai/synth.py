@@ -150,24 +150,6 @@ def open_mouth_line(shape, spec, rgb):
     return col, A, dict(pivot_y=float(np.median(ys)), cx=cx, top=ytop, bottom=ybot)
 
 
-def aligned_layer(shape, spec, rgb, proj_dir):
-    """A user-supplied RGBA layer (already aligned to the source canvas) used verbatim, optionally cropped to a box/mask and
-    with parts of it removed (cut mask)."""
-    import os, cv2 as _cv
-    im = _cv.imread(os.path.join(proj_dir, spec["file"]), _cv.IMREAD_UNCHANGED)
-    rgbL = im[..., :3][..., ::-1].astype(np.float32)
-    A = im[..., 3].astype(np.float32) / 255.0
-    if "box" in spec:
-        x0, y0, x1, y1 = spec["box"]; bx = np.zeros(shape, np.float32); bx[y0:y1, x0:x1] = 1; A = A * bx
-    for cut in spec.get("cut_masks", []):
-        c = _cv.imread(os.path.join(proj_dir, cut), 0).astype(np.float32) / 255.0
-        A = A * (1 - c)
-    er = int(spec.get("erode", 0))
-    if er:
-        A = _cv.erode(A, np.ones((2 * er + 1, 2 * er + 1), np.uint8))
-    return rgbL, A
-
-
 def ref_patch(shape, spec, rgb, proj_dir):
     """Pixels taken from a reference drawing that is the same art with only some area redrawn (e.g. closed eyes).
     The patch is where the reference differs from the source inside `box` (grown + feathered), so everything else
@@ -240,6 +222,4 @@ def render(spec, shape, rgb=None, proj_dir=None):
         return ref_patch(shape, s, rgb, proj_dir)
     if s["type"] == "eyelid":
         return eyelid(shape, s, rgb)
-    if s["type"] == "aligned_layer":
-        return aligned_layer(shape, s, rgb, proj_dir)
     return RENDERERS[s["type"]](shape, s)

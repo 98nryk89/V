@@ -2842,20 +2842,6 @@
     "open": 1,
     "min_area": 150
    }
-  },
-  {
-   "id": "skin_under",
-   "z": 1.5,
-   "synthetic": {
-    "type": "aligned_layer",
-    "file": "skin_layer.png",
-    "box": [
-     330,
-     300,
-     830,
-     760
-    ]
-   }
   }
  ],
  "unmix": [
