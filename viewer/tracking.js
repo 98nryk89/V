@@ -12,7 +12,7 @@
 
   class Tracker {
     constructor(model, opts = {}) {
-      this.m = model; this.opts = Object.assign({ invX: false, invY: false, invZ: false, smooth: 0.45, gainX: 1, gainY: 1 }, opts);
+      this.m = model; this.opts = Object.assign({ invX: false, invY: false, invZ: false, smooth: 0.45, gainX: 1, gainY: 1, gainP: 1 }, opts);
       this.neutral = { yaw: 0, pitch: 0.45 };
       this.raw = null; this.state = {}; this.running = false;
     }
@@ -43,7 +43,7 @@
       if (this.video && this.video.srcObject) this.video.srcObject.getTracks().forEach(t => t.stop());
     }
 
-    calibrate() { if (this.raw) { this.neutral = { yaw: this.raw.yaw, pitch: this.raw.pitch }; } }
+    calibrate() { if (this.raw) { this.neutral = { yaw: this.raw.yaw, pitch: this.raw.pitch, px: this.raw.px, py: this.raw.py }; } }
 
     _step() {
       const v = this.video; if (!v || v.readyState < 2 || v.currentTime === this._lastT) return;
@@ -71,14 +71,19 @@
       const downNose = -nx * ey + ny * ex, downChin = -cx * ey + cy * ex;     // components along "down" in the head frame
       const pitch = downNose / (downChin || 1e-3);                            // larger = looking down
       const roll = Math.atan2(eL.y - eR.y, eL.x - eR.x) * 180 / Math.PI;
-      this.raw = { yaw, pitch };
+      this.raw = { yaw, pitch, px: mid.x, py: mid.y };
       const o = this.opts;
       // mirrored preview: user turning to their right (nose to image-left) => avatar turns to screen-right (+AngleX)
       let ax = -(yaw - this.neutral.yaw) * 13 * o.gainX;
       let ay = -(pitch - this.neutral.pitch) * 30 * o.gainY;
       let az = -roll * 0.18;
       if (o.invX) ax = -ax; if (o.invY) ay = -ay; if (o.invZ) az = -az;
+      if (this.neutral.px == null) { this.neutral.px = mid.x; this.neutral.py = mid.y; }
+      const px = this.neutral.px, py = this.neutral.py;
+      let posX = -(mid.x - px) * 5 * o.gainP, posY = -(mid.y - py) * 5 * o.gainP;
+      if (o.invX) posX = -posX; if (o.invY) posY = -posY;
       const t = {
+        PosX: clamp(posX, -1, 1), PosY: clamp(posY, -1, 1),
         AngleX: clamp(ax, -5, 5), AngleY: clamp(ay, -10, 5), AngleZ: clamp(az, -5, 5),
       };
       const bs = {};
@@ -87,8 +92,7 @@
       // mirror: user's left eye shows on screen-left -> EyeL
       const open = b => clamp(1 - (b - 0.15) / 0.5, 0, 1);
       t.EyeLOpen = open(g('eyeBlinkLeft')); t.EyeROpen = open(g('eyeBlinkRight'));
-      Object.assign(t, vowelWeights(bs));
-      t.Smile = clamp(((g('mouthSmileLeft') + g('mouthSmileRight')) / 2 - 0.2) / 0.5, 0, 1);
+      t.VowelA = clamp((g('jawOpen') - 0.08) / 0.2, 0, 1);      // mouth: closed or あ only
       t.EyeBallX = clamp(((g('eyeLookOutRight') + g('eyeLookInLeft')) - (g('eyeLookOutLeft') + g('eyeLookInRight'))) / 1.2, -1, 1);
       t.EyeBallY = clamp(((g('eyeLookUpLeft') + g('eyeLookUpRight')) - (g('eyeLookDownLeft') + g('eyeLookDownRight'))) / 1.2, -1, 1);
       const k = 1 - o.smooth;
@@ -102,27 +106,5 @@
       return true;
     }
   }
-  // Vowel classification from MediaPipe blendshapes -> weights for あ/い/う/え/お (sum <= 1, 0 when the mouth is closed).
-  // jaw = jawOpen, fun = mouthFunnel, puc = mouthPucker, str = mouthStretch (avg L/R), smi = mouthSmile (avg L/R)
-  function vowelWeights(bs, opts = {}) {
-    const g = k => bs[k] || 0, cl = (v, a, b) => Math.max(0, Math.min(1, (v - a) / (b - a)));
-    const jaw = g('jawOpen'), fun = g('mouthFunnel'), puc = g('mouthPucker');
-    const str = (g('mouthStretchLeft') + g('mouthStretchRight')) / 2, smi = (g('mouthSmileLeft') + g('mouthSmileRight')) / 2;
-    const wide = Math.max(str, smi * 0.8);                       // lateral stretch
-    const round = Math.max(fun, puc);                            // lips rounded forward
-    const amp = Math.max(cl(jaw, 0.06, 0.3), cl(round, 0.15, 0.45), cl(wide, 0.2, 0.5) * 0.8);   // how "open" the mouth is at all
-    const raw = {
-      A: cl(jaw, 0.25, 0.55) * (1 - cl(round, 0.2, 0.5)) * (1 - cl(wide, 0.3, 0.6)),
-      I: cl(wide, 0.25, 0.55) * (1 - cl(jaw, 0.25, 0.55)) * (1 - cl(round, 0.2, 0.5)),
-      U: cl(puc, 0.2, 0.5) * (1 - cl(jaw, 0.3, 0.6)),
-      E: cl(wide, 0.2, 0.5) * cl(jaw, 0.1, 0.35) * (1 - cl(round, 0.2, 0.5)),
-      O: cl(fun, 0.2, 0.5) * cl(jaw, 0.08, 0.3) * (1 - cl(puc, 0.4, 0.7)),
-    };
-    let sum = 0; for (const k in raw) sum += raw[k];
-    const out = {};
-    for (const k in raw) out['Vowel' + k] = sum > 1e-3 ? (raw[k] / Math.max(sum, 1)) * amp : 0;
-    return out;
-  }
-  Tracker.vowelWeights = vowelWeights;
   global.L2DTracker = Tracker;
 })(window);

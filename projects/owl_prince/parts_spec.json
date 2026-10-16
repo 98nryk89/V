@@ -43,7 +43,28 @@
       700
      ]
     ]
-   ]
+   ],
+   "fill_gate": {
+    "any": [
+     {
+      "lab": {
+       "L": [
+        0,
+        125
+       ]
+      }
+     },
+     {
+      "lab": {
+       "b": [
+        125.5,
+        255
+       ]
+      },
+      "soft": 2
+     }
+    ]
+   }
   },
   {
    "id": "owl",
@@ -2212,21 +2233,39 @@
   },
   {
    "id": "browL",
-   "z": 9,
+   "z": 8.4,
    "bleed": 0,
    "zone": {
     "mask": "brow_L_mask.png"
    },
-   "close": 0
+   "close": 0,
+   "color": {
+    "lab": {
+     "L": [
+      0,
+      125
+     ]
+    },
+    "soft": 4
+   }
   },
   {
    "id": "browR",
-   "z": 9,
+   "z": 8.4,
    "bleed": 0,
    "zone": {
     "mask": "brow_R_mask.png"
    },
-   "close": 0
+   "close": 0,
+   "color": {
+    "lab": {
+     "L": [
+      0,
+      125
+     ]
+    },
+    "soft": 4
+   }
   },
   {
    "id": "eyeL_k1",
@@ -2529,86 +2568,6 @@
     "ref": "../../samples/vowel_a.png",
     "union_refs": [
      "../../samples/vowel_a.png"
-    ],
-    "box": [
-     498,
-     452,
-     628,
-     522
-    ],
-    "thr": 45,
-    "grow": 3,
-    "feather": 1.4
-   }
-  },
-  {
-   "id": "mouth_vI",
-   "z": 13,
-   "synthetic": {
-    "type": "ref_patch",
-    "ref": "../../samples/vowel_i.png",
-    "union_refs": [
-     "../../samples/vowel_i.png"
-    ],
-    "box": [
-     498,
-     452,
-     628,
-     522
-    ],
-    "thr": 45,
-    "grow": 3,
-    "feather": 1.4
-   }
-  },
-  {
-   "id": "mouth_vU",
-   "z": 13,
-   "synthetic": {
-    "type": "ref_patch",
-    "ref": "../../samples/vowel_u.png",
-    "union_refs": [
-     "../../samples/vowel_u.png"
-    ],
-    "box": [
-     498,
-     452,
-     628,
-     522
-    ],
-    "thr": 45,
-    "grow": 3,
-    "feather": 1.4
-   }
-  },
-  {
-   "id": "mouth_vE",
-   "z": 13,
-   "synthetic": {
-    "type": "ref_patch",
-    "ref": "../../samples/vowel_e.png",
-    "union_refs": [
-     "../../samples/vowel_e.png"
-    ],
-    "box": [
-     498,
-     452,
-     628,
-     522
-    ],
-    "thr": 45,
-    "grow": 3,
-    "feather": 1.4
-   }
-  },
-  {
-   "id": "mouth_vO",
-   "z": 13,
-   "synthetic": {
-    "type": "ref_patch",
-    "ref": "../../samples/vowel_o.png",
-    "union_refs": [
-     "../../samples/vowel_o.png"
     ],
     "box": [
      498,

@@ -6,98 +6,98 @@
    "min": -5,
    "max": 5,
    "default": 0,
-   "label": "\u9854\u306e\u5411\u304d \u5de6\u53f3"
+   "label": "顔の向き 左右"
   },
   {
    "id": "AngleY",
    "min": -10,
    "max": 5,
    "default": 0,
-   "label": "\u9854\u306e\u5411\u304d \u4e0a\u4e0b"
+   "label": "顔の向き 上下"
   },
   {
    "id": "AngleZ",
    "min": -5,
    "max": 5,
    "default": 0,
-   "label": "\u9996\u304b\u3057\u3052"
+   "label": "首かしげ"
   },
   {
    "id": "EyeLOpen",
    "min": 0,
    "max": 1,
    "default": 1,
-   "label": "\u5de6\u76ee \u958b\u9589"
+   "label": "左目 開閉"
   },
   {
    "id": "EyeROpen",
    "min": 0,
    "max": 1,
    "default": 1,
-   "label": "\u53f3\u76ee \u958b\u9589"
+   "label": "右目 開閉"
   },
   {
    "id": "Breath",
    "min": 0,
    "max": 1,
    "default": 0,
-   "label": "\u547c\u5438"
+   "label": "呼吸"
   },
   {
    "id": "PhysHairL",
    "min": -1,
    "max": 1,
    "default": 0,
-   "label": "\u7269\u7406 \u9aeaL"
+   "label": "物理 髪L"
   },
   {
    "id": "Smile",
    "min": 0,
    "max": 1,
    "default": 0,
-   "label": "\u7b11\u9854"
+   "label": "笑顔"
   },
   {
    "id": "PhysHairR",
    "min": -1,
    "max": 1,
    "default": 0,
-   "label": "\u7269\u7406 \u9aeaR"
+   "label": "物理 髪R"
   },
   {
    "id": "PhysBangs",
    "min": -1,
    "max": 1,
    "default": 0,
-   "label": "\u7269\u7406 \u524d\u9aea"
+   "label": "物理 前髪"
   },
   {
    "id": "PhysRibbon",
    "min": -1,
    "max": 1,
    "default": 0,
-   "label": "\u7269\u7406 \u30ea\u30dc\u30f3"
+   "label": "物理 リボン"
   },
   {
    "id": "PhysChain",
    "min": -1,
    "max": 1,
    "default": 0,
-   "label": "\u7269\u7406 \u30c1\u30a7\u30fc\u30f3"
+   "label": "物理 チェーン"
   },
   {
    "id": "PhysEarL",
    "min": -1,
    "max": 1,
    "default": 0,
-   "label": "\u7269\u7406 \u8033\u98fe\u308aL"
+   "label": "物理 耳飾りL"
   },
   {
    "id": "PhysEarR",
    "min": -1,
    "max": 1,
    "default": 0,
-   "label": "\u7269\u7406 \u8033\u98fe\u308aR"
+   "label": "物理 耳飾りR"
   },
   {
    "id": "IdleX",
@@ -118,49 +118,33 @@
    "min": -1,
    "max": 1,
    "default": 0,
-   "label": "\u7269\u7406 \u623fA"
+   "label": "物理 房A"
   },
   {
    "id": "PhysTasselB",
    "min": -1,
    "max": 1,
    "default": 0,
-   "label": "\u7269\u7406 \u623fB"
+   "label": "物理 房B"
   },
   {
    "id": "VowelA",
    "min": 0,
    "max": 1,
    "default": 0,
-   "label": "\u6bcd\u97f3 \u3042"
+   "label": "母音 あ"
   },
   {
-   "id": "VowelI",
-   "min": 0,
+   "id": "PosX",
+   "min": -1,
    "max": 1,
-   "default": 0,
-   "label": "\u6bcd\u97f3 \u3044"
+   "default": 0
   },
   {
-   "id": "VowelU",
-   "min": 0,
+   "id": "PosY",
+   "min": -1,
    "max": 1,
-   "default": 0,
-   "label": "\u6bcd\u97f3 \u3046"
-  },
-  {
-   "id": "VowelE",
-   "min": 0,
-   "max": 1,
-   "default": 0,
-   "label": "\u6bcd\u97f3 \u3048"
-  },
-  {
-   "id": "VowelO",
-   "min": 0,
-   "max": 1,
-   "default": 0,
-   "label": "\u6bcd\u97f3 \u304a"
+   "default": 0
   }
  ],
  "templates": {
@@ -182,6 +166,48 @@
     "idle": 0.35,
     "rigid": 0,
     "k": 0.5
+   },
+   {
+    "type": "translate",
+    "param": "PosX",
+    "map": [
+     [
+      -1,
+      -80,
+      0
+     ],
+     [
+      1,
+      80,
+      0
+     ]
+    ],
+    "weight": {
+     "mode": "y",
+     "from": 690,
+     "to": 590
+    }
+   },
+   {
+    "type": "translate",
+    "param": "PosY",
+    "map": [
+     [
+      -1,
+      0,
+      50
+     ],
+     [
+      1,
+      0,
+      -50
+     ]
+    ],
+    "weight": {
+     "mode": "y",
+     "from": 690,
+     "to": 590
+    }
    }
   ],
   "head_eye": [
@@ -202,6 +228,48 @@
     "idle": 0.35,
     "rigid": 0,
     "k": 0.5
+   },
+   {
+    "type": "translate",
+    "param": "PosX",
+    "map": [
+     [
+      -1,
+      -80,
+      0
+     ],
+     [
+      1,
+      80,
+      0
+     ]
+    ],
+    "weight": {
+     "mode": "y",
+     "from": 690,
+     "to": 590
+    }
+   },
+   {
+    "type": "translate",
+    "param": "PosY",
+    "map": [
+     [
+      -1,
+      0,
+      50
+     ],
+     [
+      1,
+      0,
+      -50
+     ]
+    ],
+    "weight": {
+     "mode": "y",
+     "from": 690,
+     "to": 590
+    }
    }
   ],
   "head_front": [
@@ -222,6 +290,48 @@
     "idle": 0.35,
     "rigid": 0.5,
     "k": 0.5
+   },
+   {
+    "type": "translate",
+    "param": "PosX",
+    "map": [
+     [
+      -1,
+      -80,
+      0
+     ],
+     [
+      1,
+      80,
+      0
+     ]
+    ],
+    "weight": {
+     "mode": "y",
+     "from": 690,
+     "to": 590
+    }
+   },
+   {
+    "type": "translate",
+    "param": "PosY",
+    "map": [
+     [
+      -1,
+      0,
+      50
+     ],
+     [
+      1,
+      0,
+      -50
+     ]
+    ],
+    "weight": {
+     "mode": "y",
+     "from": 690,
+     "to": 590
+    }
    }
   ],
   "head_back": [
@@ -242,6 +352,48 @@
     "idle": 0.35,
     "rigid": 0.4,
     "k": 0.5
+   },
+   {
+    "type": "translate",
+    "param": "PosX",
+    "map": [
+     [
+      -1,
+      -80,
+      0
+     ],
+     [
+      1,
+      80,
+      0
+     ]
+    ],
+    "weight": {
+     "mode": "y",
+     "from": 690,
+     "to": 590
+    }
+   },
+   {
+    "type": "translate",
+    "param": "PosY",
+    "map": [
+     [
+      -1,
+      0,
+      50
+     ],
+     [
+      1,
+      0,
+      -50
+     ]
+    ],
+    "weight": {
+     "mode": "y",
+     "from": 690,
+     "to": 590
+    }
    }
   ],
   "head_orn": [
@@ -262,6 +414,48 @@
     "idle": 0.35,
     "rigid": 1,
     "k": 0.5
+   },
+   {
+    "type": "translate",
+    "param": "PosX",
+    "map": [
+     [
+      -1,
+      -80,
+      0
+     ],
+     [
+      1,
+      80,
+      0
+     ]
+    ],
+    "weight": {
+     "mode": "y",
+     "from": 690,
+     "to": 590
+    }
+   },
+   {
+    "type": "translate",
+    "param": "PosY",
+    "map": [
+     [
+      -1,
+      0,
+      50
+     ],
+     [
+      1,
+      0,
+      -50
+     ]
+    ],
+    "weight": {
+     "mode": "y",
+     "from": 690,
+     "to": 590
+    }
    }
   ],
   "head_hairside": [
@@ -287,6 +481,48 @@
      "to": 520
     },
     "k": 0.5
+   },
+   {
+    "type": "translate",
+    "param": "PosX",
+    "map": [
+     [
+      -1,
+      -80,
+      0
+     ],
+     [
+      1,
+      80,
+      0
+     ]
+    ],
+    "weight": {
+     "mode": "y",
+     "from": 1000,
+     "to": 590
+    }
+   },
+   {
+    "type": "translate",
+    "param": "PosY",
+    "map": [
+     [
+      -1,
+      0,
+      50
+     ],
+     [
+      1,
+      0,
+      -50
+     ]
+    ],
+    "weight": {
+     "mode": "y",
+     "from": 1000,
+     "to": 590
+    }
    }
   ],
   "breath_body": [
@@ -347,6 +583,48 @@
     "idle": 0.35,
     "rigid": 1,
     "k": 0.5
+   },
+   {
+    "type": "translate",
+    "param": "PosX",
+    "map": [
+     [
+      -1,
+      -80,
+      0
+     ],
+     [
+      1,
+      80,
+      0
+     ]
+    ],
+    "weight": {
+     "mode": "y",
+     "from": 690,
+     "to": 590
+    }
+   },
+   {
+    "type": "translate",
+    "param": "PosY",
+    "map": [
+     [
+      -1,
+      0,
+      50
+     ],
+     [
+      1,
+      0,
+      -50
+     ]
+    ],
+    "weight": {
+     "mode": "y",
+     "from": 690,
+     "to": 590
+    }
    }
   ],
   "body_follow": [
@@ -420,6 +698,38 @@
      [
       5,
       0.12
+     ]
+    ]
+   },
+   {
+    "type": "translate",
+    "param": "PosX",
+    "map": [
+     [
+      -1,
+      -6,
+      0
+     ],
+     [
+      1,
+      6,
+      0
+     ]
+    ]
+   },
+   {
+    "type": "translate",
+    "param": "PosY",
+    "map": [
+     [
+      -1,
+      0,
+      4
+     ],
+     [
+      1,
+      0,
+      -4
      ]
     ]
    }
@@ -499,6 +809,48 @@
       "mode": "y",
       "from": 640,
       "to": 540
+     }
+    },
+    {
+     "type": "translate",
+     "param": "PosX",
+     "map": [
+      [
+       -1,
+       -80,
+       0
+      ],
+      [
+       1,
+       80,
+       0
+      ]
+     ],
+     "weight": {
+      "mode": "y",
+      "from": 690,
+      "to": 590
+     }
+    },
+    {
+     "type": "translate",
+     "param": "PosY",
+     "map": [
+      [
+       -1,
+       0,
+       50
+      ],
+      [
+       1,
+       0,
+       -50
+      ]
+     ],
+     "weight": {
+      "mode": "y",
+      "from": 690,
+      "to": 590
      }
     },
     "@body_follow"
@@ -1362,126 +1714,6 @@
    },
    "mesh_step": 4
   },
-  "mouth_vI": {
-   "effects": [
-    {
-     "type": "opacity",
-     "param": "VowelI",
-     "map": [
-      [
-       0,
-       0
-      ],
-      [
-       0.15,
-       1
-      ],
-      [
-       1,
-       1
-      ]
-     ]
-    },
-    "@breath_head",
-    "@head_eye",
-    "@body_follow"
-   ],
-   "depth": {
-    "layer": "face",
-    "off": 2
-   },
-   "mesh_step": 4
-  },
-  "mouth_vU": {
-   "effects": [
-    {
-     "type": "opacity",
-     "param": "VowelU",
-     "map": [
-      [
-       0,
-       0
-      ],
-      [
-       0.15,
-       1
-      ],
-      [
-       1,
-       1
-      ]
-     ]
-    },
-    "@breath_head",
-    "@head_eye",
-    "@body_follow"
-   ],
-   "depth": {
-    "layer": "face",
-    "off": 2
-   },
-   "mesh_step": 4
-  },
-  "mouth_vE": {
-   "effects": [
-    {
-     "type": "opacity",
-     "param": "VowelE",
-     "map": [
-      [
-       0,
-       0
-      ],
-      [
-       0.15,
-       1
-      ],
-      [
-       1,
-       1
-      ]
-     ]
-    },
-    "@breath_head",
-    "@head_eye",
-    "@body_follow"
-   ],
-   "depth": {
-    "layer": "face",
-    "off": 2
-   },
-   "mesh_step": 4
-  },
-  "mouth_vO": {
-   "effects": [
-    {
-     "type": "opacity",
-     "param": "VowelO",
-     "map": [
-      [
-       0,
-       0
-      ],
-      [
-       0.15,
-       1
-      ],
-      [
-       1,
-       1
-      ]
-     ]
-    },
-    "@breath_head",
-    "@head_eye",
-    "@body_follow"
-   ],
-   "depth": {
-    "layer": "face",
-    "off": 2
-   },
-   "mesh_step": 4
-  },
   "earL_skin": {
    "effects": [
     "@breath_head",
@@ -1630,6 +1862,14 @@
     {
      "param": "AngleY",
      "gain": 0.25
+    },
+    {
+     "param": "PosX",
+     "gain": 4.0
+    },
+    {
+     "param": "PosY",
+     "gain": 1.5
     }
    ],
    "freq": 1.5,
@@ -1652,6 +1892,14 @@
     {
      "param": "AngleY",
      "gain": 0.25
+    },
+    {
+     "param": "PosX",
+     "gain": 4.0
+    },
+    {
+     "param": "PosY",
+     "gain": 1.5
     }
    ],
    "freq": 1.6,
@@ -1674,6 +1922,14 @@
     {
      "param": "AngleZ",
      "gain": 0.8
+    },
+    {
+     "param": "PosX",
+     "gain": 4.0
+    },
+    {
+     "param": "PosY",
+     "gain": 1.5
     }
    ],
    "freq": 2.3,
@@ -1696,6 +1952,14 @@
     {
      "param": "AngleY",
      "gain": 0.25
+    },
+    {
+     "param": "PosX",
+     "gain": 4.0
+    },
+    {
+     "param": "PosY",
+     "gain": 1.5
     }
    ],
    "freq": 1.8,
@@ -1718,6 +1982,14 @@
     {
      "param": "AngleY",
      "gain": 0.25
+    },
+    {
+     "param": "PosX",
+     "gain": 4.0
+    },
+    {
+     "param": "PosY",
+     "gain": 1.5
     }
    ],
    "freq": 2.0,
