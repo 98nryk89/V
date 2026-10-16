@@ -56,12 +56,12 @@
       this.raw = { yaw, pitch };
       const o = this.opts;
       // mirrored preview: user turning to their right (nose to image-left) => avatar turns to screen-right (+AngleX)
-      let ax = -(yaw - this.neutral.yaw) * 70 * o.gainX;
-      let ay = -(pitch - this.neutral.pitch) * 110 * o.gainY;
-      let az = -roll;
+      let ax = -(yaw - this.neutral.yaw) * 30 * o.gainX;
+      let ay = -(pitch - this.neutral.pitch) * 50 * o.gainY;
+      let az = -roll * 0.4;
       if (o.invX) ax = -ax; if (o.invY) ay = -ay; if (o.invZ) az = -az;
       const t = {
-        AngleX: clamp(ax, -30, 30), AngleY: clamp(ay, -30, 30), AngleZ: clamp(az, -30, 30),
+        AngleX: clamp(ax, -12, 12), AngleY: clamp(ay, -12, 12), AngleZ: clamp(az, -12, 12),
       };
       const bs = {};
       if (res.faceBlendshapes && res.faceBlendshapes[0]) for (const c of res.faceBlendshapes[0].categories) bs[c.categoryName] = c.score;

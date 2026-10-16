@@ -148,6 +148,8 @@ def decompose(rgb_u8, alpha, specs, report=None):
     vis = {}
     for s in order:
         zone = poly_mask((h, w), s["zone"]) if s.get("zone") is not None else np.ones((h, w), np.float32)
+        if s.get("zone_grow"):      # let the part own a few px of outline just outside its polygon
+            zone = np.maximum(zone, ndi.binary_dilation(zone > 0.5, iterations=int(s["zone_grow"])).astype(np.float32))
         gate = color_gate(rgb_u8, s.get("color"))
         a = zone * gate * (alpha > 0)
         if s.get("close"):          # bridge small gaps / fill pinholes (dark shading inside silver hair, ...)
@@ -214,6 +216,8 @@ def decompose(rgb_u8, alpha, specs, report=None):
             known_src = known & (color_gate(rgb_u8, s["fill_gate"]) > 0.5)
         else:
             known_src = known
+        if s.get("known_erode"):    # keep antialiased/contaminated rims out of the seed pixels
+            known_src = ndi.binary_erosion(known_src, iterations=int(s["known_erode"]))
         if "fill_rgb" in s:
             col = src.copy()
             hm = ndi.gaussian_filter((hidden & ~known).astype(np.float32), 2.0)[..., None]
@@ -221,6 +225,14 @@ def decompose(rgb_u8, alpha, specs, report=None):
             col = np.where((hidden & ~known)[..., None], np.array(s["fill_rgb"], np.float32), col)
         else:
             col = fill_hidden(src, known_src & ~hidden, hidden & ~known)
+            if s.get("fill_smooth"):   # hidden skin/hair should be smooth, not a copy of strand edges
+                sg = float(s["fill_smooth"])
+                hm_ = (hidden & ~known)
+                if hm_.any():
+                    blurred = np.stack([ndi.gaussian_filter(col[..., c] * hm_, sg) for c in range(3)], -1)
+                    wgt = ndi.gaussian_filter(hm_.astype(np.float32), sg)[..., None]
+                    sm = blurred / np.maximum(wgt, 1e-3)
+                    col = np.where(hm_[..., None], np.where(wgt > 0.05, sm, col), col)
         a = np.clip(v, 0, 1)
         # alpha of the part as it sits in the stack: undo the 'over' compositing of conserved alpha
         a_layer = np.where(front < 0.999, a / np.maximum(1 - front, 1e-3), a)
