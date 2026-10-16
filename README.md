@@ -19,6 +19,15 @@ python -m live2d_ai preview projects/owl_prince --poses "r20:AngleX=20;blink:Eye
 python -m live2d_ai export projects/owl_prince -o dist/owl_prince.html
 ```
 
+## 最新の操作
+
+- 頭の回転範囲は左右・傾き ±5°、上下は上 +5°／下 −10°。横・縦の平行移動は別スライダーで広く動かせる。
+- 口は閉じ口と「あ」の開いた口のみ。
+- 笑顔はキー **1** で切替、**0** で真顔。自動で笑顔にはならない。ボタンでも操作できる。
+- カメラでは「正面を較正」で中心を合わせ、「移動の感度」で反応を調整する。
+
+比較画像・検証方法は [操作仕様](docs/controls.md)。
+
 ## 自分のイラストで作る
 
 ```sh

@@ -30,16 +30,16 @@ python tools/fidelity.py projects/owl_prince/out samples/ref12.png /tmp/err.png 
 | `live2d_ai/build.py` | 仕様 → パーツ PNG + メッシュ + `rig.json` |
 | `live2d_ai/headmodel.py` + `projects/*/head_model.json` | このキャラ専用の頭の奥行き(正面の幅 + 横顔の出っ張り) |
 | `viewer/runtime.js` | WebGL ランタイム(head3d, translate/rotate/scale/opacity, ばね物理) |
-| `viewer/tracking.js` | Web カメラ追跡(MediaPipe)。母音判定 `vowelWeights` |
+| `viewer/tracking.js` | Web カメラ追跡(MediaPipe)。顔位置と回転を分離、顎の開きで A の口を開閉 |
 | `projects/owl_prince/parts_spec.json` | どの画素をどのパーツにするか |
 | `projects/owl_prince/rig_spec.json` | パラメータ、各パーツの動き、物理 |
 | `tools/` | `zoom.py`(座標グリッド付き拡大)、`preview.py`、`fidelity.py`、`track_test.py` |
 
 ## 現在の仕様(ユーザーが決めたこと)
 - 首の角度: 左右・かしげ ±5°、上下は 上+5°/下-10°(うなずき)。大きくは動かさない。
-- 頭を動かすと、体全体もごく小さく一緒に動く(`body_follow`)。ジャケット・肩・時計・房は、頭に連動しない。
+- 角度に応じた小さい体の連動に加え、独立した BodyX/Y で全身を横 ±90px・縦 ±70px 移動する。ジャケット・肩・時計・房は頭と個別には回転しない。
 - 銀髪は首から下では動かない。耳+耳飾りは一緒に動く。肩のフクロウは頭に連動しない。
-- まばたき: 参考絵の段階絵を段階的につなぐ。黒目は動かさない。笑顔: `Smile`。口: 母音 `VowelA/I/U/E/O`(参考写真)。
+- まばたき: 参考絵の段階絵を段階的につなぐ。黒目は動かさない。笑顔: `Smile`（キー1で切替、0で真顔。自動判定なし、初期値0）。口: 閉じ口と参考 A の `VowelA`（0/1）のみ。笑顔時も口はこの2形状。
 - 縁はくっきり(`edge`)。髪飾り・アクセサリーには縁取りを足さない。
 
 ## 未完了・次の作業(最新。上から順に)
@@ -74,3 +74,7 @@ python tools/fidelity.py projects/owl_prince/out samples/ref12.png /tmp/err.png 
 - 独立した眉・耳肌パーツを削除して face に統合。顔・耳の見えている元絵画素を色条件で塗り直す処理を外した。隠れた耳は履歴にあった提供 RGBA から補う。耳飾りの輪より下だけが揺れる設定は維持。
 - 詳細・比較・検証方法は `docs/cutout-repair.md`、原因は CLAUDE.md の Codex 節。テストはビルド後に `python -m unittest discover -s tests -v`、既存 fidelity/physics/preview で確認する。
 - 残作業の優先順: (1) ユーザーの修正版での動作確認、特に左右の耳と髪の境目。(2) 頭の髪を毛束ごとに分ける追加調整と長髪とのつなぎ目の確認。(3) リボン右下の灰色片の切り分け。(4) 実機カメラ。うなずきの参考絵と完全一致する立体・形状にしたわけではない。
+
+## 移動・口・表情の操作更新（切り取り修正後の最新仕様）
+
+回転の範囲は維持し、BodyX/Y は全パーツ共通の平行移動。カメラの位置合わせは「正面を較正」、移動量への反応は「移動の感度」で調整する。数字キー1で笑顔を切替、0で真顔。詳細と確認画像は `docs/controls.md`。検証は Python の6件（ブラウザ2件を含む）と `node --test tests/tracking.test.cjs` の7件。実機カメラは未確認、検出結果を模した入力でカメラ側の変換処理を確認した。
