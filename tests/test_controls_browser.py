@@ -191,6 +191,27 @@ class ViewerControlsTest(unittest.TestCase):
         page.locator('#a_mouse').uncheck()
         page.locator('#reset').click()
         self.assertEqual(page.evaluate('[M.params.Smile,M.params.VowelE,M.params.BodyX,M.params.BodyY]'), [0, 0, 0, 0])
+        matrix_motion = page.evaluate('''()=>{
+          const tracker=new L2DTracker(M,{smooth:0});let result;
+          tracker.landmarker={detectForVideo:()=>result};
+          const feed=(yaw,pitch)=>{
+            const d=Math.PI/180,cy=Math.cos(yaw*d),sy=Math.sin(yaw*d),cp=Math.cos(pitch*d),sp=Math.sin(pitch*d);
+            const l=Array.from({length:478},()=>({x:.5,y:.5}));
+            for(const [i,x,y] of [[33,.4,.4],[263,.6,.4],[1,.5,.45],[152,.5,.65],[61,.46,.57],[291,.54,.57]])l[i]={x,y};
+            result={faceLandmarks:[l],facialTransformationMatrixes:[{data:[cy,0,-sy,0,sy*sp,cp,cy*sp,0,sy*cp,-sp,cy*cp,0,0,0,-50,1]}]};
+            tracker.feed({},0);
+          };
+          M.reset();feed(0,0);const f=M.byId.face;M._deform(f);const rest=Array.from(f._pos);
+          return [[20,0],[-20,0],[0,-20],[0,20]].map(([x,y])=>{feed(x,y);M._deform(f);
+            const movement=Math.max(...f._pos.map((v,i)=>Math.abs(v-rest[i])));
+            return {angle:[M.params.AngleX,M.params.AngleY],body:[M.params.BodyX,M.params.BodyY],movement};
+          });
+        }''')
+        for result, expected in zip(matrix_motion, [[-5,0],[5,0],[0,5],[0,-10]]):
+            self.assertEqual(result['angle'], expected)
+            self.assertEqual(result['body'], [0,0])
+            self.assertGreater(result['movement'], 1)
+        page.evaluate('M.reset();M.render()')
         if capture and os.environ.get('CONTROL_PREVIEW_DIR'):
             out = Path(os.environ['CONTROL_PREVIEW_DIR'])
             out.mkdir(parents=True, exist_ok=True)

@@ -10,10 +10,23 @@
   const MODEL = OVR.model || 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task';
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
+  // MediaPipe uses a column-major 4x4 face transform. Translation and scale
+  // must not masquerade as neck rotation. Euler angles are in camera degrees.
+  function rotationFromMatrix(data) {
+    if (!data || data.length !== 16 || !Array.from(data).every(Number.isFinite)) return null;
+    if (Math.hypot(data[0],data[1],data[2]) < .5 || Math.hypot(data[6],data[10]) < .1) return null;
+    const degrees = 180 / Math.PI;
+    return {
+      yaw: Math.atan2(-data[2], Math.hypot(data[0],data[1])) * degrees,
+      pitch: Math.atan2(data[6],data[10]) * degrees,
+      roll: Math.atan2(data[1],data[0]) * degrees,
+    };
+  }
+
   class Tracker {
     constructor(model, opts = {}) {
       this.m = model; this.opts = Object.assign({ invX: false, invY: false, invZ: false, smooth: 0.45, gainX: 1, gainY: 1, gainMove: 1 }, opts);
-      this.neutral = { yaw: 0, pitch: 0.45, x: null, y: null, eyeDist: null };
+      this.neutral = { yaw: 0, pitch: 0.45, x: null, y: null, eyeDist: null, rotation: null };
       this.raw = null; this.state = {}; this.running = false;
     }
 
@@ -46,8 +59,8 @@
     calibrate() {
       if (!this.raw) return;
       this.neutral = { ...this.raw };
-      this.state.BodyX = this.state.BodyY = 0;
-      this.m.setParams({ BodyX: 0, BodyY: 0 });
+      for (const key of ['BodyX','BodyY','AngleX','AngleY','AngleZ']) this.state[key] = 0;
+      this.m.setParams({ BodyX: 0, BodyY: 0, AngleX: 0, AngleY: 0, AngleZ: 0 });
     }
 
     _step() {
@@ -76,13 +89,24 @@
       const downNose = -nx * ey + ny * ex, downChin = -cx * ey + cy * ex;     // components along "down" in the head frame
       const pitch = downNose / (downChin || 1e-3);                            // larger = looking down
       const roll = Math.atan2(eL.y - eR.y, eL.x - eR.x) * 180 / Math.PI;
-      this.raw = { yaw, pitch, x: mid.x, y: mid.y, eyeDist };
+      const rotation = rotationFromMatrix(this.lastMatrix);
+      this.raw = { yaw, pitch, x: mid.x, y: mid.y, eyeDist, rotation };
+      if (rotation && !this.neutral.rotation) this.neutral.rotation = { ...rotation };
       if (this.neutral.x == null) Object.assign(this.neutral, { x: mid.x, y: mid.y, eyeDist });
       const o = this.opts;
       // mirrored preview: user turning to their right (nose to image-left) => avatar turns to screen-right (+AngleX)
       let ax = -(yaw - this.neutral.yaw) * 13 * o.gainX;
       let ay = -(pitch - this.neutral.pitch) * 30 * o.gainY;
       let az = -roll * 0.18;
+      if (rotation) {
+        const n = this.neutral.rotation;
+        // Mirror camera yaw, positive camera pitch looks down, camera roll
+        // already has the mirrored screen tilt sign. Keep the specified caps.
+        const delta = (a,b) => ((a-b+540)%360)-180;
+        ax = -delta(rotation.yaw,n.yaw) * o.gainX;
+        ay = -delta(rotation.pitch,n.pitch) * o.gainY;
+        az = delta(rotation.roll,n.roll);
+      }
       if (o.invX) ax = -ax; if (o.invY) ay = -ay; if (o.invZ) az = -az;
       // Translation comes from face position, independently of nose/eye angles.
       const bx = -(mid.x - this.neutral.x) / this.neutral.eyeDist * 1.5 * o.gainMove * (o.invX ? -1 : 1);

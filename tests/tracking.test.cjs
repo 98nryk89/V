@@ -72,3 +72,40 @@ test('vertical head rotation retains the original up/down limits',()=>{
     const p=r.params.find(p=>p.id===id);assert.equal(p.min,min);assert.equal(p.max,max);
   }
 });
+
+// Column-major Rz * Ry * Rx: independent of the 2D nose ratios above.
+function poseFrame(yaw=0,pitch=0,roll=0,dx=0,dy=0) {
+  const r=frame(dx,dy),d=Math.PI/180;
+  const cy=Math.cos(yaw*d),sy=Math.sin(yaw*d),cx=Math.cos(pitch*d),sx=Math.sin(pitch*d),cz=Math.cos(roll*d),sz=Math.sin(roll*d);
+  r.facialTransformationMatrixes=[{data:[
+    cz*cy,sz*cy,-sy,0,
+    cz*sy*sx-sz*cx,sz*sy*sx+cz*cx,cy*sx,0,
+    cz*sy*cx+sz*sx,sz*sy*cx-cz*sx,cy*cx,0,
+    0,0,-50,1,
+  ]}];return r;
+}
+test('real 3D camera rotation drives the head even when nose ratios do not move',()=>{
+  const {model,feed}=fixture();feed(poseFrame());
+  feed(poseFrame(3,2,1));
+  assert.ok(Math.abs(model.params.AngleX+3)<1e-8);
+  assert.ok(Math.abs(model.params.AngleY+2)<1e-8);
+  assert.ok(Math.abs(model.params.AngleZ-1)<1e-8);
+  assert.equal(model.params.BodyX,0);assert.equal(model.params.BodyY,0);
+  feed(poseFrame(25,20,15));
+  assert.equal(model.params.AngleX,-5);assert.equal(model.params.AngleY,-10);assert.equal(model.params.AngleZ,5);
+  feed(poseFrame(-25,-20,-15));
+  assert.equal(model.params.AngleX,5);assert.equal(model.params.AngleY,5);assert.equal(model.params.AngleZ,-5);
+});
+test('3D rotation calibration and position calibration remain independent',()=>{
+  const {model,tr,feed}=fixture();feed(poseFrame());feed(poseFrame(8,9,-3,.02,.03));tr.calibrate();
+  for(const k of ['AngleX','AngleY','AngleZ','BodyX','BodyY'])assert.equal(model.params[k],0);
+  feed(poseFrame(8,9,-3,.07,.07));
+  for(const k of ['AngleX','AngleY','AngleZ'])assert.ok(Math.abs(model.params[k])<1e-8);
+  assert.ok(Math.abs(model.params.BodyX+.375)<1e-8);assert.ok(Math.abs(model.params.BodyY-.3)<1e-8);
+  tr.opts.invX=true;tr.opts.invY=true;tr.opts.invZ=true;feed(poseFrame(11,11,-2,.02,.03));
+  assert.ok(Math.abs(model.params.AngleX-3)<1e-8);assert.ok(Math.abs(model.params.AngleY-2)<1e-8);assert.ok(Math.abs(model.params.AngleZ+1)<1e-8);
+});
+test('invalid camera matrices fall back to landmarks without freezing or NaN',()=>{
+  const {model,feed}=fixture();const f=frame(0,0,.25);f.facialTransformationMatrixes=[{data:Array(16).fill(NaN)}];feed(f);
+  assert.equal(model.params.AngleX,-5);assert.ok(Number.isFinite(model.params.AngleY));
+});
