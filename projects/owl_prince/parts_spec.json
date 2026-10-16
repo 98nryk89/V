@@ -2205,7 +2205,7 @@
   {
    "id": "browL",
    "z": 9,
-   "bleed": 1,
+   "bleed": 0,
    "zone": [
     [
      446,
@@ -2243,12 +2243,15 @@
      ]
     ],
     "tol": 22
+   },
+   "exclude": {
+    "mask": "hair_head_alpha.png"
    }
   },
   {
    "id": "browR",
    "z": 9,
-   "bleed": 1,
+   "bleed": 0,
    "zone": [
     [
      606,
@@ -2286,6 +2289,9 @@
      ]
     ],
     "tol": 22
+   },
+   "exclude": {
+    "mask": "hair_head_alpha.png"
    }
   },
   {
