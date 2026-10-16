@@ -113,3 +113,10 @@ python tools/fidelity.py projects/owl_prince/out samples/ref12.png /tmp/err.png 
 - 露出した眉だけでなく目/まぶたも髪から顔へ戻す。前髪は提供アルファで保護。tools/refine_details.py で再生成。
 - 正解画像に samples/surprised_ref.png（ユーザー提供ZIP内の元PNG）を追加。キー2/驚きボタン、1/笑顔と排他、0/真顔/リセットで解除。驚きでも瞬き・Eの口で発話可能。デフォルト真顔。
 - 44パーツ、Python20件＋Node10件。比較と戻し方は docs/surprise.md。回転は左右/上5度・下10度を維持。未完了は実機カメラでの確認と必要な微調整。
+
+## 最新: 眉の肌への固定・顎の輪郭・カメラ自動A/I（2026-10-17）
+
+- 眉を横切る髪の小領域を肌と同じ深度・変形へ合わせ、そこだけ前髪回転を除外。眉の表情追従なし。笑顔・驚きのパッチは目だけ。
+- 左/下向きの顎の線の圧縮を緩和し、faceメッシュは4px。首の旧顎の線は tools/refine_face.py → neck_underjaw.png の局所補完で隠す。
+- 口は旧E単独を廃止し、閉じ口・参考A・参考Iのみ。MouthForm=0/1をカメラで自動判定、MouthOpen=0〜1で滑らかに開閉。A/Iを混ぜない。驚き専用口も廃止。保存済み vowel_i.png が今回の添付と同じ歯を見せる参考。
+- 44パーツ、Python22件＋Node12件。操作・比較・戻し方は docs/face-mouth.md。回転/移動の範囲・物理ドライバは維持。未完了の優先順は実機カメラでの口判定と眉/輪郭の確認、必要な感度の微調整。
