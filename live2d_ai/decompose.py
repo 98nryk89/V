@@ -297,9 +297,23 @@ def decompose(rgb_u8, alpha, specs, report=None, unmix=None):
         if ref is None or ref.ndim != 3 or ref.shape != (h, w, 4):
             raise ValueError("fill_layer must be an aligned RGBA image on the source canvas")
         layer = out[s["id"]]
-        blend = ref[..., 3].astype(np.float32) / 255.0 * layer["hidden"]
+        ref_alpha = ref[..., 3].astype(np.float32) / 255.0
+        target = layer["hidden"]
+        if ref_spec.get("include_partial"):
+            # A soft cutout can leave part of its own colour on the backing.
+            # Replace that covered fraction too, only inside the supplied RGBA.
+            target = target | (layer["visible"] < alpha - 0.001)
+        extension = ((ref_alpha > layer["alpha"] + 0.001) & (alpha < 0.5)
+                     if ref_spec.get("extend_alpha") else np.zeros((h, w), bool))
+        target = target | extension
+        blend = ref_alpha * target
         layer["rgb"] = (layer["rgb"] * (1 - blend[..., None])
                         + ref[..., 2::-1].astype(np.float32) * blend[..., None])
+        if ref_spec.get("extend_alpha"):
+            # Newly revealed gaps have no source colour to blend with. Use the
+            # reference's unassociated RGB and its bounded, feathered coverage.
+            layer["rgb"] = np.where(extension[..., None], ref[..., 2::-1], layer["rgb"])
+            layer["alpha"] = np.where(extension, np.maximum(layer["alpha"], ref_alpha), layer["alpha"])
     for s in sorted(specs, key=lambda item: item["z"]):
         if not s.get("preserve_source"):
             continue

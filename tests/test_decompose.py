@@ -71,6 +71,41 @@ class ArtistFillTest(unittest.TestCase):
         self.assertLessEqual(a, 1)
         np.testing.assert_array_equal(out['skin']['rgb'][2, 2], self.rgb[2, 2])
 
+    def test_partial_backing_does_not_retain_a_stationary_cutout_halo(self):
+        self.save_reference()
+        self.rgb[:] = [30, 40, 90]
+        mask = np.zeros((24, 24), dtype=np.uint8)
+        mask[8:16, 8:16] = 64
+        mask_path = self.path.parent / 'soft-object.png'
+        cv2.imwrite(str(mask_path), mask)
+        self.specs[0]['fill_layer']['include_partial'] = True
+        self.specs[1].update(zone={'mask': str(mask_path)}, preserve_source=True)
+        out = decompose(self.rgb, self.alpha, self.specs)
+        self.assertFalse(out['skin']['hidden'][11, 11])
+        np.testing.assert_array_equal(out['skin']['rgb'][11, 11], [230, 80, 50])
+        a = out['hair']['alpha'][11, 11]
+        composite = out['hair']['rgb'][11, 11] * a + out['skin']['rgb'][11, 11] * (1 - a)
+        np.testing.assert_allclose(composite, self.rgb[11, 11], atol=.001)
+        np.testing.assert_array_equal(out['skin']['rgb'][2, 2], self.rgb[2, 2])
+
+    def test_explicit_backing_extension_is_bounded_and_keeps_reference_edge_colour(self):
+        self.alpha[:] = 0
+        ref = np.zeros((24, 24, 4), np.uint8)
+        ref[8:16, 8:16] = [180, 170, 190, 160]
+        cv2.imwrite(str(self.path), ref)
+        self.specs[0]['fill_layer']['extend_alpha'] = True
+        out = decompose(self.rgb, self.alpha, self.specs)
+        self.assertAlmostEqual(float(out['skin']['alpha'][11, 11]), 160 / 255)
+        self.assertEqual(out['skin']['alpha'][2, 2], 0)
+        np.testing.assert_array_equal(out['skin']['rgb'][11, 11], [190, 170, 180])
+
+    def test_backing_extension_does_not_make_intentional_cutout_holes_opaque(self):
+        self.save_reference()
+        self.specs[0].pop('extent')
+        self.specs[0]['fill_layer']['extend_alpha'] = True
+        out = decompose(self.rgb, self.alpha, self.specs)
+        self.assertEqual(out['skin']['alpha'][11, 11], 0)
+
 
 if __name__ == '__main__':
     unittest.main()
