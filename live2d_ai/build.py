@@ -46,6 +46,50 @@ def make_mesh(alpha_crop, x0, y0, step):
     return dict(verts=[round(v, 2) for v in verts], uvs=[round(u, 5) for u in uvs], tris=tris)
 
 
+def _smoothstep(a, lo, hi):
+    t = np.clip((a - lo) / max(hi - lo, 1e-6), 0, 1)
+    return t * t * (3 - 2 * t)
+
+
+def _edge_context(alpha, layers, edge):
+    """Silhouette bookkeeping shared by all parts: where the figure ends, and which part owns each outline pixel."""
+    fg = alpha > 0.5
+    dist, idx = ndi.distance_transform_edt(~fg, return_indices=True)
+    near_in = ndi.distance_transform_edt(fg)
+    zone = (dist <= 3) | (near_in <= 3)              # a few px either side of the silhouette
+    ids = [k for k, v in layers.items()]
+    stack = np.stack([layers[k]["visible"] for k in ids])
+    owner_map = np.argmax(stack, axis=0)             # part that owns each foreground pixel
+    return dict(fg=fg, dist=dist, idx=idx, zone=zone, ids=ids, owner=owner_map[idx[0], idx[1]])
+
+
+def _apply_edge(L, pid, ctx, edge):
+    """Crisp silhouette for one part: steeper alpha at the figure edge, dark outline ring, mild unsharp mask."""
+    rgb = L["rgb"].astype(np.float32).copy()
+    a = L["alpha"].astype(np.float32).copy()
+    st = edge.get("steepen")
+    if st:
+        a = np.where(ctx["zone"], _smoothstep(a, st[0], st[1]), a)
+    ol = edge.get("outline")
+    if ol:
+        mine = ctx["owner"] == ctx["ids"].index(pid)
+        w = float(ol.get("width", 1.5))
+        ring_a = np.clip(w + 0.5 - ctx["dist"], 0, 1) * float(ol.get("strength", 0.9))
+        ring = mine & (ctx["dist"] > 0) & (ring_a > 0) & ~ctx["fg"]
+        near = rgb[ctx["idx"][0], ctx["idx"][1]] * float(ol.get("darken", 0.4))
+        if "color" in ol:
+            near = np.broadcast_to(np.array(ol["color"], np.float32), near.shape)
+        new_a = np.where(ring, np.maximum(a, ring_a), a)
+        use = ring & (ring_a >= a)
+        rgb = np.where(use[..., None], near, rgb)
+        a = new_a
+    sh = edge.get("sharpen")
+    if sh:
+        blur = cv2.GaussianBlur(rgb, (0, 0), float(sh.get("sigma", 1.0)))
+        rgb = np.clip(rgb + float(sh.get("amount", 0.5)) * (rgb - blur), 0, 255)
+    return dict(L, rgb=rgb, alpha=a)
+
+
 def build(proj_dir, out_dir=None, verbose=True):
     proj_dir = os.path.abspath(proj_dir)
     out_dir = out_dir or os.path.join(proj_dir, "out")
@@ -63,13 +107,18 @@ def build(proj_dir, out_dir=None, verbose=True):
     alpha = rgba[..., 3].astype(np.float32) / 255
     H, W = alpha.shape
     layers = decompose(rgb, alpha, pspec["parts"], unmix=pspec.get("unmix"))
+    edge = pspec.get("edge")
+    if edge:
+        edge_ctx = _edge_context(alpha, layers, edge)
+    else:
+        edge_ctx = None
     templates = rspec.get("templates", {})
     rig_parts = []
     hm = HeadModel(os.path.join(proj_dir, rspec["head_model"])) if rspec.get("head_model") else None
     for ps in pspec["parts"]:
         pid = ps["id"]
         if "synthetic" in ps:
-            rgb_s, a_s = synth_render(ps, (H, W), rgb)
+            rgb_s, a_s = synth_render(ps, (H, W), rgb, proj_dir)
             L = dict(rgb=rgb_s, alpha=a_s)
         else:
             L = layers[pid]
@@ -77,6 +126,9 @@ def build(proj_dir, out_dir=None, verbose=True):
         if bb is None:
             if verbose: print("  (empty part skipped)", pid)
             continue
+        if edge_ctx is not None and "synthetic" not in ps:
+            L = _apply_edge(L, pid, edge_ctx, edge)
+            bb = bbox_of(L["alpha"], pad=3)
         x0, y0, x1, y1 = bb
         a = L["alpha"][y0:y1, x0:x1]
         col = L["rgb"][y0:y1, x0:x1]

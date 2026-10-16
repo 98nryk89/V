@@ -100,11 +100,45 @@ def eyelid(shape, spec, rgb):
     return np.broadcast_to(col, shape + (3,)).copy(), A
 
 
+def ref_patch(shape, spec, rgb, proj_dir):
+    """Pixels taken from a reference drawing that is the same art with only some area redrawn (e.g. closed eyes).
+    The patch is where the reference differs from the source inside `box` (grown + feathered), so everything else
+    stays the artist's original pixels."""
+    import os, cv2 as _cv
+    ref = _cv.imread(os.path.join(proj_dir, spec["ref"]), _cv.IMREAD_UNCHANGED)[..., :3][..., ::-1].astype(np.float32)
+    src = rgb.astype(np.float32)
+    if "poly" in spec:
+        m = _canvas(shape)
+        _cv.fillPoly(m, [(np.array(spec["poly"], np.float32) * SS).astype(np.int32)], 255, _cv.LINE_AA)
+        A = _cv.GaussianBlur(_down(m), (0, 0), float(spec.get("feather", 2.0)))
+        return ref, A
+    x0, y0, x1, y1 = spec["box"]
+    diff = np.abs(ref - src).sum(2)
+    m = np.zeros(shape, bool)
+    m[y0:y1, x0:x1] = diff[y0:y1, x0:x1] > float(spec.get("thr", 40))
+    m = _cv.morphologyEx(m.astype(np.uint8), _cv.MORPH_CLOSE, np.ones((5, 5), np.uint8)) > 0
+    m = ndi_fill(m)
+    g = int(spec.get("grow", 5))
+    if g:
+        m = _cv.dilate(m.astype(np.uint8), _cv.getStructuringElement(_cv.MORPH_ELLIPSE, (2 * g + 1, 2 * g + 1))) > 0
+    box = np.zeros(shape, bool); box[y0:y1, x0:x1] = True
+    A = _cv.GaussianBlur((m & box).astype(np.float32), (0, 0), float(spec.get("feather", 2.0)))
+    A = np.where(box, A, 0)
+    return ref, A
+
+
+def ndi_fill(m):
+    from scipy import ndimage as ndi
+    return ndi.binary_fill_holes(m)
+
+
 RENDERERS = {"closed_eye": closed_eye, "open_mouth": open_mouth}
 
 
-def render(spec, shape, rgb=None):
+def render(spec, shape, rgb=None, proj_dir=None):
     s = spec["synthetic"]
+    if s["type"] == "ref_patch":
+        return ref_patch(shape, s, rgb, proj_dir)
     if s["type"] == "eyelid":
         return eyelid(shape, s, rgb)
     return RENDERERS[s["type"]](shape, s)
