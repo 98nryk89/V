@@ -74,12 +74,12 @@
       this.raw = { yaw, pitch };
       const o = this.opts;
       // mirrored preview: user turning to their right (nose to image-left) => avatar turns to screen-right (+AngleX)
-      let ax = -(yaw - this.neutral.yaw) * 18 * o.gainX;
+      let ax = -(yaw - this.neutral.yaw) * 13 * o.gainX;
       let ay = -(pitch - this.neutral.pitch) * 30 * o.gainY;
-      let az = -roll * 0.25;
+      let az = -roll * 0.18;
       if (o.invX) ax = -ax; if (o.invY) ay = -ay; if (o.invZ) az = -az;
       const t = {
-        AngleX: clamp(ax, -7, 7), AngleY: clamp(ay, -7, 7), AngleZ: clamp(az, -7, 7),
+        AngleX: clamp(ax, -5, 5), AngleY: clamp(ay, -10, 5), AngleZ: clamp(az, -5, 5),
       };
       const bs = {};
       if (res.faceBlendshapes && res.faceBlendshapes[0]) for (const c of res.faceBlendshapes[0].categories) bs[c.categoryName] = c.score;
@@ -88,6 +88,7 @@
       const open = b => clamp(1 - (b - 0.15) / 0.5, 0, 1);
       t.EyeLOpen = open(g('eyeBlinkLeft')); t.EyeROpen = open(g('eyeBlinkRight'));
       t.MouthOpen = clamp((g('jawOpen') - 0.05) / 0.45, 0, 1);
+      t.Smile = clamp(((g('mouthSmileLeft') + g('mouthSmileRight')) / 2 - 0.2) / 0.5, 0, 1);
       t.EyeBallX = clamp(((g('eyeLookOutRight') + g('eyeLookInLeft')) - (g('eyeLookOutLeft') + g('eyeLookInRight'))) / 1.2, -1, 1);
       t.EyeBallY = clamp(((g('eyeLookUpLeft') + g('eyeLookUpRight')) - (g('eyeLookDownLeft') + g('eyeLookDownRight'))) / 1.2, -1, 1);
       const k = 1 - o.smooth;

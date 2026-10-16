@@ -3,22 +3,22 @@
  "params": [
   {
    "id": "AngleX",
-   "min": -7,
-   "max": 7,
+   "min": -5,
+   "max": 5,
    "default": 0,
    "label": "\u9854\u306e\u5411\u304d \u5de6\u53f3"
   },
   {
    "id": "AngleY",
-   "min": -7,
-   "max": 7,
+   "min": -10,
+   "max": 5,
    "default": 0,
    "label": "\u9854\u306e\u5411\u304d \u4e0a\u4e0b"
   },
   {
    "id": "AngleZ",
-   "min": -7,
-   "max": 7,
+   "min": -5,
+   "max": 5,
    "default": 0,
    "label": "\u9996\u304b\u3057\u3052"
   },
@@ -56,6 +56,13 @@
    "max": 1,
    "default": 0,
    "label": "\u7269\u7406 \u9aeaL"
+  },
+  {
+   "id": "Smile",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "label": "\u7b11\u9854"
   },
   {
    "id": "PhysHairR",
@@ -313,17 +320,94 @@
     "rigid": 1,
     "k": 0.5
    }
+  ],
+  "body_follow": [
+   {
+    "type": "translate",
+    "param": "AngleX",
+    "map": [
+     [
+      -5,
+      -2.0,
+      0
+     ],
+     [
+      5,
+      2.0,
+      0
+     ]
+    ]
+   },
+   {
+    "type": "translate",
+    "param": "AngleY",
+    "map": [
+     [
+      -10,
+      0,
+      3.0
+     ],
+     [
+      0,
+      0,
+      0
+     ],
+     [
+      5,
+      0,
+      -1.5
+     ]
+    ]
+   },
+   {
+    "type": "rotate",
+    "param": "AngleZ",
+    "pivot": [
+     570,
+     1374
+    ],
+    "map": [
+     [
+      -5,
+      -0.3
+     ],
+     [
+      5,
+      0.3
+     ]
+    ]
+   },
+   {
+    "type": "rotate",
+    "param": "AngleX",
+    "pivot": [
+     570,
+     1374
+    ],
+    "map": [
+     [
+      -5,
+      -0.12
+     ],
+     [
+      5,
+      0.12
+     ]
+    ]
+   }
   ]
  },
  "parts": {
   "body": {
    "effects": [
-    "@breath_body"
+    "@breath_body",
+    "@body_follow"
    ]
   },
   "owl": {
    "effects": [
-    "@breath_body"
+    "@breath_body",
+    "@body_follow"
    ]
   },
   "hair_back": {
@@ -356,7 +440,8 @@
       "pow": 2
      }
     },
-    "@head_back"
+    "@head_back",
+    "@body_follow"
    ],
    "depth": {
     "layer": "dome"
@@ -387,7 +472,8 @@
       "from": 640,
       "to": 540
      }
-    }
+    },
+    "@body_follow"
    ],
    "depth": {
     "layer": "neck"
@@ -397,7 +483,8 @@
   "face": {
    "effects": [
     "@breath_head",
-    "@head"
+    "@head",
+    "@body_follow"
    ],
    "depth": {
     "layer": "face"
@@ -431,7 +518,8 @@
       "pow": 1.4
      }
     },
-    "@head_hairside"
+    "@head_hairside",
+    "@body_follow"
    ],
    "depth": {
     "layer": "side"
@@ -464,7 +552,8 @@
       "pow": 1.4
      }
     },
-    "@head_hairside"
+    "@head_hairside",
+    "@body_follow"
    ],
    "depth": {
     "layer": "side"
@@ -497,7 +586,8 @@
       "pow": 1.3
      }
     },
-    "@head_front"
+    "@head_front",
+    "@body_follow"
    ],
    "depth": {
     "layer": "hairfront"
@@ -534,7 +624,8 @@
       "pow": 1
      }
     },
-    "@head_ear"
+    "@head_ear",
+    "@body_follow"
    ],
    "depth": {
     "layer": "const",
@@ -571,7 +662,8 @@
       "pow": 1
      }
     },
-    "@head_ear"
+    "@head_ear",
+    "@body_follow"
    ],
    "depth": {
     "layer": "const",
@@ -605,7 +697,8 @@
       "pow": 1.4
      }
     },
-    "@head_orn"
+    "@head_orn",
+    "@body_follow"
    ],
    "depth": {
     "layer": "const",
@@ -639,7 +732,8 @@
       "pow": 1.2
      }
     },
-    "@head_orn"
+    "@head_orn",
+    "@body_follow"
    ],
    "depth": {
     "layer": "const",
@@ -649,7 +743,8 @@
   "orn_mask": {
    "effects": [
     "@breath_head",
-    "@head_orn"
+    "@head_orn",
+    "@body_follow"
    ],
    "depth": {
     "layer": "const",
@@ -659,7 +754,8 @@
   "eyeL_white": {
    "effects": [
     "@breath_head",
-    "@head_eye"
+    "@head_eye",
+    "@body_follow"
    ],
    "depth": {
     "layer": "face",
@@ -670,7 +766,8 @@
   "eyeL_iris": {
    "effects": [
     "@breath_head",
-    "@head_eye"
+    "@head_eye",
+    "@body_follow"
    ],
    "depth": {
     "layer": "face",
@@ -682,7 +779,8 @@
   "eyeL_lash": {
    "effects": [
     "@breath_head",
-    "@head_eye"
+    "@head_eye",
+    "@body_follow"
    ],
    "depth": {
     "layer": "face",
@@ -693,7 +791,8 @@
   "eyeR_white": {
    "effects": [
     "@breath_head",
-    "@head_eye"
+    "@head_eye",
+    "@body_follow"
    ],
    "depth": {
     "layer": "face",
@@ -704,7 +803,8 @@
   "eyeR_iris": {
    "effects": [
     "@breath_head",
-    "@head_eye"
+    "@head_eye",
+    "@body_follow"
    ],
    "depth": {
     "layer": "face",
@@ -716,7 +816,8 @@
   "eyeR_lash": {
    "effects": [
     "@breath_head",
-    "@head_eye"
+    "@head_eye",
+    "@body_follow"
    ],
    "depth": {
     "layer": "face",
@@ -726,22 +827,9 @@
   },
   "mouth": {
    "effects": [
-    {
-     "type": "opacity",
-     "param": "MouthOpen",
-     "map": [
-      [
-       0,
-       1
-      ],
-      [
-       0.2,
-       0
-      ]
-     ]
-    },
     "@breath_head",
-    "@head_eye"
+    "@head_eye",
+    "@body_follow"
    ],
    "depth": {
     "layer": "face",
@@ -754,19 +842,19 @@
      "type": "scale",
      "param": "MouthOpen",
      "pivot": [
-      565,
-      497
+      561,
+      490
      ],
      "map": [
       [
        0,
-       0.5,
-       0.1
+       0.75,
+       0.04
       ],
       [
-       0.3,
-       0.8,
-       0.6
+       0.4,
+       0.9,
+       0.55
       ],
       [
        1,
@@ -784,7 +872,7 @@
        0
       ],
       [
-       0.15,
+       0.08,
        1
       ],
       [
@@ -794,12 +882,14 @@
      ]
     },
     "@breath_head",
-    "@head_eye"
+    "@head_eye",
+    "@body_follow"
    ],
    "depth": {
     "layer": "face",
     "off": 2
-   }
+   },
+   "mesh_step": 4
   },
   "tasselL": {
    "effects": [
@@ -830,7 +920,8 @@
       "len": 160,
       "pow": 1.1
      }
-    }
+    },
+    "@body_follow"
    ]
   },
   "tasselR1": {
@@ -862,7 +953,8 @@
       "len": 170,
       "pow": 1.1
      }
-    }
+    },
+    "@body_follow"
    ]
   },
   "tasselR2": {
@@ -894,7 +986,8 @@
       "len": 180,
       "pow": 1.1
      }
-    }
+    },
+    "@body_follow"
    ]
   },
   "hangR3": {
@@ -926,7 +1019,8 @@
       "len": 410,
       "pow": 1.1
      }
-    }
+    },
+    "@body_follow"
    ]
   },
   "watch": {
@@ -958,7 +1052,8 @@
       "len": 90,
       "pow": 1.1
      }
-    }
+    },
+    "@body_follow"
    ]
   },
   "watch_gems": {
@@ -990,13 +1085,15 @@
       "len": 110,
       "pow": 1.1
      }
-    }
+    },
+    "@body_follow"
    ]
   },
   "browL": {
    "effects": [
     "@breath_head",
-    "@head_eye"
+    "@head_eye",
+    "@body_follow"
    ],
    "depth": {
     "layer": "face",
@@ -1007,7 +1104,8 @@
   "browR": {
    "effects": [
     "@breath_head",
-    "@head_eye"
+    "@head_eye",
+    "@body_follow"
    ],
    "depth": {
     "layer": "face",
@@ -1032,7 +1130,8 @@
      ]
     },
     "@breath_head",
-    "@head_eye"
+    "@head_eye",
+    "@body_follow"
    ],
    "depth": {
     "layer": "face",
@@ -1061,7 +1160,8 @@
      ]
     },
     "@breath_head",
-    "@head_eye"
+    "@head_eye",
+    "@body_follow"
    ],
    "depth": {
     "layer": "face",
@@ -1090,7 +1190,8 @@
      ]
     },
     "@breath_head",
-    "@head_eye"
+    "@head_eye",
+    "@body_follow"
    ],
    "depth": {
     "layer": "face",
@@ -1119,7 +1220,8 @@
      ]
     },
     "@breath_head",
-    "@head_eye"
+    "@head_eye",
+    "@body_follow"
    ],
    "depth": {
     "layer": "face",
@@ -1144,7 +1246,8 @@
      ]
     },
     "@breath_head",
-    "@head_eye"
+    "@head_eye",
+    "@body_follow"
    ],
    "depth": {
     "layer": "face",
@@ -1173,7 +1276,8 @@
      ]
     },
     "@breath_head",
-    "@head_eye"
+    "@head_eye",
+    "@body_follow"
    ],
    "depth": {
     "layer": "face",
@@ -1202,7 +1306,8 @@
      ]
     },
     "@breath_head",
-    "@head_eye"
+    "@head_eye",
+    "@body_follow"
    ],
    "depth": {
     "layer": "face",
@@ -1231,7 +1336,86 @@
      ]
     },
     "@breath_head",
-    "@head_eye"
+    "@head_eye",
+    "@body_follow"
+   ],
+   "depth": {
+    "layer": "face",
+    "off": 4
+   },
+   "mesh_step": 5
+  },
+  "eyeL_smile": {
+   "effects": [
+    {
+     "type": "opacity",
+     "param": "Smile",
+     "map": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       1
+      ]
+     ]
+    },
+    "@breath_head",
+    "@head_eye",
+    "@body_follow"
+   ],
+   "depth": {
+    "layer": "face",
+    "off": 4
+   },
+   "mesh_step": 5
+  },
+  "eyeR_smile": {
+   "effects": [
+    {
+     "type": "opacity",
+     "param": "Smile",
+     "map": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       1
+      ]
+     ]
+    },
+    "@breath_head",
+    "@head_eye",
+    "@body_follow"
+   ],
+   "depth": {
+    "layer": "face",
+    "off": 4
+   },
+   "mesh_step": 5
+  },
+  "mouth_smile": {
+   "effects": [
+    {
+     "type": "opacity",
+     "param": "Smile",
+     "map": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       1
+      ]
+     ]
+    },
+    "@breath_head",
+    "@head_eye",
+    "@body_follow"
    ],
    "depth": {
     "layer": "face",
@@ -1247,11 +1431,11 @@
    "inputs": [
     {
      "param": "AngleX",
-     "gain": 0.0857
+     "gain": 0.12
     },
     {
      "param": "AngleZ",
-     "gain": 0.0686
+     "gain": 0.096
     }
    ],
    "freq": 1.5,
@@ -1265,11 +1449,11 @@
    "inputs": [
     {
      "param": "AngleX",
-     "gain": 0.0857
+     "gain": 0.12
     },
     {
      "param": "AngleZ",
-     "gain": 0.0686
+     "gain": 0.096
     }
    ],
    "freq": 1.6,
@@ -1283,7 +1467,7 @@
    "inputs": [
     {
      "param": "AngleX",
-     "gain": 0.0857
+     "gain": 0.12
     },
     {
      "param": "AngleY",
@@ -1291,7 +1475,7 @@
     },
     {
      "param": "AngleZ",
-     "gain": 0.0514
+     "gain": 0.072
     }
    ],
    "freq": 2.3,
@@ -1305,11 +1489,11 @@
    "inputs": [
     {
      "param": "AngleX",
-     "gain": 0.1029
+     "gain": 0.1441
     },
     {
      "param": "AngleZ",
-     "gain": 0.0857
+     "gain": 0.12
     }
    ],
    "freq": 1.8,
@@ -1323,11 +1507,11 @@
    "inputs": [
     {
      "param": "AngleX",
-     "gain": 0.1029
+     "gain": 0.1441
     },
     {
      "param": "AngleZ",
-     "gain": 0.0857
+     "gain": 0.12
     }
    ],
    "freq": 2.0,
@@ -1341,11 +1525,11 @@
    "inputs": [
     {
      "param": "AngleX",
-     "gain": 0.12
+     "gain": 0.168
     },
     {
      "param": "AngleZ",
-     "gain": 0.1029
+     "gain": 0.1441
     }
    ],
    "freq": 2.4,
@@ -1359,11 +1543,11 @@
    "inputs": [
     {
      "param": "AngleX",
-     "gain": 0.12
+     "gain": 0.168
     },
     {
      "param": "AngleZ",
-     "gain": 0.1029
+     "gain": 0.1441
     }
    ],
    "freq": 2.5,
@@ -1377,11 +1561,11 @@
    "inputs": [
     {
      "param": "AngleX",
-     "gain": 0.0857
+     "gain": 0.12
     },
     {
      "param": "AngleZ",
-     "gain": 0.0857
+     "gain": 0.12
     },
     {
      "param": "Breath",
@@ -1399,11 +1583,11 @@
    "inputs": [
     {
      "param": "AngleX",
-     "gain": 0.0857
+     "gain": 0.12
     },
     {
      "param": "AngleZ",
-     "gain": 0.0857
+     "gain": 0.12
     },
     {
      "param": "Breath",

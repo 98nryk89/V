@@ -100,6 +100,56 @@ def eyelid(shape, spec, rgb):
     return np.broadcast_to(col, shape + (3,)).copy(), A
 
 
+def open_mouth_line(shape, spec, rgb):
+    """Mouth opening hung from the artist's own lip line. The line (found in the source) stays as the upper lip;
+    the opening is drawn below it at FULL openness, the runtime scales it vertically from the line (pivot) for MouthOpen.
+    Colours are taken from the line itself so it matches the art."""
+    import cv2 as _cv
+    x0, y0, x1, y1 = spec["box"]                   # search box around the lip line
+    lum = rgb[y0:y1, x0:x1].astype(np.float32).mean(2)
+    dark = lum < float(spec.get("line_thr", 190))
+    cols = np.where(dark.sum(0) > 0)[0]
+    xs, ys = [], []
+    for c in cols:
+        r = np.where(dark[:, c])[0]
+        w = np.clip(float(spec.get("line_thr", 190)) - lum[r, c], 1e-3, None)
+        ys.append(float((r * w).sum() / w.sum()) + y0 + 0.5); xs.append(c + x0 + 0.5)
+    xs, ys = np.array(xs), np.array(ys)
+    ys = np.convolve(np.pad(ys, 3, mode="edge"), np.ones(7) / 7, mode="valid")        # smooth
+    lx0, lx1 = xs.min(), xs.max()
+    cx = float(spec.get("cx", (lx0 + lx1) / 2)); half = float(spec.get("width", 40)) / 2
+    h = float(spec.get("height", 20))
+    line_col = np.array(rgb[int(np.median(ys)), int(xs[len(xs) // 2])], np.float32)
+    px = np.linspace(cx - half, cx + half, 60)
+    top = np.interp(px, xs, ys) + float(spec.get("gap", 1.4))
+    t = (px - cx) / half
+    bot = top + h * np.clip(1 - np.abs(t) ** 2.2, 0, 1) ** 0.75
+    poly = np.concatenate([np.stack([px, top], 1), np.stack([px[::-1], bot[::-1]], 1)])
+    big = _canvas(shape)
+    _cv.fillPoly(big, [(poly * SS).astype(np.int32)], 255, _cv.LINE_AA)
+    A = _down(big)
+    outline = np.array(spec.get("outline", [112, 58, 64]), np.float32)
+    inner_top = np.array(spec.get("inner", [92, 38, 50]), np.float32)
+    inner_bot = np.array(spec.get("inner_low", [138, 66, 78]), np.float32)
+    tongue = np.array(spec.get("tongue", [226, 118, 124]), np.float32)
+    yy = np.arange(shape[0], dtype=np.float32)[:, None]
+    ytop = float(top.min()); ybot = float(bot.max())
+    g = np.clip((yy - ytop) / max(ybot - ytop, 1), 0, 1)[..., None]
+    col = inner_top * (1 - g) + inner_bot * g
+    col = np.broadcast_to(col, shape + (3,)).copy()
+    # tongue: low, centred
+    tg = _canvas(shape)
+    _cv.ellipse(tg, (int(cx * SS), int((ytop + 0.78 * (ybot - ytop)) * SS)), (int(half * 0.62 * SS), int(0.3 * (ybot - ytop) * SS)), 0, 0, 360, 255, -1, _cv.LINE_AA)
+    T = np.minimum(_down(tg), A)[..., None]
+    col = col * (1 - T) + tongue * T
+    # outline along the lower edge (inside the shape, ~1.4px)
+    er = _cv.erode(A, _cv.getStructuringElement(_cv.MORPH_ELLIPSE, (3, 3)))
+    ring = np.clip(A - er, 0, 1)[..., None]
+    ring = ring * (yy > ytop + 2.5)[..., None]
+    col = col * (1 - ring) + outline * ring
+    return col, A, dict(pivot_y=float(np.median(ys)), cx=cx, top=ytop, bottom=ybot)
+
+
 def ref_patch(shape, spec, rgb, proj_dir):
     """Pixels taken from a reference drawing that is the same art with only some area redrawn (e.g. closed eyes).
     The patch is where the reference differs from the source inside `box` (grown + feathered), so everything else
@@ -111,7 +161,10 @@ def ref_patch(shape, spec, rgb, proj_dir):
         # one shared mask for every keyframe of this eye: wherever ANY keyframe differs from the source
         def load(path):
             return _cv.GaussianBlur(_cv.imread(os.path.join(proj_dir, path), _cv.IMREAD_UNCHANGED)[..., :3][..., ::-1].astype(np.float32), (0, 0), 1.0)
-        base = _cv.GaussianBlur(src, (0, 0), 1.0)
+        base_img = src
+        if "base" in spec:           # the keyframes were drawn on a different render of the art: diff against that one
+            base_img = _cv.imread(os.path.join(proj_dir, spec["base"]), _cv.IMREAD_UNCHANGED)[..., :3][..., ::-1].astype(np.float32)
+        base = _cv.GaussianBlur(base_img, (0, 0), 1.0)
         d = np.max([np.abs(load(r) - base).sum(2) for r in spec["union_refs"]], axis=0)
         x0, y0, x1, y1 = spec["box"]
         m = np.zeros(shape, bool)
@@ -163,6 +216,8 @@ RENDERERS = {"closed_eye": closed_eye, "open_mouth": open_mouth}
 
 def render(spec, shape, rgb=None, proj_dir=None):
     s = spec["synthetic"]
+    if s["type"] == "open_mouth_line":
+        return open_mouth_line(shape, s, rgb)[:2]
     if s["type"] == "ref_patch":
         return ref_patch(shape, s, rgb, proj_dir)
     if s["type"] == "eyelid":
