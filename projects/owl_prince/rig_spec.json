@@ -323,25 +323,7 @@
   },
   "owl": {
    "effects": [
-    "@breath_body",
-    {
-     "type": "rotate",
-     "param": "Breath",
-     "pivot": [
-      260,
-      730
-     ],
-     "map": [
-      [
-       0,
-       0
-      ],
-      [
-       1,
-       -0.8
-      ]
-     ]
-    }
+    "@breath_body"
    ]
   },
   "hair_back": {

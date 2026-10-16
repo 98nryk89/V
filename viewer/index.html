@@ -31,6 +31,8 @@ button:hover{border-color:var(--ac)}
 <label class="chk"><input type="checkbox" id="invx">左右反転</label>
 <label class="chk"><input type="checkbox" id="invy">上下反転</label>
 <label class="chk"><input type="checkbox" id="invz">傾き反転</label>
+<div class="row"><label>感度 左右</label><input type=range id="gx" min=0.5 max=4 step=0.1 value=1><output id="gxo">1.0</output></div>
+<div class="row"><label>感度 上下</label><input type=range id="gy" min=0.5 max=4 step=0.1 value=1><output id="gyo">1.0</output></div>
 <video id="vid" playsinline muted style="width:100%;margin-top:6px;border-radius:6px;display:none;transform:scaleX(-1)"></video>
 <div id="camst" style="font-size:12px;color:var(--mut)"></div></div>
 <h2>パラメータ</h2><div id="params"></div></div></div>
@@ -74,6 +76,7 @@ const base=window.__RIG__?'':(q.get('model')||'../projects/owl_prince/out')+'/';
       const sync=()=>{tr.opts.invX=document.getElementById('invx').checked;tr.opts.invY=document.getElementById('invy').checked;tr.opts.invZ=document.getElementById('invz').checked};
       for(const id of['invx','invy','invz'])document.getElementById(id).onchange=sync;
       document.getElementById('calib').onclick=()=>tr.calibrate();
+      for(const [id,key] of [['gx','gainX'],['gy','gainY']]){const e=document.getElementById(id),o=document.getElementById(id+'o');e.oninput=()=>{tr.opts[key]=+e.value;o.textContent=(+e.value).toFixed(1)};tr.opts[key]=+e.value}
     }catch(e){st.textContent='失敗: '+e.message;console.error(e)}
   };
   if(q.get('still')){ m.auto={blink:false,breath:false,idle:false,physics:false}; m.render(); window.READY=true; }

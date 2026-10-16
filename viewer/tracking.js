@@ -1,11 +1,13 @@
 /* Webcam face tracking -> model params, using MediaPipe Face Landmarker (loaded from CDN in the user's browser).
- * NOTE: this file could not be exercised in the headless dev container (no camera / no CDN access);
- * signs are therefore exposed as invert checkboxes in the UI and a "calibrate" button sets the neutral pose.
+ * Verified in the headless dev container with a closed-loop test (tools/track_test.py): the model is rendered at known
+ * poses, mirrored like a webcam selfie, fed through MediaPipe, and the recovered params are compared with the input.
+ * A real camera was NOT available there; the invert checkboxes and the "calibrate" button remain for per-setup tuning.
  */
 (function (global) {
   'use strict';
-  const CDN = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
-  const MODEL = 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task';
+  const OVR = global.L2D_MP || {};      // tests / offline use can point these at local copies
+  const CDN = OVR.cdn || 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
+  const MODEL = OVR.model || 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task';
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
   class Tracker {
@@ -15,18 +17,22 @@
       this.raw = null; this.state = {}; this.running = false;
     }
 
+    async load(delegate = 'GPU') {
+      const vision = await import(CDN + '/vision_bundle.mjs');
+      const fileset = await vision.FilesetResolver.forVisionTasks(CDN + '/wasm');
+      this.landmarker = await vision.FaceLandmarker.createFromOptions(fileset, {
+        baseOptions: { modelAssetPath: MODEL, delegate },
+        outputFaceBlendshapes: true, outputFacialTransformationMatrixes: true, runningMode: 'VIDEO', numFaces: 1,
+      });
+    }
+
     async start(video, onStatus = () => {}) {
       onStatus('カメラを起動中…');
       const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480, facingMode: 'user' }, audio: false });
       video.srcObject = stream; await video.play();
       onStatus('MediaPipe を読み込み中…');
-      const vision = await import(CDN + '/vision_bundle.mjs');
-      const fileset = await vision.FilesetResolver.forVisionTasks(CDN + '/wasm');
-      this.landmarker = await vision.FaceLandmarker.createFromOptions(fileset, {
-        baseOptions: { modelAssetPath: MODEL, delegate: 'GPU' },
-        outputFaceBlendshapes: true, runningMode: 'VIDEO', numFaces: 1,
-      });
-      this.video = video; this.running = true; this._lastT = -1;
+      await this.load();
+      this.video = video; this.running = true; this._lastT = -1; this._onStatus = onStatus; this._miss = 0;
       onStatus('トラッキング中');
       const loop = () => { if (!this.running) return; this._step(); requestAnimationFrame(loop); };
       loop();
@@ -42,16 +48,28 @@
     _step() {
       const v = this.video; if (!v || v.readyState < 2 || v.currentTime === this._lastT) return;
       this._lastT = v.currentTime;
-      const res = this.landmarker.detectForVideo(v, performance.now());
-      if (!res.faceLandmarks || !res.faceLandmarks.length) return;
+      const ok = this.feed(v, performance.now());
+      if (!ok) { if (++this._miss === 30 && this._onStatus) this._onStatus('顔が検出できません。明るさ・カメラの向きを確認してください'); }
+      else { if (this._miss >= 30 && this._onStatus) this._onStatus('トラッキング中'); this._miss = 0; }
+    }
+
+    // process one frame (video element, canvas or image) taken by an UN-mirrored camera
+    feed(source, tsMs) {
+      const res = this.landmarker.detectForVideo(source, tsMs);
+      if (!res.faceLandmarks || !res.faceLandmarks.length) return false;
       const L = res.faceLandmarks[0];
+      this.lastMatrix = res.facialTransformationMatrixes && res.facialTransformationMatrixes[0] ? Array.from(res.facialTransformationMatrixes[0].data) : null;
       const P = i => L[i];
       // raw (un-mirrored) camera image: landmark 33 = user's right eye (image-left), 263 = user's left eye (image-right)
       const eR = P(33), eL = P(263), nose = P(1), chin = P(152), mouthC = [(P(61).x + P(291).x) / 2, (P(61).y + P(291).y) / 2];
       const mid = { x: (eR.x + eL.x) / 2, y: (eR.y + eL.y) / 2 };
       const eyeDist = Math.hypot(eL.x - eR.x, eL.y - eR.y) || 1e-3;
-      const yaw = (nose.x - mid.x) / eyeDist;                       // + = nose toward image-right
-      const pitch = (nose.y - mid.y) / ((chin.y - mid.y) || 1e-3);  // larger = looking down
+      // measure in the head's own frame (x along the eye line) so head tilt does not leak into turn/nod
+      const ex = (eL.x - eR.x) / eyeDist, ey = (eL.y - eR.y) / eyeDist;       // unit vector along the eyes
+      const nx = nose.x - mid.x, ny = nose.y - mid.y, cx = chin.x - mid.x, cy = chin.y - mid.y;
+      const yaw = (nx * ex + ny * ey) / eyeDist;                              // + = nose toward the user's left eye (image-right)
+      const downNose = -nx * ey + ny * ex, downChin = -cx * ey + cy * ex;     // components along "down" in the head frame
+      const pitch = downNose / (downChin || 1e-3);                            // larger = looking down
       const roll = Math.atan2(eL.y - eR.y, eL.x - eR.x) * 180 / Math.PI;
       this.raw = { yaw, pitch };
       const o = this.opts;
@@ -80,6 +98,7 @@
         this.state[key] = prev + (t[key] - prev) * kk;
         this.m.setParam(key, this.state[key]);
       }
+      return true;
     }
   }
   global.L2DTracker = Tracker;
