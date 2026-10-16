@@ -71,9 +71,40 @@ def open_mouth(shape, spec):
     return rgb, A
 
 
+def eyelid(shape, spec, rgb):
+    """Skin sheet that fills the eye opening when the lid comes down. Colours are sampled from the source art just
+    above and just below the opening (skin-like pixels only) and blended top->bottom."""
+    import cv2 as _cv
+    poly = np.array(spec["poly"], np.float32)
+    m = _canvas(shape)
+    _cv.fillPoly(m, [(poly * SS).astype(np.int32)], 255, _cv.LINE_AA)
+    A = _down(m)
+    k = float(spec.get("feather", 1.0))
+    if k > 0:
+        A = _cv.GaussianBlur(A, (0, 0), k)
+    ys, xs = np.where(A > 0.5)
+    y0, y1, x0, x1 = ys.min(), ys.max(), xs.min(), xs.max()
+    lab = _cv.cvtColor(rgb.astype(np.uint8), _cv.COLOR_RGB2LAB).astype(np.float32)
+    ref = _cv.cvtColor(np.array([[[250, 230, 221]]], np.uint8), _cv.COLOR_RGB2LAB).astype(np.float32)[0, 0]
+    skin = np.linalg.norm(lab - ref, axis=2) < float(spec.get("skin_tol", 32))
+
+    def band(b0, b1):
+        sl = (slice(int(b0), int(b1)), slice(int(x0), int(x1)))
+        px = rgb[sl][skin[sl]]
+        return np.median(px, axis=0) if len(px) > 20 else np.array([245, 222, 212], np.float32)
+    top = band(*spec["top"])
+    bot = band(*spec["bottom"])
+    yy = np.arange(shape[0], dtype=np.float32)[:, None]
+    t = np.clip((yy - y0) / max(y1 - y0, 1), 0, 1)[..., None]
+    col = top * (1 - t) + bot * t
+    return np.broadcast_to(col, shape + (3,)).copy(), A
+
+
 RENDERERS = {"closed_eye": closed_eye, "open_mouth": open_mouth}
 
 
-def render(spec, shape):
+def render(spec, shape, rgb=None):
     s = spec["synthetic"]
+    if s["type"] == "eyelid":
+        return eyelid(shape, s, rgb)
     return RENDERERS[s["type"]](shape, s)

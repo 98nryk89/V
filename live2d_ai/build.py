@@ -62,14 +62,14 @@ def build(proj_dir, out_dir=None, verbose=True):
     rgb = rgba[..., 2::-1].copy()
     alpha = rgba[..., 3].astype(np.float32) / 255
     H, W = alpha.shape
-    layers = decompose(rgb, alpha, pspec["parts"])
+    layers = decompose(rgb, alpha, pspec["parts"], unmix=pspec.get("unmix"))
     templates = rspec.get("templates", {})
     rig_parts = []
     hm = HeadModel(os.path.join(proj_dir, rspec["head_model"])) if rspec.get("head_model") else None
     for ps in pspec["parts"]:
         pid = ps["id"]
         if "synthetic" in ps:
-            rgb_s, a_s = synth_render(ps, (H, W))
+            rgb_s, a_s = synth_render(ps, (H, W), rgb)
             L = dict(rgb=rgb_s, alpha=a_s)
         else:
             L = layers[pid]

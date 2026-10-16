@@ -139,7 +139,7 @@ def fill_hidden(rgb, known, hidden, method="pushpull"):
     return out
 
 
-def decompose(rgb_u8, alpha, specs, report=None):
+def decompose(rgb_u8, alpha, specs, report=None, unmix=None):
     """rgb_u8: HxWx3 uint8 (RGB), alpha: HxW float. Returns {id: dict(rgba=full-canvas float RGBA, ...)}."""
     h, w = alpha.shape
     specs = [s for s in specs if "synthetic" not in s]
@@ -239,7 +239,64 @@ def decompose(rgb_u8, alpha, specs, report=None):
         a_layer = np.clip(a_layer, 0, 1)
         a_layer = np.where(hidden, 1.0, a_layer)
         out[pid] = dict(rgb=col, alpha=a_layer, visible=v, hidden=hidden)
+    for cfg in unmix or []:
+        unmix_pair(rgb_u8, alpha, out, vis, cfg)
     return out
+
+
+def unmix_pair(rgb_u8, alpha, out, vis, cfg):
+    """Soft layer separation of FRONT (hair strands, ...) over BACK (skin) inside cfg["region"].
+
+    Each antialiased pixel is P = a*H + (1-a)*S with S = clean back colour (smooth field of pure skin pixels) and
+    H = front colour (smooth field of pure hair pixels). Solving a per pixel gives crisp, soft-edged strands in the
+    front layer and a complete, strand-free skin layer behind, and composite(front, back) == source.
+    Pixels whose colour is off the S->H line (e.g. a skin shadow under the bangs) are kept as skin.
+    """
+    h, w = alpha.shape
+    P = rgb_u8.astype(np.float32)
+    fid, bid = cfg["front"], cfg["back"]
+    # pixels owned by any other part (eyes, brows, ears, ornaments...) are left alone
+    skip = set(cfg.get("keep_ids", [fid, bid, "body", "hair_back", "neck"]))
+    owned_other = np.zeros((h, w), bool)
+    for k, v_ in vis.items():
+        if k not in skip:
+            owned_other |= v_ > 0.05
+    owned_other = ndi.binary_dilation(owned_other, iterations=int(cfg.get("other_margin", 0)))
+    R = (poly_mask((h, w), cfg["region"]) > 0.5) & (alpha > 0.5) & ~owned_other
+    sg = color_gate(rgb_u8, cfg["skin"])
+    pure_skin = R & (sg > 0.97)
+    pure_skin = ndi.binary_erosion(pure_skin, iterations=1)
+    hair_seed = R & (sg < 0.03) & (vis[fid] > 0.9)
+    hair_seed = ndi.binary_erosion(hair_seed, iterations=1)
+    if pure_skin.sum() < 50 or hair_seed.sum() < 50:
+        return
+    S = push_pull_fill(P, pure_skin)
+    H = push_pull_fill(P, hair_seed)
+    d = H - S
+    denom = np.maximum((d * d).sum(2), float(cfg.get("min_contrast", 900)))
+    a = np.clip(((P - S) * d).sum(2) / denom, 0, 1)
+    resid = np.linalg.norm(P - (S + a[..., None] * d), axis=2)
+    off_line = resid > float(cfg.get("resid", 16))          # shadow / shading: skin, not a strand
+    a = np.where(off_line, 0.0, a)
+    a = np.where(sg > 0.97, 0.0, a)
+    a = np.where(hair_seed, 1.0, a)
+    a = np.where(a < float(cfg.get("a_min", 0.06)), 0.0, a)
+    a = np.where(a > float(cfg.get("a_max", 0.94)), 1.0, a)
+    a = np.where(R, a, 0.0)
+    af = out[fid]["alpha"]; ab = out[bid]["alpha"]
+    ff = out[fid]["rgb"]; fb = out[bid]["rgb"]
+    keep_front_outside = ~R
+    out[fid]["alpha"] = np.where(R, a, af)
+    mixed = (a > 0) & (a < 1)
+    out[fid]["rgb"] = np.where((R & mixed)[..., None], H, np.where((R & (a >= 1))[..., None], P, ff))
+    back_zone = poly_mask((h, w), cfg.get("back_extent", cfg["region"])) > 0.5   # whole face area: back layer is complete skin
+    shade = np.linalg.norm(P - S, axis=2) < float(cfg.get("shade_max", 38))   # skin shading is kept; anything else is not skin
+    keep_P = (sg > 0.97) | (off_line & shade)
+    new_back = np.where((a > 0)[..., None], S, np.where(keep_P[..., None], P, fb))
+    # inside the face area but outside R (eyes, brows...) the back layer keeps its earlier reconstruction (clean skin fill)
+    out[bid]["rgb"] = np.where((back_zone & R)[..., None], new_back, fb)
+    out[bid]["alpha"] = np.where(back_zone, 1.0, ab)
+    out[fid]["unmixed"] = a
 
 
 def bbox_of(alpha, pad=4, thr=0.01):

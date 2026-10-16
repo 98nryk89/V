@@ -179,7 +179,7 @@
      610
     ],
     "idle": 0.35,
-    "rigid": 1,
+    "rigid": 0,
     "k": 0.5
    }
   ],
@@ -1394,6 +1394,28 @@
    "depth": {
     "layer": "face",
     "off": 3
+   },
+   "mesh_step": 6
+  },
+  "eyeL_lid": {
+   "effects": [
+    "@breath_head",
+    "@head_eye"
+   ],
+   "depth": {
+    "layer": "face",
+    "off": 2
+   },
+   "mesh_step": 6
+  },
+  "eyeR_lid": {
+   "effects": [
+    "@breath_head",
+    "@head_eye"
+   ],
+   "depth": {
+    "layer": "face",
+    "off": 2
    },
    "mesh_step": 6
   }
