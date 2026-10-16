@@ -215,6 +215,8 @@ def decompose(rgb_u8, alpha, specs, report=None, unmix=None):
         ext = s.get("extent")
         if ext is not None:
             em = (alpha > 0.5) if ext == "all" else poly_mask((h, w), ext) > 0.5
+            if s.get("extent_in_figure"):      # never reconstruct pixels that are empty (transparent) in the source art
+                em &= alpha > 0.5
             hidden |= em & (front > 0.5) & ~solid
         bleed = int(s.get("bleed", 8))
         if bleed > 0 and solid.any():
@@ -222,6 +224,15 @@ def decompose(rgb_u8, alpha, specs, report=None, unmix=None):
             if ext is not None and ext != "all":      # under-lap only inside the part's true shape (no skin leaking past the contour)
                 near &= ndi.binary_dilation(em, iterations=2)
             hidden |= near & (front > 0.5) & ~solid
+        if s.get("extent_in_figure"):
+            hidden &= alpha > 0.5          # under-lap and reconstruction stay inside the figure (never fill empty space)
+        bg_alpha = np.zeros((h, w), np.float32)
+        if s.get("fade_exposed"):
+            # areas held only by *moving* ornaments (their outline is reconstructed as a grey shape here): fade the base
+            # layer out there so a swung ornament does not reveal a ghost of itself on the ground
+            fe = poly_mask((h, w), s["fade_exposed"]) > 0.5
+            hidden &= ~fe
+            bg_alpha = fe.astype(np.float32)
         # source colour for this part: its own visible pixels, hidden ones inpainted
         known = v > 0.05
         if s.get("fill_gate"):      # only these pixels may seed the reconstruction of hidden areas
@@ -257,6 +268,9 @@ def decompose(rgb_u8, alpha, specs, report=None, unmix=None):
         a_layer = np.where(front < 0.999, a / np.maximum(1 - front, 1e-3), a)
         a_layer = np.clip(a_layer, 0, 1)
         a_layer = np.where(hidden, 1.0, a_layer)
+        if s.get("fade_exposed"):
+            fe_ = poly_mask((h, w), s["fade_exposed"]) > 0.5
+            a_layer = np.where(fe_ & (front > 0.5) & (v < 0.5), 0.0, a_layer)
         out[pid] = dict(rgb=col, alpha=a_layer, visible=v, hidden=hidden)
     for cfg in unmix or []:
         unmix_pair(rgb_u8, alpha, out, vis, cfg)

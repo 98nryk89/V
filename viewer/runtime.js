@@ -145,10 +145,13 @@ void main(){ vec4 c = texture(uTex, vUV); if (uCut > 0.0 && c.a < uCut) discard;
     }
 
     _physics(dt) {
+      // Damped spring (pendulum hung from the head). Input u = sum(param*gain) in "degrees of head motion"; the base
+      // acceleration u'' drives the spring: th'' = -K*u'' - 2*zeta*w*th' - w^2*th (+ drag*u'). Output th is clamped to -1..1.
       const P = this.params;
       const steps = Math.max(1, Math.ceil(dt / 0.008)); const h = dt / steps;
+      let pi = 0;
       for (const s of this.phys) {
-        const d = s.d;
+        const d = s.d; pi++;
         let inp = 0;
         for (const i of d.inputs) inp += (P[i.param] || 0) * i.gain;
         if (d.idle) inp += (P.IdleX || 0) * d.idle;
@@ -156,10 +159,13 @@ void main(){ vec4 c = texture(uTex, vUV); if (uCut > 0.0 && c.a < uCut) discard;
         const ia = (iv - s.prevInV) / Math.max(dt, 1e-4);
         s.prevIn = inp; s.prevInV = iv;
         const w = (d.freq || 2.2) * 2 * Math.PI, z = d.damp != null ? d.damp : 0.35;
+        const K = d.inertia != null ? d.inertia : 0.5, drag = d.drag || 0;
+        const iaC = clamp(ia, -3000, 3000), ivC = clamp(iv, -300, 300);
         for (let k = 0; k < steps; k++) {
-          const acc = -w * w * s.a - 2 * z * w * s.av - (d.inertia || 1) * clamp(ia, -400, 400) * 0.02 - (d.drag || 0) * iv * 0.01;
+          const amb = d.sway ? d.sway * w * w * Math.sin(this.time * 2 * Math.PI * (0.28 + 0.07 * (pi % 4)) + pi * 1.7) : 0;   // gentle ambient sway
+          const acc = -w * w * s.a - 2 * z * w * s.av - K * iaC * 0.01 - drag * ivC * 0.01 + amb;
           s.av += acc * h; s.a += s.av * h;
-          s.a = clamp(s.a, -1.5, 1.5);
+          s.a = clamp(s.a, -1.2, 1.2);
         }
         P[d.output] = clamp(s.a, -1, 1);
       }
