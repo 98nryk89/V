@@ -276,6 +276,14 @@ def decompose(rgb_u8, alpha, specs, report=None, unmix=None):
                     wgt = ndi.gaussian_filter(hm_.astype(np.float32), sg)[..., None]
                     sm = blurred / np.maximum(wgt, 1e-3)
                     col = np.where(hm_[..., None], np.where(wgt > 0.05, sm, col), col)
+        for pa in s.get("paint_out", []):
+            # remove thin ink (brow lines etc.) that belongs to ANOTHER part from this part's texture: repaint those pixels
+            # from the surrounding skin so nothing is left behind when the other part moves
+            pm = poly_mask((h, w), pa) > 0.5
+            pm = ndi.binary_dilation(pm, iterations=2)
+            ring = ndi.binary_dilation(pm, iterations=6) & ~pm & known
+            if ring.any() and pm.any():
+                col = fill_hidden(col if isinstance(col, np.ndarray) else src, ring, pm)
         a = np.clip(v, 0, 1)
         # alpha of the part as it sits in the stack: undo the 'over' compositing of conserved alpha
         a_layer = np.where(front < 0.999, a / np.maximum(1 - front, 1e-3), a)
