@@ -48,7 +48,11 @@ def main():
     under = ndi.binary_dilation(white, iterations=18) & (yy < 649) & (yy > 555) & (xx > 475) & (xx < 680)
     neck = poly_mask(shape, [[478,470],[672,470],[674,556],[662,584],[640,604],
                               [600,624],[575,636],[545,616],[505,587],[486,566],[480,540]])
-    under &= neck > .5  # no white paint behind outer hair or the black standing collar
+    # The coarse neck polygon also contains hair and the standing collar.
+    # Only source skin may become a newly revealed white collar underlap.
+    skin = (lab[..., 2] >= 130) & (lab[..., 1] >= 130) & (lab[..., 0] > 130)
+    # Two source pixels of underlap also cover the antialiased skin edge.
+    under &= (neck > .5) & ndi.binary_dilation(skin, iterations=2)
     colour = push_pull_fill(src[..., :3], white)
     ref = np.dstack([colour, under.astype(np.float32) * 255]).astype(np.uint8)
     cv2.imwrite(str(p / 'collar_underlap.png'), ref)

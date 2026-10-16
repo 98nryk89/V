@@ -32,6 +32,19 @@ class DetailTest(unittest.TestCase):
             self.assertFalse(tip[750, 510])  # shirt
             self.assertFalse(tip[900, 890])  # watch
 
+    def test_white_collar_underlap_stays_at_the_neck_skin_boundary(self):
+        src = cv2.imread(str(ROOT / 'samples/ref12.png'))
+        lab = cv2.cvtColor(src, cv2.COLOR_BGR2LAB)
+        ref = cv2.imread(str(P / 'collar_underlap.png'), -1)
+        under = ref[..., 3] > 0
+        self.assertGreater(under.sum(), 100)
+        from scipy import ndimage as ndi
+        skin = (lab[..., 2] >= 130) & (lab[..., 1] >= 130) & (lab[..., 0] > 130)
+        self.assertTrue(np.all(ndi.distance_transform_edt(~skin)[under] <= 2))
+        self.assertEqual(ref[580, 672, 3], 0)  # outer hair/standing collar
+        for x, y in [(516, 580), (530, 590), (542, 600)]:
+            self.assertEqual(ref[y, x, 3], 255)
+
     def test_owl_lid_covers_iris_and_never_touches_beak_or_body(self):
         import json
         src = cv2.imread(str(ROOT / 'samples/ref12.png'))[..., ::-1].copy()
