@@ -287,6 +287,44 @@ def decompose(rgb_u8, alpha, specs, report=None, unmix=None):
         out[pid] = dict(rgb=col, alpha=a_layer, visible=v, hidden=hidden)
     for cfg in unmix or []:
         unmix_pair(rgb_u8, alpha, out, vis, cfg)
+    for s in specs:
+        ref_spec = s.get("fill_layer")
+        if not ref_spec:
+            continue
+        # Use the artist's aligned RGBA pixels only where this layer was
+        # reconstructed. Visible source pixels and unrelated layers stay intact.
+        ref = cv2.imread(ref_spec["mask"], cv2.IMREAD_UNCHANGED)
+        if ref is None or ref.ndim != 3 or ref.shape != (h, w, 4):
+            raise ValueError("fill_layer must be an aligned RGBA image on the source canvas")
+        layer = out[s["id"]]
+        blend = ref[..., 3].astype(np.float32) / 255.0 * layer["hidden"]
+        layer["rgb"] = (layer["rgb"] * (1 - blend[..., None])
+                        + ref[..., 2::-1].astype(np.float32) * blend[..., None])
+    for s in sorted(specs, key=lambda item: item["z"]):
+        if not s.get("preserve_source"):
+            continue
+        layer = out[s["id"]]
+        below = np.zeros_like(src)
+        below_a = np.zeros((h, w), np.float32)
+        for other in sorted(specs, key=lambda item: item["z"]):
+            if other["z"] >= s["z"]:
+                continue
+            lower = out[other["id"]]
+            a = lower["alpha"]
+            below = lower["rgb"] * a[..., None] + below * (1 - a[..., None])
+            below_a = a + below_a * (1 - a)
+        below += src * (1 - below_a[..., None])
+        # The source is already a composite. Assigning its RGB to a soft hair
+        # mask blends skin into the strand a second time. Solve P=a*H+(1-a)*B.
+        # Increase coverage only when the supplied matte cannot represent P
+        # with an in-gamut colour; this keeps thin dark strands from clipping.
+        need = np.where(src < below, (below - src) / np.maximum(below, 1e-6),
+                        (src - below) / np.maximum(255 - below, 1e-6)).max(axis=2)
+        valid = (layer["visible"] > 0.001) & (alpha > 0.95)
+        a = np.where(valid, np.maximum(layer["alpha"], need), layer["alpha"])
+        colour = (src - below * (1 - a[..., None])) / np.maximum(a[..., None], 1e-6)
+        layer["rgb"] = np.where(valid[..., None], np.clip(colour, 0, 255), layer["rgb"])
+        layer["alpha"] = a
     return out
 
 
