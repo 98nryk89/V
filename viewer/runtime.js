@@ -69,8 +69,9 @@ void main(){ vec4 c = texture(uTex, vUV); if (uCut > 0.0 && c.a < uCut) discard;
       this.parts = rig.parts.slice().sort((a, b) => a.z - b.z);
       this.byId = {}; for (const p of this.parts) this.byId[p.id] = p;
       this.phys = (rig.physics || []).map(d => ({ d, a: 0, av: 0, prevIn: 0, prevInV: 0 }));
-      this.time = 0; this.auto = { blink: true, breath: true, idle: true, physics: true };
+      this.time = 0; this.auto = { blink: true, owlBlink: true, breath: true, idle: true, physics: true };
       this.blink = { next: 2.5, t: -1 };
+      this.owlBlink = { next: 4.3, t: -1 };
       this.wire = false;
     }
 
@@ -134,6 +135,16 @@ void main(){ vec4 c = texture(uTex, vUV); if (uCut > 0.0 && c.a < uCut) discard;
           const open = b.t < .045 ? 1 - b.t / .045 : (b.t < .10 ? 0 : Math.min(1, (b.t - .10) / .08));
           P.EyeLOpen = open; P.EyeROpen = open;
           if (b.t >= dur) { b.t = -1; b.next = 2.2 + Math.random() * 3.5; P.EyeLOpen = 1; P.EyeROpen = 1; }
+        }
+      }
+      // Independent of human/camera blinking: the shoulder owl keeps blinking.
+      if (this.auto.owlBlink && this.paramDefs.OwlEyeOpen) {
+        const b = this.owlBlink;
+        if (b.t < 0) { b.next -= dt; if (b.next <= 0) b.t = 0; }
+        else {
+          b.t += dt;
+          P.OwlEyeOpen = b.t < .045 ? 1 - b.t / .045 : (b.t < .10 ? 0 : Math.min(1, (b.t - .10) / .08));
+          if (b.t >= .18) { b.t = -1; b.next = 3.8 + Math.random() * 3; P.OwlEyeOpen = 1; }
         }
       }
       if (this.auto.idle && this.paramDefs.AngleZ) {

@@ -211,6 +211,26 @@ def ref_patch(shape, spec, rgb, proj_dir):
     return ref, A
 
 
+def owl_lid(shape, spec, rgb):
+    """Only the occluded owl eye is filled; surrounding artist feathers stay intact."""
+    from .decompose import poly_mask, push_pull_fill
+    from scipy import ndimage as ndi
+    mask = poly_mask(shape, spec["poly"])
+    yy, xx = np.mgrid[:shape[0], :shape[1]]
+    x0, y0, x1, y1 = spec["seed_box"]
+    lab = cv2.cvtColor(rgb, cv2.COLOR_RGB2LAB).astype(np.float32)
+    seeds = ((xx >= x0) & (xx <= x1) & (yy >= y0) & (yy <= y1) &
+             (lab[..., 0] > 170) & (lab[..., 2] > 119) & (lab[..., 2] < 136))
+    seeds &= ~ndi.binary_dilation(mask > .01, iterations=3)
+    if seeds.sum() < 20:
+        raise ValueError("owl eyelid needs neighbouring white feathers")
+    colour = push_pull_fill(rgb, seeds)
+    line = stroke(shape, spec["pts"], spec.get("width", 2.6), (.6, .6), .3)
+    colour = colour * (1 - line[..., None]) + np.array(spec.get("color", [48, 40, 55])) * line[..., None]
+    alpha = cv2.GaussianBlur(mask, (0, 0), .45)
+    return colour, alpha
+
+
 def _ndi():
     from scipy import ndimage as ndi
     return ndi
@@ -230,6 +250,8 @@ def render(spec, shape, rgb=None, proj_dir=None):
         return open_mouth_line(shape, s, rgb)[:2]
     if s["type"] == "ref_patch":
         return ref_patch(shape, s, rgb, proj_dir)
+    if s["type"] == "owl_lid":
+        return owl_lid(shape, s, rgb)
     if s["type"] == "eyelid":
         return eyelid(shape, s, rgb)
     return RENDERERS[s["type"]](shape, s)

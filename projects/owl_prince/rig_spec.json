@@ -149,6 +149,14 @@
    "default": 0,
    "label": "\u53e3\u306e\u958b\u9589\uff08\u3048\uff09",
    "step": 0.01
+  },
+  {
+   "id": "OwlEyeOpen",
+   "min": 0,
+   "max": 1,
+   "default": 1,
+   "step": 0.01,
+   "label": "\u30d5\u30af\u30ed\u30a6\u306e\u76ee \u958b\u9589"
   }
  ],
  "templates": {
@@ -1585,6 +1593,48 @@
     "z": 121.839
    },
    "mesh_step": 8
+  },
+  "owl_lid_L": {
+   "effects": [
+    {
+     "type": "opacity",
+     "param": "OwlEyeOpen",
+     "map": [
+      [
+       0.4,
+       1
+      ],
+      [
+       0.6,
+       0
+      ]
+     ]
+    },
+    "@breath_body",
+    "@body_follow"
+   ],
+   "mesh_step": 4
+  },
+  "owl_lid_R": {
+   "effects": [
+    {
+     "type": "opacity",
+     "param": "OwlEyeOpen",
+     "map": [
+      [
+       0.4,
+       1
+      ],
+      [
+       0.6,
+       0
+      ]
+     ]
+    },
+    "@breath_body",
+    "@body_follow"
+   ],
+   "mesh_step": 4
   }
  },
  "physics": [
