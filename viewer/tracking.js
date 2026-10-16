@@ -105,7 +105,7 @@
       for (const key in t) {
         const prev = this.state[key] != null ? this.state[key] : (key === 'VowelE' ? 0 : t[key]);
         // blinks should be fast: no smoothing for eye open params
-        const kk = key === 'VowelE' ? 0.45 : ((key === 'EyeLOpen' || key === 'EyeROpen') ? 0.85 : k);
+        const kk = key === 'VowelE' ? 0.45 : ((key === 'EyeLOpen' || key === 'EyeROpen') ? 1 : k);
         this.state[key] = prev + (t[key] - prev) * kk;
         if (key === 'VowelE') {
           if (t[key] === 0 && this.state[key] < 0.005) this.state[key] = 0;

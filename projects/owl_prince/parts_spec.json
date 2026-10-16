@@ -1228,8 +1228,51 @@
     ],
     "thr": 70,
     "grow": 3,
-    "feather": 1.6,
-    "base": "../../samples/source.png"
+    "feather": 0.6,
+    "base": "../../samples/source.png",
+    "detail": {
+     "sigma": 0.65,
+     "amount": 0.8
+    },
+    "clip_poly": [
+     [
+      427,
+      369
+     ],
+     [
+      449,
+      367
+     ],
+     [
+      479,
+      370
+     ],
+     [
+      505,
+      366
+     ],
+     [
+      531,
+      359
+     ],
+     [
+      540,
+      380
+     ],
+     [
+      525,
+      403
+     ],
+     [
+      469,
+      407
+     ],
+     [
+      432,
+      394
+     ]
+    ],
+    "exclude_mask": "hair_head_alpha.png"
    }
   },
   {
@@ -1252,8 +1295,51 @@
     ],
     "thr": 70,
     "grow": 3,
-    "feather": 1.6,
-    "base": "../../samples/source.png"
+    "feather": 0.6,
+    "base": "../../samples/source.png",
+    "detail": {
+     "sigma": 0.65,
+     "amount": 0.8
+    },
+    "clip_poly": [
+     [
+      427,
+      369
+     ],
+     [
+      449,
+      367
+     ],
+     [
+      479,
+      370
+     ],
+     [
+      505,
+      366
+     ],
+     [
+      531,
+      359
+     ],
+     [
+      540,
+      380
+     ],
+     [
+      525,
+      403
+     ],
+     [
+      469,
+      407
+     ],
+     [
+      432,
+      394
+     ]
+    ],
+    "exclude_mask": "hair_head_alpha.png"
    }
   },
   {
@@ -1276,8 +1362,51 @@
     ],
     "thr": 70,
     "grow": 3,
-    "feather": 1.6,
-    "base": "../../samples/source.png"
+    "feather": 0.6,
+    "base": "../../samples/source.png",
+    "detail": {
+     "sigma": 0.65,
+     "amount": 0.8
+    },
+    "clip_poly": [
+     [
+      427,
+      369
+     ],
+     [
+      449,
+      367
+     ],
+     [
+      479,
+      370
+     ],
+     [
+      505,
+      366
+     ],
+     [
+      531,
+      359
+     ],
+     [
+      540,
+      380
+     ],
+     [
+      525,
+      403
+     ],
+     [
+      469,
+      407
+     ],
+     [
+      432,
+      394
+     ]
+    ],
+    "exclude_mask": "hair_head_alpha.png"
    }
   },
   {
@@ -1300,8 +1429,51 @@
     ],
     "thr": 70,
     "grow": 3,
-    "feather": 1.6,
-    "base": "../../samples/source.png"
+    "feather": 0.6,
+    "base": "../../samples/source.png",
+    "detail": {
+     "sigma": 0.65,
+     "amount": 0.8
+    },
+    "clip_poly": [
+     [
+      427,
+      369
+     ],
+     [
+      449,
+      367
+     ],
+     [
+      479,
+      370
+     ],
+     [
+      505,
+      366
+     ],
+     [
+      531,
+      359
+     ],
+     [
+      540,
+      380
+     ],
+     [
+      525,
+      403
+     ],
+     [
+      469,
+      407
+     ],
+     [
+      432,
+      394
+     ]
+    ],
+    "exclude_mask": "hair_head_alpha.png"
    }
   },
   {
@@ -1324,8 +1496,47 @@
     ],
     "thr": 70,
     "grow": 3,
-    "feather": 1.6,
-    "base": "../../samples/source.png"
+    "feather": 0.6,
+    "base": "../../samples/source.png",
+    "detail": {
+     "sigma": 0.65,
+     "amount": 0.8
+    },
+    "clip_poly": [
+     [
+      584,
+      360
+     ],
+     [
+      619,
+      353
+     ],
+     [
+      654,
+      351
+     ],
+     [
+      682,
+      350
+     ],
+     [
+      695,
+      368
+     ],
+     [
+      683,
+      390
+     ],
+     [
+      630,
+      401
+     ],
+     [
+      591,
+      386
+     ]
+    ],
+    "exclude_mask": "hair_head_alpha.png"
    }
   },
   {
@@ -1348,8 +1559,47 @@
     ],
     "thr": 70,
     "grow": 3,
-    "feather": 1.6,
-    "base": "../../samples/source.png"
+    "feather": 0.6,
+    "base": "../../samples/source.png",
+    "detail": {
+     "sigma": 0.65,
+     "amount": 0.8
+    },
+    "clip_poly": [
+     [
+      584,
+      360
+     ],
+     [
+      619,
+      353
+     ],
+     [
+      654,
+      351
+     ],
+     [
+      682,
+      350
+     ],
+     [
+      695,
+      368
+     ],
+     [
+      683,
+      390
+     ],
+     [
+      630,
+      401
+     ],
+     [
+      591,
+      386
+     ]
+    ],
+    "exclude_mask": "hair_head_alpha.png"
    }
   },
   {
@@ -1372,8 +1622,47 @@
     ],
     "thr": 70,
     "grow": 3,
-    "feather": 1.6,
-    "base": "../../samples/source.png"
+    "feather": 0.6,
+    "base": "../../samples/source.png",
+    "detail": {
+     "sigma": 0.65,
+     "amount": 0.8
+    },
+    "clip_poly": [
+     [
+      584,
+      360
+     ],
+     [
+      619,
+      353
+     ],
+     [
+      654,
+      351
+     ],
+     [
+      682,
+      350
+     ],
+     [
+      695,
+      368
+     ],
+     [
+      683,
+      390
+     ],
+     [
+      630,
+      401
+     ],
+     [
+      591,
+      386
+     ]
+    ],
+    "exclude_mask": "hair_head_alpha.png"
    }
   },
   {
@@ -1396,8 +1685,47 @@
     ],
     "thr": 70,
     "grow": 3,
-    "feather": 1.6,
-    "base": "../../samples/source.png"
+    "feather": 0.6,
+    "base": "../../samples/source.png",
+    "detail": {
+     "sigma": 0.65,
+     "amount": 0.8
+    },
+    "clip_poly": [
+     [
+      584,
+      360
+     ],
+     [
+      619,
+      353
+     ],
+     [
+      654,
+      351
+     ],
+     [
+      682,
+      350
+     ],
+     [
+      695,
+      368
+     ],
+     [
+      683,
+      390
+     ],
+     [
+      630,
+      401
+     ],
+     [
+      591,
+      386
+     ]
+    ],
+    "exclude_mask": "hair_head_alpha.png"
    }
   },
   {

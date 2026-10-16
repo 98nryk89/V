@@ -130,8 +130,8 @@ void main(){ vec4 c = texture(uTex, vUV); if (uCut > 0.0 && c.a < uCut) discard;
         const b = this.blink;
         if (b.t < 0) { b.next -= dt; if (b.next <= 0) { b.t = 0; } }
         else {
-          b.t += dt; const dur = 0.18; const k = b.t / dur;
-          const open = k < 0.5 ? 1 - k * 2 : (k < 1 ? (k - 0.5) * 2 : 1);
+          b.t += dt; const dur = 0.18;
+          const open = b.t < .045 ? 1 - b.t / .045 : (b.t < .10 ? 0 : Math.min(1, (b.t - .10) / .08));
           P.EyeLOpen = open; P.EyeROpen = open;
           if (b.t >= dur) { b.t = -1; b.next = 2.2 + Math.random() * 3.5; P.EyeLOpen = 1; P.EyeROpen = 1; }
         }

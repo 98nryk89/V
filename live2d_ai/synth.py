@@ -157,6 +157,10 @@ def ref_patch(shape, spec, rgb, proj_dir):
     import os, cv2 as _cv
     ref = _cv.imread(os.path.join(proj_dir, spec["ref"]), _cv.IMREAD_UNCHANGED)[..., :3][..., ::-1].astype(np.float32)
     src = rgb.astype(np.float32)
+    if spec.get("detail"):
+        detail = spec["detail"]
+        low = _cv.GaussianBlur(ref, (0, 0), float(detail.get("sigma", .7)))
+        ref = np.clip(ref + float(detail.get("amount", .7)) * (ref - low), 0, 255)
     if "union_refs" in spec:
         # one shared mask for every keyframe of this eye: wherever ANY keyframe differs from the source
         def load(path):
@@ -180,6 +184,12 @@ def ref_patch(shape, spec, rgb, proj_dir):
             m = _cv.dilate(m.astype(np.uint8), _cv.getStructuringElement(_cv.MORPH_ELLIPSE, (2 * g + 1, 2 * g + 1))) > 0
         box = np.zeros(shape, bool); box[y0:y1, x0:x1] = True
         A = _cv.GaussianBlur((m & box).astype(np.float32), (0, 0), float(spec.get("feather", 1.6)))
+        if spec.get("clip_poly"):
+            from .decompose import poly_mask
+            A *= poly_mask(shape, spec["clip_poly"])
+        if spec.get("exclude_mask"):
+            protect = _cv.imread(os.path.join(proj_dir, spec["exclude_mask"]), 0) / 255
+            A *= 1 - protect
         return ref, np.where(box, A, 0)
     if "poly" in spec:
         m = _canvas(shape)
