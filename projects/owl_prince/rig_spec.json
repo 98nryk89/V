@@ -290,8 +290,8 @@
     "rigid": 0.4,
     "weight": {
      "mode": "y",
-     "from": 660,
-     "to": 430
+     "from": 610,
+     "to": 520
     },
     "k": 0.5
    }
@@ -664,7 +664,7 @@
    ],
    "depth": {
     "layer": "const",
-    "z": 90
+    "z": 10
    }
   },
   "earR": {
@@ -702,7 +702,7 @@
    ],
    "depth": {
     "layer": "const",
-    "z": 90
+    "z": 10
    }
   },
   "ribbon": {

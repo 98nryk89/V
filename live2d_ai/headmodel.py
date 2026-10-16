@@ -73,8 +73,15 @@ class HeadModel:
         cs = fl + (1 - fl) * cs
         z = (self.depth_base(y) + extra_d) * cs
         nose = self.nose_h(y) * np.exp(-((u / self.nose_hw) ** 2))
-        # above the head's measured rows keep tapering with a dome so nothing jumps
-        return z + nose * cs
+        out = z + nose * cs
+        # ears sit on the head's side plane, i.e. near the rotation axis: past the face contour the depth falls to a small
+        # value, so ear skin / earring / side hair move together instead of the skin sliding over them
+        ew = float(self.s.get("ear_taper", 0.0))
+        if ew > 0:
+            over = np.maximum(np.abs(u) - (wside - 6.0), 0.0)
+            f = np.clip(1.0 - over / ew, float(self.s.get("ear_floor", 0.1)), 1.0)
+            out = out * f
+        return out
 
     def z(self, x, y, layer, **kw):
         x = np.asarray(x, float); y = np.asarray(y, float)

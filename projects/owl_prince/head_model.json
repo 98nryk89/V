@@ -144,5 +144,7 @@
   "half_width": 92,
   "depth": 72
  },
- "edge_floor": 0.5
+ "edge_floor": 0.5,
+ "ear_taper": 26,
+ "ear_floor": 0.1
 }
