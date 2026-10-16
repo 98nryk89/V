@@ -28,7 +28,7 @@
       this.m = model; this.opts = Object.assign({ invX: false, invY: false, invZ: false, smooth: 0.45, gainX: 1, gainY: 1, gainMove: 1 }, opts);
       this.neutral = { yaw: 0, pitch: 0.45, x: null, y: null, eyeDist: null, rotation: null };
       this.raw = null; this.state = {}; this.running = false;
-      this.mouthForm = 0; this.mouthCandidate = 0; this.mouthCandidateFrames = 0;
+      this.mouthActive = false; this.mouthForm = 0; this.mouthCandidate = 0; this.mouthCandidateFrames = 0;
     }
 
     async load(delegate = 'GPU') {
@@ -126,20 +126,28 @@
       // mirror: user's left eye shows on screen-left -> EyeL
       const open = b => clamp(1 - (b - 0.15) / 0.5, 0, 1);
       t.EyeLOpen = open(g('eyeBlinkLeft')); t.EyeROpen = open(g('eyeBlinkRight'));
-      // One shared opening and one discrete shape: A and I never crossfade.
+      // A dead zone and separate release threshold reject small lip motion.
+      // Shape is discrete; only the opening amount is smoothed.
       const jaw = g('jawOpen'), stretch = (g('mouthStretchLeft')+g('mouthStretchRight'))/2;
       const widthRatio = mouthWidth/(this.neutral.mouthWidth || mouthWidth || 1);
-      const wide = stretch>.28 || (widthRatio>1.10 && aspect<.23 && jaw<.42);
-      const tall = jaw>.45 || aspect>.32;
-      let desired = tall ? 0 : (wide ? 1 : ((stretch<.16 && widthRatio<1.04) ? 0 : this.mouthForm));
-      const baseOpen = clamp((jaw-.04)/.36,0,1);
-      const lipOpen = clamp((aspect-(this.neutral.lipAspect || 0)-.025)/.16,0,1);
-      if (baseOpen===0 && lipOpen===0) desired = this.mouthForm;
+      const lipDelta = Math.max(0, aspect-(this.neutral.lipAspect || 0));
+      if (this.mouthActive) {
+        if (jaw<.14 && lipDelta<.07) this.mouthActive = false;
+      } else if (jaw>.22 || lipDelta>.11) this.mouthActive = true;
+      const wide = stretch>.40 || widthRatio>1.15;
+      const spread = stretch>.25 || widthRatio>1.08;
+      const tall = jaw>.56 || aspect>.36;
+      let desired = tall ? 0 : (wide && aspect<.20 && jaw<.38 ? 1 :
+        (spread && (jaw>.28 || lipDelta>.12) ? 2 :
+          (stretch<.18 && widthRatio<1.04 ? 0 : this.mouthForm)));
+      if (!this.mouthActive) desired = this.mouthForm;
       if (desired!==this.mouthCandidate) { this.mouthCandidate = desired; this.mouthCandidateFrames = 1; }
       else this.mouthCandidateFrames++;
       if (this.mouthCandidateFrames>=3) this.mouthForm = desired;
       this.m.setParam('MouthForm',this.mouthForm);
-      t.MouthOpen = this.mouthForm===1 ? Math.max(baseOpen,lipOpen) : baseOpen;
+      const baseOpen = this.mouthActive ? clamp((jaw-.16)/(.60-.16),0,1) : 0;
+      const lipOpen = this.mouthActive ? clamp((lipDelta-.07)/.23,0,1) : 0;
+      t.MouthOpen = this.mouthForm===0 ? baseOpen : Math.max(baseOpen,lipOpen);
       t.EyeBallX = clamp(((g('eyeLookOutRight') + g('eyeLookInLeft')) - (g('eyeLookOutLeft') + g('eyeLookInRight'))) / 1.2, -1, 1);
       t.EyeBallY = clamp(((g('eyeLookUpLeft') + g('eyeLookUpRight')) - (g('eyeLookDownLeft') + g('eyeLookDownRight'))) / 1.2, -1, 1);
       const k = 1 - o.smooth;

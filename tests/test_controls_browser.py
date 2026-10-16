@@ -48,21 +48,21 @@ class ViewerControlsTest(unittest.TestCase):
         page.evaluate('M.stop(); M.auto={blink:false,breath:false,idle:false,physics:false}; M.reset();M.render()')
         self.assertEqual(page.evaluate('M.params.Smile'), 0)
         self.assertEqual(page.evaluate('M.params.MouthOpen'), 0)
-        self.assertEqual(page.evaluate('M.rig.parts.filter(p=>p.id.startsWith("mouth")).map(p=>p.id).sort()'), ['mouth', 'mouth_vA', 'mouth_vI'])
+        self.assertEqual(page.evaluate('M.rig.parts.filter(p=>p.id.startsWith("mouth")).map(p=>p.id).sort()'), ['mouth', 'mouth_vA', 'mouth_vE', 'mouth_vI'])
         self.assertEqual(page.evaluate('M.rig.params.filter(p=>/^Vowel/.test(p.id)).map(p=>p.id)'), [])
         # An invalid/intermediate selector must never blend both vowel textures.
         vowel_states = page.evaluate("""()=>{
-          return [0,1,.5].map(shape=>{
+          return [0,1,2,.5].map(shape=>{
             M.reset();M.setParams({MouthOpen:1,MouthForm:shape});M.render();
-            return [M.byId.mouth_vA._opacity,M.byId.mouth_vI._opacity];
+            return [M.byId.mouth_vA._opacity,M.byId.mouth_vI._opacity,M.byId.mouth_vE._opacity];
           });
         }""")
-        self.assertEqual(vowel_states, [[1,0],[0,1],[0,0]])
+        self.assertEqual(vowel_states, [[1,0,0],[0,1,0],[0,0,1],[0,0,0]])
         closed = page.evaluate("""()=>{
-          return [0,1].map(shape=>{M.setParams({MouthOpen:0,MouthForm:shape});M.render();
-            return [M.byId.mouth_vA._opacity,M.byId.mouth_vI._opacity]});
+          return [0,1,2].map(shape=>{M.setParams({MouthOpen:0,MouthForm:shape});M.render();
+            return [M.byId.mouth_vA._opacity,M.byId.mouth_vI._opacity,M.byId.mouth_vE._opacity]});
         }""")
-        self.assertEqual(closed, [[0,0],[0,0]])
+        self.assertEqual(closed, [[0,0,0],[0,0,0],[0,0,0]])
 
         heights = page.evaluate('''()=>{
           const p=M.parts.find(p=>p.id==='mouth_vA');
@@ -195,12 +195,12 @@ class ViewerControlsTest(unittest.TestCase):
         page.keyboard.press('1')
         self.assertEqual(page.evaluate('M.params.Smile'), 1)
         self.assertEqual(page.locator('#smile').get_attribute('aria-pressed'), 'true')
-        page.evaluate('for(let i=0;i<12;i++)feedFace(.5,0)')
+        page.evaluate('for(let i=0;i<12;i++)feedFace(.7,0)')
         self.assertEqual(page.evaluate('[M.params.Smile,M.params.MouthOpen]'), [1, 1])
         page.keyboard.press('1')
         self.assertEqual(page.evaluate('M.params.Smile'), 0)
         for _ in range(4):
-            page.evaluate('feedFace(.12,0,.8)')
+            page.evaluate('feedFace(.28,0,.8)')
         page.evaluate('M.render()')
         self.assertEqual(page.evaluate('[M.params.MouthForm,M.byId.mouth_vA._opacity]'), [1,0])
         self.assertGreater(page.evaluate('M.byId.mouth_vI._opacity'), 0)

@@ -40,19 +40,19 @@ test('mouth opening ignores expression classifications',()=>{
   const {model,feed}=fixture();
   feed(frame(0,0,0,{jawOpen:0,mouthSmileLeft:1,mouthSmileRight:1,mouthPucker:1}));
   assert.equal(model.params.MouthOpen,0);
-  feed(frame(0,0,0,{jawOpen:.4,mouthFunnel:1,mouthStretchRight:1}));
+  feed(frame(0,0,0,{jawOpen:.65,mouthFunnel:1,mouthStretchRight:1}));
   assert.ok(model.params.MouthOpen>0 && model.params.MouthOpen<1);
   for(const key of ['VowelA','VowelI','VowelU','VowelO','Smile'])assert.equal(model.params[key],undefined);
 });
 test('mouth has monotonic intermediate motion and settles fully open/closed',()=>{
   const {model,feed}=fixture();let prev=0;
-  for(let i=0;i<12;i++){feed(frame(0,0,0,{jawOpen:.4}));assert.ok(model.params.MouthOpen>=prev);prev=model.params.MouthOpen;}
+  for(let i=0;i<12;i++){feed(frame(0,0,0,{jawOpen:.65}));assert.ok(model.params.MouthOpen>=prev);prev=model.params.MouthOpen;}
   assert.equal(model.params.MouthOpen,1);
   feed(frame(0,0,0,{jawOpen:0}));assert.ok(model.params.MouthOpen>0 && model.params.MouthOpen<1);
   prev=model.params.MouthOpen;
   for(let i=0;i<12;i++){feed(frame(0,0,0,{jawOpen:0}));assert.ok(model.params.MouthOpen<=prev);prev=model.params.MouthOpen;}
   assert.equal(model.params.MouthOpen,0);
-  for(let i=0;i<20;i++)feed(frame(0,0,0,{jawOpen:.22}));
+  for(let i=0;i<20;i++)feed(frame(0,0,0,{jawOpen:.38}));
   assert.ok(Math.abs(model.params.MouthOpen-.5)<.001);
 });
 test('tracking preserves manual smile while independently opening the mouth',()=>{
@@ -112,7 +112,7 @@ test('invalid camera matrices fall back to landmarks without freezing or NaN',()
 
 test('automatic A/I selection is discrete, debounced and preserves manual expressions',()=>{
   const {model,feed}=fixture();model.params.Smile=1;model.params.Surprise=0;
-  const wide=()=>frame(0,0,0,{jawOpen:.12,mouthStretchLeft:.8,mouthStretchRight:.8});
+  const wide=()=>frame(0,0,0,{jawOpen:.28,mouthStretchLeft:.8,mouthStretchRight:.8});
   feed(wide());feed(wide());assert.equal(model.params.MouthForm,0);
   feed(wide());assert.equal(model.params.MouthForm,1);assert.ok(model.params.MouthOpen>0);
   for(let i=0;i<6;i++)feed(frame(0,0,0,{jawOpen:.15,mouthStretchLeft:.22,mouthStretchRight:.22}));
@@ -127,10 +127,10 @@ test('automatic A/I selection is discrete, debounced and preserves manual expres
 
 test('wide narrow lip geometry also selects I, independently of face translation and tilt',()=>{
   const {model,feed}=fixture();
-  const wide=frame(0,0,0,{jawOpen:.1});
+  const wide=frame(0,0,0,{jawOpen:.28});
   for(const [i,x,y] of [[61,.45,.57],[291,.55,.57],[13,.5,.5625],[14,.5,.5775]])wide.faceLandmarks[0][i]={x,y};
   for(let i=0;i<6;i++)feed(wide);
-  assert.equal(model.params.MouthForm,1);assert.ok(model.params.MouthOpen>.3);
+  assert.equal(model.params.MouthForm,1);assert.ok(model.params.MouthOpen>.2);
   const translated=JSON.parse(JSON.stringify(wide));
   for(const p of translated.faceLandmarks[0]){p.x+=.02;p.y+=.03}
   for(let i=0;i<3;i++)feed(translated);
@@ -143,5 +143,19 @@ test('wide narrow lip geometry also selects I, independently of face translation
   for(let i=0;i<3;i++)feed(tilted);
   assert.equal(model.params.MouthForm,1);
   for(let i=0;i<12;i++)feed(frame());
+  assert.equal(model.params.MouthOpen,0);
+});
+
+test('small mouth motion stays closed; deliberate A, I and E stay exclusive',()=>{
+  const {model,feed}=fixture();
+  for(const jaw of [.05,.1,.15,.2])for(let i=0;i<20;i++)feed(frame(0,0,0,{jawOpen:jaw,mouthStretchLeft:.8,mouthStretchRight:.8}));
+  assert.equal(model.params.MouthOpen,0);
+  for(let i=0;i<8;i++)feed(frame(0,0,0,{jawOpen:.4,mouthStretchLeft:.55,mouthStretchRight:.55}));
+  assert.equal(model.params.MouthForm,2);assert.ok(model.params.MouthOpen>.3);
+  for(let i=0;i<8;i++)feed(frame(0,0,0,{jawOpen:.28,mouthStretchLeft:.8,mouthStretchRight:.8}));
+  assert.equal(model.params.MouthForm,1);
+  for(let i=0;i<12;i++)feed(frame(0,0,0,{jawOpen:.7}));
+  assert.equal(model.params.MouthForm,0);assert.equal(model.params.MouthOpen,1);
+  for(let i=0;i<12;i++)feed(frame(0,0,0,{jawOpen:.1}));
   assert.equal(model.params.MouthOpen,0);
 });

@@ -169,10 +169,10 @@
   {
    "id": "MouthForm",
    "min": 0,
-   "max": 1,
+   "max": 2,
    "default": 0,
    "step": 1,
-   "label": "\u53e3\u306e\u5f62 0=\u3042 / 1=\u3044\uff08\u30ab\u30e1\u30e9\u4e2d\u306f\u81ea\u52d5\uff09"
+   "label": "\u53e3\u306e\u5f62 0=\u3042 / 1=\u3044 / 2=\u3048\uff08\u30ab\u30e1\u30e9\u4e2d\u306f\u81ea\u52d5\uff09"
   }
  ],
  "templates": {
@@ -1949,6 +1949,61 @@
      "type": "opacity",
      "param": "MouthForm",
      "equals": 1
+    },
+    {
+     "type": "opacity",
+     "param": "MouthOpen",
+     "map": [
+      [
+       0,
+       0
+      ],
+      [
+       0.06,
+       1
+      ],
+      [
+       1,
+       1
+      ]
+     ]
+    },
+    {
+     "type": "scale",
+     "param": "MouthOpen",
+     "pivot": [
+      562,
+      492
+     ],
+     "map": [
+      [
+       0,
+       1,
+       0.06
+      ],
+      [
+       1,
+       1,
+       1
+      ]
+     ]
+    },
+    "@breath_head",
+    "@head_eye",
+    "@body_follow"
+   ],
+   "depth": {
+    "layer": "face",
+    "off": 2
+   },
+   "mesh_step": 4
+  },
+  "mouth_vE": {
+   "effects": [
+    {
+     "type": "opacity",
+     "param": "MouthForm",
+     "equals": 2
     },
     {
      "type": "opacity",

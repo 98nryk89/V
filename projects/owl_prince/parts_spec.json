@@ -2209,7 +2209,8 @@
     "ref": "../../samples/vowel_a.png",
     "union_refs": [
      "../../samples/vowel_a.png",
-     "../../samples/vowel_i.png"
+     "../../samples/vowel_i.png",
+     "../../samples/vowel_e.png"
     ],
     "box": [
      498,
@@ -2230,7 +2231,30 @@
     "ref": "../../samples/vowel_i.png",
     "union_refs": [
      "../../samples/vowel_a.png",
-     "../../samples/vowel_i.png"
+     "../../samples/vowel_i.png",
+     "../../samples/vowel_e.png"
+    ],
+    "box": [
+     498,
+     452,
+     628,
+     522
+    ],
+    "thr": 45,
+    "grow": 3,
+    "feather": 1.4
+   }
+  },
+  {
+   "id": "mouth_vE",
+   "z": 13,
+   "synthetic": {
+    "type": "ref_patch",
+    "ref": "../../samples/vowel_e.png",
+    "union_refs": [
+     "../../samples/vowel_a.png",
+     "../../samples/vowel_i.png",
+     "../../samples/vowel_e.png"
     ],
     "box": [
      498,
