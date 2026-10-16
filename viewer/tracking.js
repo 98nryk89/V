@@ -14,7 +14,7 @@
     constructor(model, opts = {}) {
       this.m = model; this.opts = Object.assign({ invX: false, invY: false, invZ: false, smooth: 0.45, gainX: 1, gainY: 1, gainMove: 1 }, opts);
       this.neutral = { yaw: 0, pitch: 0.45, x: null, y: null, eyeDist: null };
-      this.raw = null; this.state = {}; this.running = false; this.mouthIsOpen = false;
+      this.raw = null; this.state = {}; this.running = false;
     }
 
     async load(delegate = 'GPU') {
@@ -97,17 +97,20 @@
       // mirror: user's left eye shows on screen-left -> EyeL
       const open = b => clamp(1 - (b - 0.15) / 0.5, 0, 1);
       t.EyeLOpen = open(g('eyeBlinkLeft')); t.EyeROpen = open(g('eyeBlinkRight'));
-      // Two mouth poses, with hysteresis to avoid flickering near closed.
-      this.mouthIsOpen = g('jawOpen') >= (this.mouthIsOpen ? 0.10 : 0.18);
-      t.VowelA = this.mouthIsOpen ? 1 : 0;
+      // One E-shaped mouth, opened continuously from the original closed lips.
+      t.VowelE = clamp((g('jawOpen') - 0.04) / 0.36, 0, 1);
       t.EyeBallX = clamp(((g('eyeLookOutRight') + g('eyeLookInLeft')) - (g('eyeLookOutLeft') + g('eyeLookInRight'))) / 1.2, -1, 1);
       t.EyeBallY = clamp(((g('eyeLookUpLeft') + g('eyeLookUpRight')) - (g('eyeLookDownLeft') + g('eyeLookDownRight'))) / 1.2, -1, 1);
       const k = 1 - o.smooth;
       for (const key in t) {
-        const prev = this.state[key] != null ? this.state[key] : t[key];
+        const prev = this.state[key] != null ? this.state[key] : (key === 'VowelE' ? 0 : t[key]);
         // blinks should be fast: no smoothing for eye open params
-        const kk = key === 'VowelA' ? 1 : ((key === 'EyeLOpen' || key === 'EyeROpen') ? 0.85 : k);
+        const kk = key === 'VowelE' ? 0.45 : ((key === 'EyeLOpen' || key === 'EyeROpen') ? 0.85 : k);
         this.state[key] = prev + (t[key] - prev) * kk;
+        if (key === 'VowelE') {
+          if (t[key] === 0 && this.state[key] < 0.005) this.state[key] = 0;
+          if (t[key] === 1 && this.state[key] > 0.995) this.state[key] = 1;
+        }
         this.m.setParam(key, this.state[key]);
       }
       return true;

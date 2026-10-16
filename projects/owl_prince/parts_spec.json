@@ -1473,13 +1473,13 @@
    }
   },
   {
-   "id": "mouth_vA",
+   "id": "mouth_vE",
    "z": 13,
    "synthetic": {
     "type": "ref_patch",
-    "ref": "../../samples/vowel_a.png",
+    "ref": "../../samples/vowel_e.png",
     "union_refs": [
-     "../../samples/vowel_a.png"
+     "../../samples/vowel_e.png"
     ],
     "box": [
      498,

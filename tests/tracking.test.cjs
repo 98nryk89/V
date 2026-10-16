@@ -36,30 +36,32 @@ test('large translations clamp, calibration recentres, and inversion is consiste
   tr.opts.invX=true;tr.opts.invY=true;feed(frame(.55,.54));
   assert.ok(model.params.BodyX>0);assert.ok(model.params.BodyY<0);
 });
-test('mouth has only closed and A poses, with no vowel mixing or automatic smile',()=>{
+test('mouth uses only E and ignores smile/pucker classifications',()=>{
   const {model,feed}=fixture();
-  for (const bs of [
-    {jawOpen:0,mouthSmileLeft:1,mouthSmileRight:1},
-    {jawOpen:0,mouthPucker:1,mouthFunnel:1},
-    {jawOpen:.4,mouthSmileLeft:1,mouthStretchRight:1,mouthFunnel:1},
-  ]) {
-    feed(frame(0,0,0,bs));
-    assert.equal(model.params.VowelA,bs.jawOpen>.18?1:0);
-    for(const key of ['VowelI','VowelU','VowelE','VowelO','Smile'])assert.equal(model.params[key],undefined);
-  }
+  feed(frame(0,0,0,{jawOpen:0,mouthSmileLeft:1,mouthSmileRight:1,mouthPucker:1}));
+  assert.equal(model.params.VowelE,0);
+  feed(frame(0,0,0,{jawOpen:.4,mouthFunnel:1,mouthStretchRight:1}));
+  assert.ok(model.params.VowelE>0 && model.params.VowelE<1);
+  for(const key of ['VowelA','VowelI','VowelU','VowelO','Smile'])assert.equal(model.params[key],undefined);
 });
-test('mouth hysteresis avoids threshold chatter and never smooths into a mixed shape',()=>{
-  const {tr,model,feed}=fixture();tr.opts.smooth=.9;
-  for (const [jaw,expected] of [[.17,0],[.19,1],[.15,1],[.11,1],[.09,0],[.13,0]]){
-    feed(frame(0,0,0,{jawOpen:jaw}));assert.equal(model.params.VowelA,expected);
-  }
+test('E mouth has monotonic intermediate motion and settles fully open/closed',()=>{
+  const {model,feed}=fixture();let prev=0;
+  for(let i=0;i<12;i++){feed(frame(0,0,0,{jawOpen:.4}));assert.ok(model.params.VowelE>=prev);prev=model.params.VowelE;}
+  assert.equal(model.params.VowelE,1);
+  feed(frame(0,0,0,{jawOpen:0}));assert.ok(model.params.VowelE>0 && model.params.VowelE<1);
+  prev=model.params.VowelE;
+  for(let i=0;i<12;i++){feed(frame(0,0,0,{jawOpen:0}));assert.ok(model.params.VowelE<=prev);prev=model.params.VowelE;}
+  assert.equal(model.params.VowelE,0);
+  for(let i=0;i<20;i++)feed(frame(0,0,0,{jawOpen:.22}));
+  assert.ok(Math.abs(model.params.VowelE-.5)<.001);
 });
-test('tracking preserves the manually selected smile while updating the A mouth',()=>{
+test('tracking preserves manual smile while independently opening the E mouth',()=>{
   const {model,feed}=fixture();model.params.Smile=1;
-  feed(frame(0,0,0,{jawOpen:.6,mouthSmileLeft:0,mouthSmileRight:0}));
-  assert.equal(model.params.Smile,1);assert.equal(model.params.VowelA,1);
-  model.params.Smile=0;feed(frame(0,0,0,{jawOpen:0,mouthSmileLeft:1,mouthSmileRight:1}));
-  assert.equal(model.params.Smile,0);assert.equal(model.params.VowelA,0);
+  for(let i=0;i<12;i++)feed(frame(0,0,0,{jawOpen:.6}));
+  assert.equal(model.params.Smile,1);assert.equal(model.params.VowelE,1);
+  model.params.Smile=0;
+  for(let i=0;i<12;i++)feed(frame(0,0,0,{jawOpen:0,mouthSmileLeft:1,mouthSmileRight:1}));
+  assert.equal(model.params.Smile,0);assert.equal(model.params.VowelE,0);
 });
 test('vertical head rotation retains the original up/down limits',()=>{
   const {model,feed}=fixture();
