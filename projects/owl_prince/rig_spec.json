@@ -1594,6 +1594,172 @@
    },
    "mesh_step": 8
   },
+  "hair_tip_L": {
+   "effects": [
+    {
+     "type": "rotate",
+     "param": "PhysHairL",
+     "pivot": [
+      328,
+      1010
+     ],
+     "map": [
+      [
+       -1,
+       3
+      ],
+      [
+       1,
+       -3
+      ]
+     ],
+     "weight": {
+      "mode": "dist",
+      "pivot": [
+       328,
+       1010
+      ],
+      "len": 120,
+      "pow": 1.6
+     }
+    },
+    {
+     "type": "translate",
+     "param": "Breath",
+     "map": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       1,
+       0,
+       -6
+      ]
+     ],
+     "weight": {
+      "mode": "y",
+      "from": 1700,
+      "to": 560,
+      "pow": 2
+     }
+    },
+    {
+     "type": "rotate",
+     "param": "PhysBangs",
+     "pivot": [
+      575,
+      230
+     ],
+     "map": [
+      [
+       -1,
+       0.7
+      ],
+      [
+       1,
+       -0.7
+      ]
+     ],
+     "weight": {
+      "mode": "y",
+      "from": 1500,
+      "to": 400
+     }
+    },
+    "@head_complete_hair",
+    "@body_follow"
+   ],
+   "depth": {
+    "layer": "const",
+    "z": 121.839
+   },
+   "mesh_step": 4
+  },
+  "hair_tip_R": {
+   "effects": [
+    {
+     "type": "rotate",
+     "param": "PhysHairR",
+     "pivot": [
+      782,
+      1088
+     ],
+     "map": [
+      [
+       -1,
+       3
+      ],
+      [
+       1,
+       -3
+      ]
+     ],
+     "weight": {
+      "mode": "dist",
+      "pivot": [
+       782,
+       1088
+      ],
+      "len": 120,
+      "pow": 1.6
+     }
+    },
+    {
+     "type": "translate",
+     "param": "Breath",
+     "map": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       1,
+       0,
+       -6
+      ]
+     ],
+     "weight": {
+      "mode": "y",
+      "from": 1700,
+      "to": 560,
+      "pow": 2
+     }
+    },
+    {
+     "type": "rotate",
+     "param": "PhysBangs",
+     "pivot": [
+      575,
+      230
+     ],
+     "map": [
+      [
+       -1,
+       0.7
+      ],
+      [
+       1,
+       -0.7
+      ]
+     ],
+     "weight": {
+      "mode": "y",
+      "from": 1500,
+      "to": 400
+     }
+    },
+    "@head_complete_hair",
+    "@body_follow"
+   ],
+   "depth": {
+    "layer": "const",
+    "z": 121.839
+   },
+   "mesh_step": 4
+  },
   "owl_lid_L": {
    "effects": [
     {

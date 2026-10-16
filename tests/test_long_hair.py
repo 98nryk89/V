@@ -29,7 +29,7 @@ class LongHairTest(unittest.TestCase):
         np.testing.assert_array_equal(complete[long == 255], 255)
         parts = json.loads((PROJECT / 'parts_spec.json').read_text())['parts']
         active = [p for p in parts if p['id'].startswith('hair')]
-        self.assertEqual([p['id'] for p in active], ['hair_head', 'hair_under_face'])
+        self.assertEqual([p['id'] for p in active], ['hair_head', 'hair_under_face', 'hair_tip_L', 'hair_tip_R'])
         self.assertEqual(active[0]['zone'], {'mask': 'hair_detail_alpha.png'})
         self.assertEqual(next(p for p in parts if p['id'] == 'body')['fill_layer'], {'mask': 'collar_underlap.png'})
 

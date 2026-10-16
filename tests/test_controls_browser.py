@@ -95,6 +95,46 @@ class ViewerControlsTest(unittest.TestCase):
         self.assertGreater(hair_motion['lowerShift'], 1)
         self.assertLess(hair_motion['lowerShift'], 20)
         self.assertLess(hair_motion['bodyError'], .001)
+        # Owl blinking continues when camera tracking disables human auto-blink.
+        detail_motion = page.evaluate('''()=>{
+          M.reset();M.auto={blink:false,owlBlink:true,breath:false,idle:false,physics:false};
+          M.setParams({EyeLOpen:.43,EyeROpen:.72});M.owlBlink={next:.01,t:-1};
+          let closed=0,minimum=1;
+          for(let i=0;i<30;i++){M._drive(1/60);minimum=Math.min(minimum,M.params.OwlEyeOpen);if(M.params.OwlEyeOpen===0)closed++}
+          const finalOpen=M.params.OwlEyeOpen,human=[M.params.EyeLOpen,M.params.EyeROpen];
+          M.auto.owlBlink=false;M.setParam('OwlEyeOpen',.3);M._drive(.01);const held=M.params.OwlEyeOpen;
+          M.reset();const ids=['hair_head','body','earL','earR_skin','hair_tip_L','hair_tip_R'];
+          const rest=ids.map(id=>{M._deform(M.byId[id]);return Array.from(M.byId[id]._pos)});
+          M.setParams({PhysHairL:1,PhysHairR:1});
+          const shifts=ids.map((id,k)=>{M._deform(M.byId[id]);return Math.max(...M.byId[id]._pos.map((v,i)=>Math.abs(v-rest[k][i])))});
+          const stages=[.9,.75,.5,.25,0].map(v=>{M.reset();M.setParam('EyeLOpen',v);return [1,2,3,4].map(k=>{const p=M.byId['eyeL_k'+k];M._deform(p);return p._opacity})});
+          M.auto={blink:false,owlBlink:false,breath:false,idle:false,physics:false};M.reset();
+          return {closed,minimum,finalOpen,human,held,shifts,stages};
+        }''')
+        self.assertGreaterEqual(detail_motion['closed'], 2)
+        self.assertEqual(detail_motion['minimum'], 0)
+        self.assertEqual(detail_motion['finalOpen'], 1)
+        self.assertEqual(detail_motion['human'], [.43, .72])
+        self.assertEqual(detail_motion['held'], .3)
+        self.assertTrue(all(v < .001 for v in detail_motion['shifts'][:4]))
+        for shift in detail_motion['shifts'][4:]:
+            self.assertGreater(shift, 1)
+            self.assertLess(shift, 9)
+        # At each quarter state the top visible drawing is opaque, never a ghosted blend.
+        for row, stage in zip(detail_motion['stages'], [0,1,2,3,4]):
+            self.assertEqual(row, [1 if i < stage else 0 for i in range(4)])
+        # At maximum pitch/yaw/tilt the upper white collar must stay opaque.
+        # These samples lay in a visible transparent slit in the accepted baseline.
+        collar_alpha = page.evaluate('''()=>{
+          M.reset();M.setParams({AngleX:5,AngleY:5,AngleZ:5,BodyX:1,BodyY:1});M.render();
+          const c=M.canvas,v=M.opts.view||[0,0,...M.rig.size],s=Math.min(c.width/v[2],c.height/v[3]);
+          const ox=(c.width-v[2]*s)/2,oy=(c.height-v[3]*s)/2,gl=M.gl;
+          return [[516,580],[521,585],[530,590],[535,595],[542,600],[550,605]].map(([x,y])=>{
+            const px=Math.round(ox+(x+90-v[0])*s),py=Math.round(oy+(y+70-v[1])*s),rgba=new Uint8Array(4);
+            gl.readPixels(px,c.height-1-py,1,1,gl.RGBA,gl.UNSIGNED_BYTE,rgba);return rgba[3];
+          });
+        }''')
+        self.assertTrue(all(a > 230 for a in collar_alpha), collar_alpha)
         # All parts must translate together, without shearing the ears or neck.
         error = page.evaluate('''()=>{
           M.reset(); const before=M.parts.map(p=>{M._deform(p);return Array.from(p._pos)});

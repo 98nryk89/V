@@ -1870,6 +1870,24 @@
    }
   },
   {
+   "id": "hair_tip_L",
+   "z": 8.6,
+   "zone": {
+    "mask": "hair_tip_L_alpha.png"
+   },
+   "bleed": 0,
+   "preserve_source": true
+  },
+  {
+   "id": "hair_tip_R",
+   "z": 8.6,
+   "zone": {
+    "mask": "hair_tip_R_alpha.png"
+   },
+   "bleed": 0,
+   "preserve_source": true
+  },
+  {
    "id": "owl_lid_L",
    "z": 15,
    "synthetic": {
