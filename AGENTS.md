@@ -101,3 +101,9 @@ python tools/fidelity.py projects/owl_prince/out samples/ref12.png /tmp/err.png 
 - 髪本体の設定は維持。hair_tip_L/R の2か所（合わせて髪の約0.7%）だけを既存PhysHairL/Rで小さく揺らす。耳は揺らさない。物理ドライバ本体は触らない。
 - 現在41パーツ、Python20件＋Node7件。再生成は従来の髪マスク生成後に tools/refine_details.py、build/export。比較・コミットごとの目的・戻した場合の再生成手順は docs/details.md。
 - 次の確認は実機カメラでの瞬きの見え方と、必要なら2か所の毛先の強さの微調整。大きな作り直しはしない。
+
+## 最新: 眉の横断線・カメラの首回転（2026-10-16）
+
+- 眉の保護領域で前髪を切らない。提供hair_head_alphaで髪を保護し、髪がない露出した眉だけを顔へ戻す。
+- カメラはMediaPipeの3D顔行列から角度を取り、正面の較正姿勢との差で左右5度・上5度・下10度、首かしげ±5度に追従。最初の有効な姿勢を初期基準にし、正面を較正すると移動・回転とも0へ戻る。行列が不正/なしなら2D追跡へ戻る。
+- BodyX/Y、全体リグ・耳・物理・フクロウ・毛先は維持。Python20件＋Node10件、比較は docs/brows-rotation.md。実機カメラは未確認。
