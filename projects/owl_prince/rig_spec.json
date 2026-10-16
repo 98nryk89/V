@@ -3,22 +3,22 @@
  "params": [
   {
    "id": "AngleX",
-   "min": -12,
-   "max": 12,
+   "min": -7,
+   "max": 7,
    "default": 0,
    "label": "\u9854\u306e\u5411\u304d \u5de6\u53f3"
   },
   {
    "id": "AngleY",
-   "min": -12,
-   "max": 12,
+   "min": -7,
+   "max": 7,
    "default": 0,
    "label": "\u9854\u306e\u5411\u304d \u4e0a\u4e0b"
   },
   {
    "id": "AngleZ",
-   "min": -12,
-   "max": 12,
+   "min": -7,
+   "max": 7,
    "default": 0,
    "label": "\u9996\u304b\u3057\u3052"
   },
@@ -1265,11 +1265,11 @@
    "inputs": [
     {
      "param": "AngleX",
-     "gain": 0.05
+     "gain": 0.0857
     },
     {
      "param": "AngleZ",
-     "gain": 0.04
+     "gain": 0.0686
     }
    ],
    "freq": 1.5,
@@ -1283,11 +1283,11 @@
    "inputs": [
     {
      "param": "AngleX",
-     "gain": 0.05
+     "gain": 0.0857
     },
     {
      "param": "AngleZ",
-     "gain": 0.04
+     "gain": 0.0686
     }
    ],
    "freq": 1.6,
@@ -1301,15 +1301,15 @@
    "inputs": [
     {
      "param": "AngleX",
-     "gain": 0.05
+     "gain": 0.0857
     },
     {
      "param": "AngleY",
-     "gain": 0.04
+     "gain": 0.0686
     },
     {
      "param": "AngleZ",
-     "gain": 0.03
+     "gain": 0.0514
     }
    ],
    "freq": 2.3,
@@ -1323,11 +1323,11 @@
    "inputs": [
     {
      "param": "AngleX",
-     "gain": 0.06
+     "gain": 0.1029
     },
     {
      "param": "AngleZ",
-     "gain": 0.05
+     "gain": 0.0857
     }
    ],
    "freq": 1.8,
@@ -1341,11 +1341,11 @@
    "inputs": [
     {
      "param": "AngleX",
-     "gain": 0.06
+     "gain": 0.1029
     },
     {
      "param": "AngleZ",
-     "gain": 0.05
+     "gain": 0.0857
     }
    ],
    "freq": 2.0,
@@ -1359,11 +1359,11 @@
    "inputs": [
     {
      "param": "AngleX",
-     "gain": 0.07
+     "gain": 0.12
     },
     {
      "param": "AngleZ",
-     "gain": 0.06
+     "gain": 0.1029
     }
    ],
    "freq": 2.4,
@@ -1377,11 +1377,11 @@
    "inputs": [
     {
      "param": "AngleX",
-     "gain": 0.07
+     "gain": 0.12
     },
     {
      "param": "AngleZ",
-     "gain": 0.06
+     "gain": 0.1029
     }
    ],
    "freq": 2.5,
@@ -1395,11 +1395,11 @@
    "inputs": [
     {
      "param": "AngleX",
-     "gain": 0.05
+     "gain": 0.0857
     },
     {
      "param": "AngleZ",
-     "gain": 0.05
+     "gain": 0.0857
     },
     {
      "param": "Breath",
@@ -1417,11 +1417,11 @@
    "inputs": [
     {
      "param": "AngleX",
-     "gain": 0.05
+     "gain": 0.0857
     },
     {
      "param": "AngleZ",
-     "gain": 0.05
+     "gain": 0.0857
     },
     {
      "param": "Breath",

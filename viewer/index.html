@@ -64,7 +64,7 @@ const base=window.__RIG__?'':(q.get('model')||'../projects/owl_prince/out')+'/';
   window.addEventListener('pointermove',e=>{ if(!mouse)return;
     const r=document.getElementById('c').getBoundingClientRect();
     const nx=((e.clientX-r.left)/r.width-0.5)*2, ny=((e.clientY-r.top)/r.height-0.5)*2;
-    m.setParams({AngleX:nx*12,AngleY:-ny*9,AngleZ:-nx*3,EyeBallX:nx,EyeBallY:-ny});});
+    m.setParams({AngleX:nx*7,AngleY:-ny*5,AngleZ:-nx*2,EyeBallX:nx,EyeBallY:-ny});});
   let tr=null;const camb=document.getElementById('cam'),st=document.getElementById('camst');
   if(camb)camb.onclick=async()=>{
     if(tr&&tr.running){tr.stop();camb.textContent='開始';document.getElementById('vid').style.display='none';m.auto.blink=document.getElementById('a_blink').checked;m.auto.idle=document.getElementById('a_idle').checked;st.textContent='';return}
