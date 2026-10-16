@@ -10,11 +10,11 @@ function frame(dx=0,dy=0,noseOffset=0,bs={}) {
   for (const [i,x,y] of [[33,.4,.4],[263,.6,.4],[1,.5+noseOffset,.45],[152,.5,.65],[61,.46,.57],[291,.54,.57]]) l[i]={x:x+dx,y:y+dy};
   return {faceLandmarks:[l],faceBlendshapes:[{categories:Object.entries(bs).map(([categoryName,score])=>({categoryName,score}))}]};
 }
-function fixture() {
+function fixture(opts={}) {
   const model={params:{},setParam(k,v){this.params[k]=v},setParams(o){Object.assign(this.params,o)}};
-  const tr=new Tracker(model,{smooth:0});let result=frame();
+  const tr=new Tracker(model,{smooth:0,autoSmile:false,...opts});let result=frame();
   tr.landmarker={detectForVideo:()=>result};
-  const feed=f=>{result=f;assert.equal(tr.feed({},0),true)};
+  const feed=(f,time=0)=>{result=f;assert.equal(tr.feed({},time),true)};
   feed(frame());tr.calibrate();feed(frame());return {tr,model,feed};
 }
 test('face position translates the body without changing head rotation',()=>{
@@ -158,4 +158,38 @@ test('small mouth motion stays closed; deliberate A, I and E stay exclusive',()=
   assert.equal(model.params.MouthForm,0);assert.equal(model.params.MouthOpen,1);
   for(let i=0;i<12;i++)feed(frame(0,0,0,{jawOpen:.1}));
   assert.equal(model.params.MouthOpen,0);
+});
+
+test('automatic smile requires sustained strong bilateral scores and releases with hysteresis',()=>{
+  const {model,feed}=fixture({autoSmile:true});let time=0;
+  const hold=(left,right,n)=>{for(let i=0;i<n;i++){time+=50;feed(frame(0,0,0,{mouthSmileLeft:left,mouthSmileRight:right}),time)}};
+  hold(.8,.8,40);assert.equal(model.params.Smile,0);
+  hold(.99,.5,30);assert.equal(model.params.Smile,0);
+  hold(.95,.95,5);assert.equal(model.params.Smile,0);
+  hold(.8,.8,1);hold(.95,.95,5);assert.equal(model.params.Smile,0); // a dip resets the hold
+  hold(.95,.95,9);assert.equal(model.params.Smile,1);
+  hold(.65,.65,20);assert.equal(model.params.Smile,1);
+  hold(.1,.1,4);assert.equal(model.params.Smile,1);
+  hold(.1,.1,5);assert.equal(model.params.Smile,0);
+});
+
+test('manual expression mode and surprise take precedence over automatic smile',()=>{
+  const {model,tr,feed}=fixture({autoSmile:true});let time=0;
+  tr.setAutoSmile(false);model.params.Smile=1;
+  for(let i=0;i<30;i++){time+=50;feed(frame(),time)}
+  assert.equal(model.params.Smile,1);
+  tr.setAutoSmile(true);assert.equal(model.params.Smile,0);
+  model.params.Surprise=1;
+  for(let i=0;i<30;i++){time+=50;feed(frame(0,0,0,{mouthSmileLeft:1,mouthSmileRight:1}),time)}
+  assert.equal(model.params.Smile,0);assert.equal(model.params.Surprise,1);
+});
+
+test('losing face detection clears automatic smiles while preserving manual expressions',()=>{
+  const {model,tr,feed}=fixture({autoSmile:true});
+  for(let i=0;i<20;i++)feed(frame(0,0,0,{mouthSmileLeft:.95,mouthSmileRight:.95}),i*50);
+  assert.equal(model.params.Smile,1);
+  tr.landmarker={detectForVideo:()=>({})};
+  assert.equal(tr.feed({},1100),false);assert.equal(model.params.Smile,0);
+  tr.setAutoSmile(false);model.params.Smile=1;
+  assert.equal(tr.feed({},1200),false);assert.equal(model.params.Smile,1);
 });

@@ -29,6 +29,7 @@ button:hover{border-color:var(--ac)}
 <label class="chk"><input type="checkbox" id="a_wire">ワイヤー</label></div>
 <h2>表情</h2>
 <div><button id="smile" aria-pressed="false">笑顔 [1]</button><button id="surprise" aria-pressed="false">驚き [2]</button><button id="neutral">真顔 [0]</button></div>
+<label class="chk"><input type="checkbox" id="a_smile" checked>笑顔を自動判定（低感度）</label>
 <h2>Webカメラ追跡 (MediaPipe)</h2>
 <div><button id="cam">開始</button><button id="calib">正面を較正</button>
 <label class="chk"><input type="checkbox" id="invx">左右反転</label>
@@ -50,21 +51,32 @@ const base=window.__RIG__?'':(q.get('model')||'../projects/owl_prince/out')+'/';
   const vq=q.get('view');const m=new L2D.Model(document.getElementById('c'),rig,base,{view:vq?vq.split(',').map(Number):(rig.view||null),preserve:true});
   window.M=m; await m.load();
   document.getElementById('msg').textContent=rig.parts.length+' parts';
+  let tr=null;
+  const autoSmileBox=document.getElementById('a_smile');
   const smileButton=document.getElementById('smile');
   const surpriseButton=document.getElementById('surprise');
-  function setSmile(value){
-    if(value)setSurprise(0);
+  function setSmile(value,manual=true){
+    if(manual)setAutoSmile(false);
+    if(value)setSurprise(0,false);
     m.setParam('Smile',value?1:0);
     smileButton.setAttribute('aria-pressed',value?'true':'false');
     smileButton.textContent=value?'笑顔 ON [1]':'笑顔 [1]';
   }
-  function setSurprise(value){
-    if(value)setSmile(0);
+  function setSurprise(value,manual=true){
+    if(manual)setAutoSmile(false);
+    if(value)setSmile(0,false);
     m.setParam('Surprise',value?1:0);
     surpriseButton.setAttribute('aria-pressed',value?'true':'false');
     surpriseButton.textContent=value?'驚き ON [2]':'驚き [2]';
   }
-  function setNeutral(){setSmile(0);setSurprise(0)}
+  function setAutoSmile(enabled){
+    autoSmileBox.checked=enabled;
+    if(tr)tr.setAutoSmile(enabled);
+    if(enabled)setSurprise(0,false);
+    setSmile(0,false);
+  }
+  autoSmileBox.onchange=e=>setAutoSmile(e.target.checked);
+  function setNeutral(manual=true){setSmile(0,manual);setSurprise(0,false)}
   surpriseButton.onclick=()=>setSurprise(m.params.Surprise<0.5);
   smileButton.onclick=()=>setSmile(m.params.Smile<0.5);
   document.getElementById('neutral').onclick=()=>setNeutral();
@@ -75,7 +87,7 @@ const base=window.__RIG__?'':(q.get('model')||'../projects/owl_prince/out')+'/';
     if(e.key==='2'){e.preventDefault();setSurprise(m.params.Surprise<0.5)}
     if(e.key==='0'){e.preventDefault();setNeutral()}
   });
-  setNeutral();
+  setNeutral(false);
   const box=document.getElementById('params');
   for(const p of rig.params){ if(p.hidden) continue;
     const r=document.createElement('div');r.className='row';
@@ -85,11 +97,11 @@ const base=window.__RIG__?'':(q.get('model')||'../projects/owl_prince/out')+'/';
     p._s=s;p._o=o;box.appendChild(r);
   }
   // keep sliders in sync with auto-driven params
-  setInterval(()=>{for(const p of rig.params){if(p._s&&document.activeElement!==p._s){p._s.value=m.params[p.id];p._o.textContent=(+m.params[p.id]).toFixed(2)}}},100);
+  setInterval(()=>{const smiling=m.params.Smile>.5;smileButton.setAttribute('aria-pressed',smiling?'true':'false');smileButton.textContent=smiling?'笑顔 ON [1]':'笑顔 [1]';for(const p of rig.params){if(p._s&&document.activeElement!==p._s){p._s.value=m.params[p.id];p._o.textContent=(+m.params[p.id]).toFixed(2)}}},100);
   const A=(id,k)=>document.getElementById(id).onchange=e=>{m.auto[k]=e.target.checked};
   A('a_blink','blink');A('a_owlblink','owlBlink');A('a_breath','breath');A('a_idle','idle');A('a_phys','physics');
   document.getElementById('a_wire').onchange=e=>m.wire=e.target.checked;
-  document.getElementById('reset').onclick=()=>{m.reset();setNeutral()};
+  document.getElementById('reset').onclick=()=>{m.reset();setNeutral(false);setAutoSmile(true)};
   const bgs=['#2b2836','#ffffff','#101010','#6fcf97'];let bi=0;
   document.getElementById('bg').onclick=()=>{bi=(bi+1)%bgs.length;document.getElementById('stage').style.setProperty('--stagebg',bgs[bi])};
   let mouse=false;document.getElementById('a_mouse').onchange=e=>mouse=e.target.checked;
@@ -97,10 +109,10 @@ const base=window.__RIG__?'':(q.get('model')||'../projects/owl_prince/out')+'/';
     const r=document.getElementById('c').getBoundingClientRect();
     const nx=Math.max(-1,Math.min(1,((e.clientX-r.left)/r.width-0.5)*2)), ny=Math.max(-1,Math.min(1,((e.clientY-r.top)/r.height-0.5)*2));
     m.setParams({AngleX:nx*5,AngleY:(ny>0?-ny*10:-ny*5),AngleZ:-nx*1.5,BodyX:nx,BodyY:ny});});
-  let tr=null;const camb=document.getElementById('cam'),st=document.getElementById('camst');
+  const camb=document.getElementById('cam'),st=document.getElementById('camst');
   if(camb)camb.onclick=async()=>{
     if(tr&&tr.running){tr.stop();camb.textContent='開始';document.getElementById('vid').style.display='none';m.auto.blink=document.getElementById('a_blink').checked;m.auto.idle=document.getElementById('a_idle').checked;st.textContent='';return}
-    try{tr=new L2DTracker(m);const v=document.getElementById('vid');v.style.display='block';
+    try{tr=new L2DTracker(m,{autoSmile:autoSmileBox.checked});const v=document.getElementById('vid');v.style.display='block';
       m.auto.blink=false;m.auto.idle=false;
       await tr.start(v,t=>st.textContent=t);camb.textContent='停止';
       const sync=()=>{tr.opts.invX=document.getElementById('invx').checked;tr.opts.invY=document.getElementById('invy').checked;tr.opts.invZ=document.getElementById('invz').checked};

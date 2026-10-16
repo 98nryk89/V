@@ -182,7 +182,7 @@ class ViewerControlsTest(unittest.TestCase):
         page.evaluate('M.reset()')
         # Synthetic detector output uses the same browser-side tracker as a webcam.
         page.evaluate('''()=>{
-          const t=window.testTracker=new L2DTracker(M,{smooth:0});let result;
+          const t=window.testTracker=new L2DTracker(M,{smooth:0,autoSmile:false});let result;
           t.landmarker={detectForVideo:()=>result};
           window.feedFace=(jaw,smile,stretch=0)=>{
             const l=Array.from({length:478},()=>({x:.5,y:.5}));
@@ -192,7 +192,19 @@ class ViewerControlsTest(unittest.TestCase):
           };feedFace(0,1);t.calibrate();feedFace(0,1);
         }''')
         self.assertEqual(page.evaluate('[M.params.Smile,M.params.MouthOpen]'), [0, 0])
+        self.assertTrue(page.locator('#a_smile').is_checked())
+        page.evaluate('testTracker.setAutoSmile(true);for(let i=0;i<40;i++)feedFace(.15,.8)')
+        self.assertEqual(page.evaluate('[M.params.Smile,M.params.MouthOpen]'), [0,0])
+        page.evaluate('for(let i=0;i<8;i++)feedFace(0,.95)')
+        self.assertEqual(page.evaluate('M.params.Smile'), 0)
+        page.evaluate('for(let i=0;i<13;i++)feedFace(0,.95);M.render()')
+        self.assertEqual(page.evaluate('M.params.Smile'), 1)
+        page.wait_for_function("document.getElementById('smile').getAttribute('aria-pressed')==='true'")
+        page.evaluate('for(let i=0;i<14;i++)feedFace(0,.1)')
+        self.assertEqual(page.evaluate('M.params.Smile'), 0)
+        page.evaluate('testTracker.setAutoSmile(false)')
         page.keyboard.press('1')
+        self.assertFalse(page.locator('#a_smile').is_checked())
         self.assertEqual(page.evaluate('M.params.Smile'), 1)
         self.assertEqual(page.locator('#smile').get_attribute('aria-pressed'), 'true')
         page.evaluate('for(let i=0;i<12;i++)feedFace(.7,0)')
@@ -209,6 +221,11 @@ class ViewerControlsTest(unittest.TestCase):
         page.evaluate('M.render()')
         self.assertEqual(page.evaluate('[M.params.MouthForm,M.byId.mouth_vI._opacity]'), [0,0])
         self.assertGreater(page.evaluate('M.byId.mouth_vA._opacity'), 0)
+        for _ in range(4):
+            page.evaluate('feedFace(.4,0,.55)')
+        page.evaluate('M.render()')
+        self.assertEqual(page.evaluate('[M.params.MouthForm,M.byId.mouth_vA._opacity,M.byId.mouth_vI._opacity]'), [2,0,0])
+        self.assertGreater(page.evaluate('M.byId.mouth_vE._opacity'), 0)
         page.locator('#smile').click()
         page.keyboard.press('0')
         self.assertEqual(page.evaluate('M.params.Smile'), 0)
@@ -222,7 +239,7 @@ class ViewerControlsTest(unittest.TestCase):
         page.evaluate('feedFace(0,1)')
         self.assertEqual(page.evaluate('M.params.Surprise'), 1)
         states = page.evaluate("""()=>{
-          M.setParams({EyeLOpen:1,EyeROpen:1,MouthOpen:0});M.render();
+          M.setParams({EyeLOpen:1,EyeROpen:1,MouthOpen:0,MouthForm:0});M.render();
           const open=[M.byId.eyeL_surprise._opacity,M.byId.eyeR_surprise._opacity];
           M.setParams({EyeLOpen:0,EyeROpen:0,MouthOpen:1});M.render();
           return {open,closed:[M.byId.eyeL_surprise._opacity,M.byId.eyeR_surprise._opacity],blink:M.byId.eyeL_k4._opacity,mouth:M.byId.mouth_vA._opacity};

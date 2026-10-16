@@ -25,9 +25,10 @@
 
   class Tracker {
     constructor(model, opts = {}) {
-      this.m = model; this.opts = Object.assign({ invX: false, invY: false, invZ: false, smooth: 0.45, gainX: 1, gainY: 1, gainMove: 1 }, opts);
+      this.m = model; this.opts = Object.assign({ invX: false, invY: false, invZ: false, smooth: 0.45, gainX: 1, gainY: 1, gainMove: 1, autoSmile: true }, opts);
       this.neutral = { yaw: 0, pitch: 0.45, x: null, y: null, eyeDist: null, rotation: null };
       this.raw = null; this.state = {}; this.running = false;
+      this.smileHold = 0; this.smileRelease = 0; this.autoSmiling = false; this.lastSmileTime = null;
       this.mouthActive = false; this.mouthForm = 0; this.mouthCandidate = 0; this.mouthCandidateFrames = 0;
     }
 
@@ -57,11 +58,18 @@
       if (this.video && this.video.srcObject) this.video.srcObject.getTracks().forEach(t => t.stop());
     }
 
+    setAutoSmile(enabled) {
+      this.opts.autoSmile = !!enabled;
+      this.smileHold = 0; this.smileRelease = 0; this.autoSmiling = false; this.lastSmileTime = null;
+      if (enabled) this.m.setParam('Smile',0);
+    }
+
     calibrate() {
       if (!this.raw) return;
       this.neutral = { ...this.raw };
       for (const key of ['BodyX','BodyY','AngleX','AngleY','AngleZ']) this.state[key] = 0;
       this.m.setParams({ BodyX: 0, BodyY: 0, AngleX: 0, AngleY: 0, AngleZ: 0 });
+      this.setAutoSmile(this.opts.autoSmile);
     }
 
     _step() {
@@ -75,7 +83,10 @@
     // process one frame (video element, canvas or image) taken by an UN-mirrored camera
     feed(source, tsMs) {
       const res = this.landmarker.detectForVideo(source, tsMs);
-      if (!res.faceLandmarks || !res.faceLandmarks.length) return false;
+      if (!res.faceLandmarks || !res.faceLandmarks.length) {
+        if (this.opts.autoSmile) this.setAutoSmile(true);
+        return false;
+      }
       const L = res.faceLandmarks[0];
       this.lastMatrix = res.facialTransformationMatrixes && res.facialTransformationMatrixes[0] ? Array.from(res.facialTransformationMatrixes[0].data) : null;
       const P = i => L[i];
@@ -123,6 +134,21 @@
       const bs = {};
       if (res.faceBlendshapes && res.faceBlendshapes[0]) for (const c of res.faceBlendshapes[0].categories) bs[c.categoryName] = c.score;
       const g = k => bs[k] || 0;
+      if (o.autoSmile) {
+        const dt = this.lastSmileTime != null && tsMs>this.lastSmileTime ? Math.min((tsMs-this.lastSmileTime)/1000,.1) : 1/30;
+        this.lastSmileTime = tsMs;
+        const score = Math.min(g('mouthSmileLeft'),g('mouthSmileRight'));
+        if (this.m.params.Surprise>.5) {
+          this.autoSmiling = false; this.smileHold = 0; this.smileRelease = 0;
+        } else if (!this.autoSmiling) {
+          this.smileHold = score>.86 ? this.smileHold+dt : 0;
+          if (this.smileHold>=.6) { this.autoSmiling = true; this.smileRelease = 0; }
+        } else {
+          this.smileRelease = score<.55 ? this.smileRelease+dt : 0;
+          if (this.smileRelease>=.35) { this.autoSmiling = false; this.smileHold = 0; }
+        }
+        this.m.setParam('Smile',this.autoSmiling ? 1 : 0);
+      }
       // mirror: user's left eye shows on screen-left -> EyeL
       const open = b => clamp(1 - (b - 0.15) / 0.5, 0, 1);
       t.EyeLOpen = open(g('eyeBlinkLeft')); t.EyeROpen = open(g('eyeBlinkRight'));
