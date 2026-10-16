@@ -1843,26 +1843,6 @@
    }
   },
   {
-   "id": "mouth_vE",
-   "z": 13,
-   "synthetic": {
-    "type": "ref_patch",
-    "ref": "../../samples/vowel_e.png",
-    "union_refs": [
-     "../../samples/vowel_e.png"
-    ],
-    "box": [
-     498,
-     452,
-     628,
-     522
-    ],
-    "thr": 45,
-    "grow": 3,
-    "feather": 1.4
-   }
-  },
-  {
    "id": "earR_drop",
    "z": 9.1,
    "bleed": 3,
@@ -2222,24 +2202,45 @@
    }
   },
   {
-   "id": "mouth_surprise",
-   "z": 12.5,
+   "id": "mouth_vA",
+   "z": 13,
    "synthetic": {
     "type": "ref_patch",
-    "ref": "../../samples/surprised_ref.png",
+    "ref": "../../samples/vowel_a.png",
     "union_refs": [
-     "../../samples/surprised_ref.png"
+     "../../samples/vowel_a.png",
+     "../../samples/vowel_i.png"
     ],
-    "base": "../../samples/source.png",
     "box": [
-     520,
-     478,
-     611,
-     510
+     498,
+     452,
+     628,
+     522
     ],
-    "thr": 25,
+    "thr": 45,
     "grow": 3,
-    "feather": 1
+    "feather": 1.4
+   }
+  },
+  {
+   "id": "mouth_vI",
+   "z": 13,
+   "synthetic": {
+    "type": "ref_patch",
+    "ref": "../../samples/vowel_i.png",
+    "union_refs": [
+     "../../samples/vowel_a.png",
+     "../../samples/vowel_i.png"
+    ],
+    "box": [
+     498,
+     452,
+     628,
+     522
+    ],
+    "thr": 45,
+    "grow": 3,
+    "feather": 1.4
    }
   }
  ],

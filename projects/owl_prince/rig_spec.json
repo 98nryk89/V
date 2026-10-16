@@ -143,11 +143,11 @@
    "label": "\u7269\u7406 \u623fB"
   },
   {
-   "id": "VowelE",
+   "id": "MouthOpen",
    "min": 0,
    "max": 1,
    "default": 0,
-   "label": "\u53e3\u306e\u958b\u9589\uff08\u3048\uff09",
+   "label": "\u53e3\u306e\u958b\u304d\uff08\u81ea\u52d5\u8ffd\u5f93\uff09",
    "step": 0.01
   },
   {
@@ -165,6 +165,14 @@
    "default": 0,
    "label": "\u9a5a\u304d\u9854",
    "step": 1
+  },
+  {
+   "id": "MouthForm",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "step": 1,
+   "label": "\u53e3\u306e\u5f62 0=\u3042 / 1=\u3044\uff08\u30ab\u30e1\u30e9\u4e2d\u306f\u81ea\u52d5\uff09"
   }
  ],
  "templates": {
@@ -1528,56 +1536,6 @@
    },
    "mesh_step": 8
   },
-  "mouth_vE": {
-   "effects": [
-    {
-     "type": "opacity",
-     "param": "VowelE",
-     "map": [
-      [
-       0,
-       0
-      ],
-      [
-       0.06,
-       1
-      ],
-      [
-       1,
-       1
-      ]
-     ]
-    },
-    {
-     "type": "scale",
-     "param": "VowelE",
-     "pivot": [
-      562,
-      492
-     ],
-     "map": [
-      [
-       0,
-       1,
-       0.06
-      ],
-      [
-       1,
-       1,
-       1
-      ]
-     ]
-    },
-    "@breath_head",
-    "@head_eye",
-    "@body_follow"
-   ],
-   "depth": {
-    "layer": "face",
-    "off": 2
-   },
-   "mesh_step": 4
-  },
   "hair_under_face": {
    "effects": [
     {
@@ -1930,15 +1888,24 @@
    },
    "mesh_step": 5
   },
-  "mouth_surprise": {
+  "mouth_vA": {
    "effects": [
     {
      "type": "opacity",
-     "param": "Surprise",
+     "param": "MouthForm",
+     "equals": 0
+    },
+    {
+     "type": "opacity",
+     "param": "MouthOpen",
      "map": [
       [
        0,
        0
+      ],
+      [
+       0.06,
+       1
       ],
       [
        1,
@@ -1947,32 +1914,89 @@
      ]
     },
     {
-     "type": "opacity",
-     "param": "VowelE",
+     "type": "scale",
+     "param": "MouthOpen",
+     "pivot": [
+      562,
+      492
+     ],
      "map": [
       [
        0,
-       1
-      ],
-      [
-       0.06,
-       0
+       1,
+       0.06
       ],
       [
        1,
-       0
+       1,
+       1
       ]
      ]
     },
     "@breath_head",
-    "@head",
+    "@head_eye",
     "@body_follow"
    ],
    "depth": {
     "layer": "face",
-    "off": 4
+    "off": 2
    },
-   "mesh_step": 5
+   "mesh_step": 4
+  },
+  "mouth_vI": {
+   "effects": [
+    {
+     "type": "opacity",
+     "param": "MouthForm",
+     "equals": 1
+    },
+    {
+     "type": "opacity",
+     "param": "MouthOpen",
+     "map": [
+      [
+       0,
+       0
+      ],
+      [
+       0.06,
+       1
+      ],
+      [
+       1,
+       1
+      ]
+     ]
+    },
+    {
+     "type": "scale",
+     "param": "MouthOpen",
+     "pivot": [
+      562,
+      492
+     ],
+     "map": [
+      [
+       0,
+       1,
+       0.06
+      ],
+      [
+       1,
+       1,
+       1
+      ]
+     ]
+    },
+    "@breath_head",
+    "@head_eye",
+    "@body_follow"
+   ],
+   "depth": {
+    "layer": "face",
+    "off": 2
+   },
+   "mesh_step": 4
   }
  },
  "physics": [

@@ -47,12 +47,26 @@ class ViewerControlsTest(unittest.TestCase):
         page.wait_for_function('window.READY===true', timeout=60000)
         page.evaluate('M.stop(); M.auto={blink:false,breath:false,idle:false,physics:false}; M.reset();M.render()')
         self.assertEqual(page.evaluate('M.params.Smile'), 0)
-        self.assertEqual(page.evaluate('M.params.VowelE'), 0)
-        self.assertEqual(page.evaluate('M.rig.parts.filter(p=>p.id.startsWith("mouth")).map(p=>p.id).sort()'), ['mouth', 'mouth_surprise', 'mouth_vE'])
-        self.assertEqual(page.evaluate('M.rig.params.filter(p=>/^Vowel/.test(p.id)).map(p=>p.id)'), ['VowelE'])
+        self.assertEqual(page.evaluate('M.params.MouthOpen'), 0)
+        self.assertEqual(page.evaluate('M.rig.parts.filter(p=>p.id.startsWith("mouth")).map(p=>p.id).sort()'), ['mouth', 'mouth_vA', 'mouth_vI'])
+        self.assertEqual(page.evaluate('M.rig.params.filter(p=>/^Vowel/.test(p.id)).map(p=>p.id)'), [])
+        # An invalid/intermediate selector must never blend both vowel textures.
+        vowel_states = page.evaluate("""()=>{
+          return [0,1,.5].map(shape=>{
+            M.reset();M.setParams({MouthOpen:1,MouthForm:shape});M.render();
+            return [M.byId.mouth_vA._opacity,M.byId.mouth_vI._opacity];
+          });
+        }""")
+        self.assertEqual(vowel_states, [[1,0],[0,1],[0,0]])
+        closed = page.evaluate("""()=>{
+          return [0,1].map(shape=>{M.setParams({MouthOpen:0,MouthForm:shape});M.render();
+            return [M.byId.mouth_vA._opacity,M.byId.mouth_vI._opacity]});
+        }""")
+        self.assertEqual(closed, [[0,0],[0,0]])
+
         heights = page.evaluate('''()=>{
-          const p=M.parts.find(p=>p.id==='mouth_vE');
-          return [0,.25,.5,.75,1].map(v=>{M.reset();M.setParam('VowelE',v);M._deform(p);
+          const p=M.parts.find(p=>p.id==='mouth_vA');
+          return [0,.25,.5,.75,1].map(v=>{M.reset();M.setParam('MouthOpen',v);M._deform(p);
             const ys=Array.from(p._pos).filter((_,i)=>i%2);return Math.max(...ys)-Math.min(...ys)});
         }''')
         for small, large in zip(heights, heights[1:]):
@@ -170,21 +184,31 @@ class ViewerControlsTest(unittest.TestCase):
         page.evaluate('''()=>{
           const t=window.testTracker=new L2DTracker(M,{smooth:0});let result;
           t.landmarker={detectForVideo:()=>result};
-          window.feedFace=(jaw,smile)=>{
+          window.feedFace=(jaw,smile,stretch=0)=>{
             const l=Array.from({length:478},()=>({x:.5,y:.5}));
             for(const [i,x,y] of [[33,.4,.4],[263,.6,.4],[1,.5,.45],[152,.5,.65],[61,.46,.57],[291,.54,.57]])l[i]={x,y};
-            result={faceLandmarks:[l],faceBlendshapes:[{categories:[['jawOpen',jaw],['mouthSmileLeft',smile],['mouthSmileRight',smile]].map(([categoryName,score])=>({categoryName,score}))}]};
+            result={faceLandmarks:[l],faceBlendshapes:[{categories:[['jawOpen',jaw],['mouthSmileLeft',smile],['mouthSmileRight',smile],['mouthStretchLeft',stretch],['mouthStretchRight',stretch]].map(([categoryName,score])=>({categoryName,score}))}]};
             t.feed({},0);
           };feedFace(0,1);t.calibrate();feedFace(0,1);
         }''')
-        self.assertEqual(page.evaluate('[M.params.Smile,M.params.VowelE]'), [0, 0])
+        self.assertEqual(page.evaluate('[M.params.Smile,M.params.MouthOpen]'), [0, 0])
         page.keyboard.press('1')
         self.assertEqual(page.evaluate('M.params.Smile'), 1)
         self.assertEqual(page.locator('#smile').get_attribute('aria-pressed'), 'true')
         page.evaluate('for(let i=0;i<12;i++)feedFace(.5,0)')
-        self.assertEqual(page.evaluate('[M.params.Smile,M.params.VowelE]'), [1, 1])
+        self.assertEqual(page.evaluate('[M.params.Smile,M.params.MouthOpen]'), [1, 1])
         page.keyboard.press('1')
         self.assertEqual(page.evaluate('M.params.Smile'), 0)
+        for _ in range(4):
+            page.evaluate('feedFace(.12,0,.8)')
+        page.evaluate('M.render()')
+        self.assertEqual(page.evaluate('[M.params.MouthForm,M.byId.mouth_vA._opacity]'), [1,0])
+        self.assertGreater(page.evaluate('M.byId.mouth_vI._opacity'), 0)
+        for _ in range(4):
+            page.evaluate('feedFace(.6,0,.8)')
+        page.evaluate('M.render()')
+        self.assertEqual(page.evaluate('[M.params.MouthForm,M.byId.mouth_vI._opacity]'), [0,0])
+        self.assertGreater(page.evaluate('M.byId.mouth_vA._opacity'), 0)
         page.locator('#smile').click()
         page.keyboard.press('0')
         self.assertEqual(page.evaluate('M.params.Smile'), 0)
@@ -198,12 +222,12 @@ class ViewerControlsTest(unittest.TestCase):
         page.evaluate('feedFace(0,1)')
         self.assertEqual(page.evaluate('M.params.Surprise'), 1)
         states = page.evaluate("""()=>{
-          M.setParams({EyeLOpen:1,EyeROpen:1,VowelE:0});M.render();
-          const open=[M.byId.eyeL_surprise._opacity,M.byId.eyeR_surprise._opacity,M.byId.mouth_surprise._opacity];
-          M.setParams({EyeLOpen:0,EyeROpen:0,VowelE:1});M.render();
-          return {open,closed:[M.byId.eyeL_surprise._opacity,M.byId.eyeR_surprise._opacity,M.byId.mouth_surprise._opacity],blink:M.byId.eyeL_k4._opacity,mouth:M.byId.mouth_vE._opacity};
+          M.setParams({EyeLOpen:1,EyeROpen:1,MouthOpen:0});M.render();
+          const open=[M.byId.eyeL_surprise._opacity,M.byId.eyeR_surprise._opacity];
+          M.setParams({EyeLOpen:0,EyeROpen:0,MouthOpen:1});M.render();
+          return {open,closed:[M.byId.eyeL_surprise._opacity,M.byId.eyeR_surprise._opacity],blink:M.byId.eyeL_k4._opacity,mouth:M.byId.mouth_vA._opacity};
         }""")
-        self.assertEqual(states, dict(open=[1,1,1],closed=[0,0,0],blink=1,mouth=1))
+        self.assertEqual(states, dict(open=[1,1],closed=[0,0],blink=1,mouth=1))
         page.keyboard.press('1')
         self.assertEqual(page.evaluate('[M.params.Smile,M.params.Surprise]'), [1,0])
         page.locator('#surprise').click()
@@ -223,12 +247,12 @@ class ViewerControlsTest(unittest.TestCase):
         page.keyboard.press('1')
         self.assertEqual(page.evaluate('M.params.Smile'), 0)
         page.evaluate('document.getElementById("test-text").remove()')
-        mouth = page.locator('#params .row').filter(has_text='口の開閉').locator('input')
+        mouth = page.locator('#params .row').filter(has_text='口の開き').locator('input')
         self.assertEqual(mouth.get_attribute('step'), '0.01')
         for value in ['0', '0.25', '0.5', '0.75', '1']:
             mouth.fill(value)
             mouth.dispatch_event('input')
-            self.assertEqual(page.evaluate('M.params.VowelE'), float(value))
+            self.assertEqual(page.evaluate('M.params.MouthOpen'), float(value))
         page.locator('#a_mouse').check()
         box = page.locator('#c').bounding_box()
         page.mouse.move(box['x'] + box['width'] * .9, box['y'] + box['height'] * .8)
@@ -237,7 +261,7 @@ class ViewerControlsTest(unittest.TestCase):
         self.assertLessEqual(abs(page.evaluate('M.params.AngleX')), 5)
         page.locator('#a_mouse').uncheck()
         page.locator('#reset').click()
-        self.assertEqual(page.evaluate('[M.params.Smile,M.params.VowelE,M.params.BodyX,M.params.BodyY]'), [0, 0, 0, 0])
+        self.assertEqual(page.evaluate('[M.params.Smile,M.params.MouthOpen,M.params.BodyX,M.params.BodyY]'), [0, 0, 0, 0])
         matrix_motion = page.evaluate('''()=>{
           const tracker=new L2DTracker(M,{smooth:0});let result;
           tracker.landmarker={detectForVideo:()=>result};
@@ -263,9 +287,9 @@ class ViewerControlsTest(unittest.TestCase):
             out = Path(os.environ['CONTROL_PREVIEW_DIR'])
             out.mkdir(parents=True, exist_ok=True)
             poses = {'neutral': {}, 'left': {'BodyX': -1}, 'right': {'BodyX': 1},
-                     'up': {'BodyY': -1}, 'down': {'BodyY': 1}, 'quarter': {'VowelE': .25},
-                     'half': {'VowelE': .5}, 'threequarter': {'VowelE': .75}, 'open': {'VowelE': 1},
-                     'smile': {'Smile': 1}, 'smile_open': {'Smile': 1, 'VowelE': 1}}
+                     'up': {'BodyY': -1}, 'down': {'BodyY': 1}, 'quarter': {'MouthOpen': .25},
+                     'half': {'MouthOpen': .5}, 'threequarter': {'MouthOpen': .75}, 'open': {'MouthOpen': 1},
+                     'smile': {'Smile': 1}, 'smile_open': {'Smile': 1, 'MouthOpen': 1}}
             for name, params in poses.items():
                 data = page.evaluate('(p)=>{M.reset();M.setParams(p);M.renderStill(0);return document.getElementById("c").toDataURL().split(",")[1]}', params)
                 (out / f'{name}.png').write_bytes(base64.b64decode(data))

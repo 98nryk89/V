@@ -278,7 +278,7 @@ void main(){ vec4 c = texture(uTex, vUV); if (uCut > 0.0 && c.a < uCut) discard;
             }
             break;
           }
-          case 'opacity': opacity *= mapLinear(e.map, pv)[0]; break;
+          case 'opacity': opacity *= e.equals !== undefined ? (pv === e.equals ? 1 : 0) : mapLinear(e.map, pv)[0]; break;
         }
       }
       part._opacity = opacity;

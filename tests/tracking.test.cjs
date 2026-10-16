@@ -36,32 +36,32 @@ test('large translations clamp, calibration recentres, and inversion is consiste
   tr.opts.invX=true;tr.opts.invY=true;feed(frame(.55,.54));
   assert.ok(model.params.BodyX>0);assert.ok(model.params.BodyY<0);
 });
-test('mouth uses only E and ignores smile/pucker classifications',()=>{
+test('mouth opening ignores expression classifications',()=>{
   const {model,feed}=fixture();
   feed(frame(0,0,0,{jawOpen:0,mouthSmileLeft:1,mouthSmileRight:1,mouthPucker:1}));
-  assert.equal(model.params.VowelE,0);
+  assert.equal(model.params.MouthOpen,0);
   feed(frame(0,0,0,{jawOpen:.4,mouthFunnel:1,mouthStretchRight:1}));
-  assert.ok(model.params.VowelE>0 && model.params.VowelE<1);
+  assert.ok(model.params.MouthOpen>0 && model.params.MouthOpen<1);
   for(const key of ['VowelA','VowelI','VowelU','VowelO','Smile'])assert.equal(model.params[key],undefined);
 });
-test('E mouth has monotonic intermediate motion and settles fully open/closed',()=>{
+test('mouth has monotonic intermediate motion and settles fully open/closed',()=>{
   const {model,feed}=fixture();let prev=0;
-  for(let i=0;i<12;i++){feed(frame(0,0,0,{jawOpen:.4}));assert.ok(model.params.VowelE>=prev);prev=model.params.VowelE;}
-  assert.equal(model.params.VowelE,1);
-  feed(frame(0,0,0,{jawOpen:0}));assert.ok(model.params.VowelE>0 && model.params.VowelE<1);
-  prev=model.params.VowelE;
-  for(let i=0;i<12;i++){feed(frame(0,0,0,{jawOpen:0}));assert.ok(model.params.VowelE<=prev);prev=model.params.VowelE;}
-  assert.equal(model.params.VowelE,0);
+  for(let i=0;i<12;i++){feed(frame(0,0,0,{jawOpen:.4}));assert.ok(model.params.MouthOpen>=prev);prev=model.params.MouthOpen;}
+  assert.equal(model.params.MouthOpen,1);
+  feed(frame(0,0,0,{jawOpen:0}));assert.ok(model.params.MouthOpen>0 && model.params.MouthOpen<1);
+  prev=model.params.MouthOpen;
+  for(let i=0;i<12;i++){feed(frame(0,0,0,{jawOpen:0}));assert.ok(model.params.MouthOpen<=prev);prev=model.params.MouthOpen;}
+  assert.equal(model.params.MouthOpen,0);
   for(let i=0;i<20;i++)feed(frame(0,0,0,{jawOpen:.22}));
-  assert.ok(Math.abs(model.params.VowelE-.5)<.001);
+  assert.ok(Math.abs(model.params.MouthOpen-.5)<.001);
 });
-test('tracking preserves manual smile while independently opening the E mouth',()=>{
+test('tracking preserves manual smile while independently opening the mouth',()=>{
   const {model,feed}=fixture();model.params.Smile=1;
   for(let i=0;i<12;i++)feed(frame(0,0,0,{jawOpen:.6}));
-  assert.equal(model.params.Smile,1);assert.equal(model.params.VowelE,1);
+  assert.equal(model.params.Smile,1);assert.equal(model.params.MouthOpen,1);
   model.params.Smile=0;
   for(let i=0;i<12;i++)feed(frame(0,0,0,{jawOpen:0,mouthSmileLeft:1,mouthSmileRight:1}));
-  assert.equal(model.params.Smile,0);assert.equal(model.params.VowelE,0);
+  assert.equal(model.params.Smile,0);assert.equal(model.params.MouthOpen,0);
 });
 test('vertical head rotation retains the original up/down limits',()=>{
   const {model,feed}=fixture();
@@ -108,4 +108,40 @@ test('3D rotation calibration and position calibration remain independent',()=>{
 test('invalid camera matrices fall back to landmarks without freezing or NaN',()=>{
   const {model,feed}=fixture();const f=frame(0,0,.25);f.facialTransformationMatrixes=[{data:Array(16).fill(NaN)}];feed(f);
   assert.equal(model.params.AngleX,-5);assert.ok(Number.isFinite(model.params.AngleY));
+});
+
+test('automatic A/I selection is discrete, debounced and preserves manual expressions',()=>{
+  const {model,feed}=fixture();model.params.Smile=1;model.params.Surprise=0;
+  const wide=()=>frame(0,0,0,{jawOpen:.12,mouthStretchLeft:.8,mouthStretchRight:.8});
+  feed(wide());feed(wide());assert.equal(model.params.MouthForm,0);
+  feed(wide());assert.equal(model.params.MouthForm,1);assert.ok(model.params.MouthOpen>0);
+  for(let i=0;i<6;i++)feed(frame(0,0,0,{jawOpen:.15,mouthStretchLeft:.22,mouthStretchRight:.22}));
+  assert.equal(model.params.MouthForm,1); // hysteresis at the boundary
+  for(let i=0;i<3;i++)feed(frame(0,0,0,{jawOpen:.7,mouthStretchLeft:.8,mouthStretchRight:.8}));
+  assert.equal(model.params.MouthForm,0); // a tall jaw takes priority
+  assert.equal(model.params.Smile,1);assert.equal(model.params.Surprise,0);
+  for(let i=0;i<12;i++)feed(frame());
+  assert.equal(model.params.MouthOpen,0);
+  assert.equal(model.params.VowelE,undefined);
+});
+
+test('wide narrow lip geometry also selects I, independently of face translation and tilt',()=>{
+  const {model,feed}=fixture();
+  const wide=frame(0,0,0,{jawOpen:.1});
+  for(const [i,x,y] of [[61,.45,.57],[291,.55,.57],[13,.5,.5625],[14,.5,.5775]])wide.faceLandmarks[0][i]={x,y};
+  for(let i=0;i<6;i++)feed(wide);
+  assert.equal(model.params.MouthForm,1);assert.ok(model.params.MouthOpen>.3);
+  const translated=JSON.parse(JSON.stringify(wide));
+  for(const p of translated.faceLandmarks[0]){p.x+=.02;p.y+=.03}
+  for(let i=0;i<3;i++)feed(translated);
+  assert.equal(model.params.MouthForm,1);
+  assert.ok(model.params.BodyY>0);assert.equal(model.params.AngleZ,0);
+  const tilted=JSON.parse(JSON.stringify(translated)),a=.2;
+  for(const p of tilted.faceLandmarks[0]){
+    const x=p.x-.52,y=p.y-.43;p.x=.52+x*Math.cos(a)-y*Math.sin(a);p.y=.43+x*Math.sin(a)+y*Math.cos(a);
+  }
+  for(let i=0;i<3;i++)feed(tilted);
+  assert.equal(model.params.MouthForm,1);
+  for(let i=0;i<12;i++)feed(frame());
+  assert.equal(model.params.MouthOpen,0);
 });

@@ -28,6 +28,7 @@
       this.m = model; this.opts = Object.assign({ invX: false, invY: false, invZ: false, smooth: 0.45, gainX: 1, gainY: 1, gainMove: 1 }, opts);
       this.neutral = { yaw: 0, pitch: 0.45, x: null, y: null, eyeDist: null, rotation: null };
       this.raw = null; this.state = {}; this.running = false;
+      this.mouthForm = 0; this.mouthCandidate = 0; this.mouthCandidateFrames = 0;
     }
 
     async load(delegate = 'GPU') {
@@ -90,7 +91,11 @@
       const pitch = downNose / (downChin || 1e-3);                            // larger = looking down
       const roll = Math.atan2(eL.y - eR.y, eL.x - eR.x) * 180 / Math.PI;
       const rotation = rotationFromMatrix(this.lastMatrix);
-      this.raw = { yaw, pitch, x: mid.x, y: mid.y, eyeDist, rotation };
+      const mouthWidth = Math.hypot(P(291).x-P(61).x,P(291).y-P(61).y) / eyeDist;
+      const aspect = Math.hypot(P(14).x-P(13).x,P(14).y-P(13).y)/(mouthWidth*eyeDist || 1e-3);
+      this.raw = { yaw, pitch, x: mid.x, y: mid.y, eyeDist, rotation, mouthWidth, lipAspect: aspect };
+      if (this.neutral.lipAspect == null) this.neutral.lipAspect = aspect;
+      if (this.neutral.mouthWidth == null) this.neutral.mouthWidth = mouthWidth;
       if (rotation && !this.neutral.rotation) this.neutral.rotation = { ...rotation };
       if (this.neutral.x == null) Object.assign(this.neutral, { x: mid.x, y: mid.y, eyeDist });
       const o = this.opts;
@@ -121,17 +126,29 @@
       // mirror: user's left eye shows on screen-left -> EyeL
       const open = b => clamp(1 - (b - 0.15) / 0.5, 0, 1);
       t.EyeLOpen = open(g('eyeBlinkLeft')); t.EyeROpen = open(g('eyeBlinkRight'));
-      // One E-shaped mouth, opened continuously from the original closed lips.
-      t.VowelE = clamp((g('jawOpen') - 0.04) / 0.36, 0, 1);
+      // One shared opening and one discrete shape: A and I never crossfade.
+      const jaw = g('jawOpen'), stretch = (g('mouthStretchLeft')+g('mouthStretchRight'))/2;
+      const widthRatio = mouthWidth/(this.neutral.mouthWidth || mouthWidth || 1);
+      const wide = stretch>.28 || (widthRatio>1.10 && aspect<.23 && jaw<.42);
+      const tall = jaw>.45 || aspect>.32;
+      let desired = tall ? 0 : (wide ? 1 : ((stretch<.16 && widthRatio<1.04) ? 0 : this.mouthForm));
+      const baseOpen = clamp((jaw-.04)/.36,0,1);
+      const lipOpen = clamp((aspect-(this.neutral.lipAspect || 0)-.025)/.16,0,1);
+      if (baseOpen===0 && lipOpen===0) desired = this.mouthForm;
+      if (desired!==this.mouthCandidate) { this.mouthCandidate = desired; this.mouthCandidateFrames = 1; }
+      else this.mouthCandidateFrames++;
+      if (this.mouthCandidateFrames>=3) this.mouthForm = desired;
+      this.m.setParam('MouthForm',this.mouthForm);
+      t.MouthOpen = this.mouthForm===1 ? Math.max(baseOpen,lipOpen) : baseOpen;
       t.EyeBallX = clamp(((g('eyeLookOutRight') + g('eyeLookInLeft')) - (g('eyeLookOutLeft') + g('eyeLookInRight'))) / 1.2, -1, 1);
       t.EyeBallY = clamp(((g('eyeLookUpLeft') + g('eyeLookUpRight')) - (g('eyeLookDownLeft') + g('eyeLookDownRight'))) / 1.2, -1, 1);
       const k = 1 - o.smooth;
       for (const key in t) {
-        const prev = this.state[key] != null ? this.state[key] : (key === 'VowelE' ? 0 : t[key]);
+        const prev = this.state[key] != null ? this.state[key] : (key === 'MouthOpen' ? 0 : t[key]);
         // blinks should be fast: no smoothing for eye open params
-        const kk = key === 'VowelE' ? 0.45 : ((key === 'EyeLOpen' || key === 'EyeROpen') ? 1 : k);
+        const kk = key === 'MouthOpen' ? 0.45 : ((key === 'EyeLOpen' || key === 'EyeROpen') ? 1 : k);
         this.state[key] = prev + (t[key] - prev) * kk;
-        if (key === 'VowelE') {
+        if (key === 'MouthOpen') {
           if (t[key] === 0 && this.state[key] < 0.005) this.state[key] = 0;
           if (t[key] === 1 && this.state[key] > 0.995) this.state[key] = 1;
         }
