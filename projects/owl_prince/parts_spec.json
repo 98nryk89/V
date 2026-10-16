@@ -215,7 +215,7 @@
     "mask": "face_skin_mask.png"
    },
    "extent": {
-    "mask": "face_skin_extent.png"
+    "mask": "face_skin_extent_separate_ear.png"
    },
    "fill_gate": {
     "near": [
@@ -1559,6 +1559,21 @@
    "bleed": 0,
    "zone": {
     "mask": "hair_head_alpha.png"
+   },
+   "preserve_source": true
+  },
+  {
+   "id": "earR_skin",
+   "z": 5.5,
+   "zone": {
+    "mask": "ear_R_rigid_mask.png"
+   },
+   "extent": {
+    "mask": "ear_R_rigid_mask.png"
+   },
+   "bleed": 0,
+   "fill_layer": {
+    "mask": "ear_skin_reference.png"
    },
    "preserve_source": true
   }

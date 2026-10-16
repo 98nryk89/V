@@ -57,6 +57,22 @@ class ViewerControlsTest(unittest.TestCase):
         }''')
         for small, large in zip(heights, heights[1:]):
             self.assertGreater(large, small + 1)
+        ear_geometry = page.evaluate('''()=>{
+          const skin=M.parts.find(p=>p.id==='earR_skin'),drop=M.parts.find(p=>p.id==='earR_drop');
+          const area=(v,a,b,c)=>(v[2*b]-v[2*a])*(v[2*c+1]-v[2*a+1])-(v[2*b+1]-v[2*a+1])*(v[2*c]-v[2*a]);
+          let areaError=0,attachmentError=0;
+          for(const angle of [-10,5]){
+            M.reset();M.setParams({AngleY:angle,PhysEarR:1});M._deform(skin);
+            const t=skin.mesh.tris;
+            for(let i=0;i<t.length;i+=3){const rest=area(skin._rest,t[i],t[i+1],t[i+2]);
+              if(Math.abs(rest)>.01)areaError=Math.max(areaError,Math.abs(area(skin._pos,t[i],t[i+1],t[i+2])/rest-Math.cos(angle*Math.PI/180)))}
+            const atStud=p=>{const q={...p,_rest:new Float32Array([699,446]),_pos:new Float32Array(2),_z:new Float32Array([p._zmean])};M._deform(q);return q._pos};
+            const a=atStud(skin),b=atStud(drop);attachmentError=Math.max(attachmentError,Math.hypot(a[0]-b[0],a[1]-b[1]));
+          }
+          return {areaError,attachmentError};
+        }''')
+        self.assertLess(ear_geometry['areaError'], .005)
+        self.assertLess(ear_geometry['attachmentError'], .001)
         # All parts must translate together, without shearing the ears or neck.
         error = page.evaluate('''()=>{
           M.reset(); const before=M.parts.map(p=>{M._deform(p);return Array.from(p._pos)});
