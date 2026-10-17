@@ -1,3 +1,5 @@
+> 最新の自動驚き・黒目の追従は [surprise-gaze.md](surprise-gaze.md) を参照。口と笑顔の感度は以下の追加調整後の値を維持。
+
 # Eの再追加・低感度の口と笑顔
 
 口は提供済み `samples/vowel_e.png` を再追加し、閉じ口・A・I・Eから一つだけ表示する。MouthFormは0=A/1=I/2=E、MouthOpenは共通の連続値。等値ゲートのためA/I/Eは重ならない。
