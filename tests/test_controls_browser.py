@@ -182,7 +182,7 @@ class ViewerControlsTest(unittest.TestCase):
         page.evaluate('M.reset()')
         # Synthetic detector output uses the same browser-side tracker as a webcam.
         page.evaluate('''()=>{
-          const t=window.testTracker=new L2DTracker(M,{smooth:0,autoSmile:false});let result;
+          const t=window.testTracker=new L2DTracker(M,{smooth:0,autoSmile:false,autoSurprise:false});let result;
           t.landmarker={detectForVideo:()=>result};
           window.feedFace=(jaw,smile,stretch=0)=>{
             const l=Array.from({length:478},()=>({x:.5,y:.5}));

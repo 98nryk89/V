@@ -12,7 +12,7 @@ function frame(dx=0,dy=0,noseOffset=0,bs={}) {
 }
 function fixture(opts={}) {
   const model={params:{},setParam(k,v){this.params[k]=v},setParams(o){Object.assign(this.params,o)}};
-  const tr=new Tracker(model,{smooth:0,autoSmile:false,...opts});let result=frame();
+  const tr=new Tracker(model,{smooth:0,autoSmile:false,autoSurprise:false,...opts});let result=frame();
   tr.landmarker={detectForVideo:()=>result};
   const feed=(f,time=0)=>{result=f;assert.equal(tr.feed({},time),true)};
   feed(frame());tr.calibrate();feed(frame());return {tr,model,feed};
@@ -202,4 +202,29 @@ test('moderate movements now activate sooner while small movements stay rejected
   assert.ok(model.params.MouthOpen>.1);assert.equal(model.params.Smile,0);
   for(let i=0;i<3;i++){time+=50;feed(frame(0,0,0,{jawOpen:.2,mouthSmileLeft:.83,mouthSmileRight:.83}),time)}
   assert.equal(model.params.Smile,1);
+});
+
+test('bilateral eye widening uses the same hold and hysteresis as smile and takes priority',()=>{
+  const {model,feed}=fixture({autoSmile:true,autoSurprise:true});let time=0;
+  const hold=(left,right,n,blink=0)=>{for(let i=0;i<n;i++){time+=50;feed(frame(0,0,0,{eyeWideLeft:left,eyeWideRight:right,eyeBlinkLeft:blink,eyeBlinkRight:blink,mouthSmileLeft:.95,mouthSmileRight:.95}),time)}};
+  hold(.78,.78,15);assert.equal(model.params.Surprise,0);assert.equal(model.params.Smile,1);
+  hold(.95,.5,15);assert.equal(model.params.Surprise,0);
+  hold(.83,.83,8);assert.equal(model.params.Surprise,0);
+  hold(.83,.83,3);assert.equal(model.params.Surprise,1);assert.equal(model.params.Smile,0);
+  hold(.65,.65,10);assert.equal(model.params.Surprise,1);
+  hold(.1,.1,4);assert.equal(model.params.Surprise,1);
+  hold(.1,.1,5);assert.equal(model.params.Surprise,0);
+  hold(.95,.95,15,1);assert.equal(model.params.Surprise,0);
+});
+
+test('automatic surprise can be disabled and face loss clears its accumulated hold',()=>{
+  const {model,tr,feed}=fixture({autoSurprise:true});let time=0;
+  const wide=()=>frame(0,0,0,{eyeWideLeft:.95,eyeWideRight:.95});
+  for(let i=0;i<14;i++){time+=50;feed(wide(),time)}
+  assert.equal(model.params.Surprise,1);
+  const detect=tr.landmarker.detectForVideo;tr.landmarker.detectForVideo=()=>({});
+  assert.equal(tr.feed({},time+50),false);assert.equal(model.params.Surprise,0);
+  tr.landmarker.detectForVideo=detect;tr.setAutoSurprise(false);model.params.Surprise=1;
+  for(let i=0;i<15;i++){time+=50;feed(frame(),time)}
+  assert.equal(model.params.Surprise,1);
 });
