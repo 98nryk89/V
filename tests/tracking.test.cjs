@@ -52,7 +52,7 @@ test('mouth has monotonic intermediate motion and settles fully open/closed',()=
   prev=model.params.MouthOpen;
   for(let i=0;i<12;i++){feed(frame(0,0,0,{jawOpen:0}));assert.ok(model.params.MouthOpen<=prev);prev=model.params.MouthOpen;}
   assert.equal(model.params.MouthOpen,0);
-  for(let i=0;i<20;i++)feed(frame(0,0,0,{jawOpen:.38}));
+  for(let i=0;i<20;i++)feed(frame(0,0,0,{jawOpen:.34}));
   assert.ok(Math.abs(model.params.MouthOpen-.5)<.001);
 });
 test('tracking preserves manual smile while independently opening the mouth',()=>{
@@ -148,7 +148,7 @@ test('wide narrow lip geometry also selects I, independently of face translation
 
 test('small mouth motion stays closed; deliberate A, I and E stay exclusive',()=>{
   const {model,feed}=fixture();
-  for(const jaw of [.05,.1,.15,.2])for(let i=0;i<20;i++)feed(frame(0,0,0,{jawOpen:jaw,mouthStretchLeft:.8,mouthStretchRight:.8}));
+  for(const jaw of [.05,.1,.15])for(let i=0;i<20;i++)feed(frame(0,0,0,{jawOpen:jaw,mouthStretchLeft:.8,mouthStretchRight:.8}));
   assert.equal(model.params.MouthOpen,0);
   for(let i=0;i<8;i++)feed(frame(0,0,0,{jawOpen:.4,mouthStretchLeft:.55,mouthStretchRight:.55}));
   assert.equal(model.params.MouthForm,2);assert.ok(model.params.MouthOpen>.3);
@@ -192,4 +192,14 @@ test('losing face detection clears automatic smiles while preserving manual expr
   assert.equal(tr.feed({},1100),false);assert.equal(model.params.Smile,0);
   tr.setAutoSmile(false);model.params.Smile=1;
   assert.equal(tr.feed({},1200),false);assert.equal(model.params.Smile,1);
+});
+
+test('moderate movements now activate sooner while small movements stay rejected',()=>{
+  const {model,feed}=fixture({autoSmile:true});let time=0;
+  for(let i=0;i<12;i++){time+=50;feed(frame(0,0,0,{jawOpen:.15,mouthSmileLeft:.78,mouthSmileRight:.78}),time)}
+  assert.equal(model.params.MouthOpen,0);assert.equal(model.params.Smile,0);
+  for(let i=0;i<8;i++){time+=50;feed(frame(0,0,0,{jawOpen:.2,mouthSmileLeft:.83,mouthSmileRight:.83}),time)}
+  assert.ok(model.params.MouthOpen>.1);assert.equal(model.params.Smile,0);
+  for(let i=0;i<3;i++){time+=50;feed(frame(0,0,0,{jawOpen:.2,mouthSmileLeft:.83,mouthSmileRight:.83}),time)}
+  assert.equal(model.params.Smile,1);
 });

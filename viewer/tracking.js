@@ -141,8 +141,8 @@
         if (this.m.params.Surprise>.5) {
           this.autoSmiling = false; this.smileHold = 0; this.smileRelease = 0;
         } else if (!this.autoSmiling) {
-          this.smileHold = score>.86 ? this.smileHold+dt : 0;
-          if (this.smileHold>=.6) { this.autoSmiling = true; this.smileRelease = 0; }
+          this.smileHold = score>.80 ? this.smileHold+dt : 0;
+          if (this.smileHold>=.45) { this.autoSmiling = true; this.smileRelease = 0; }
         } else {
           this.smileRelease = score<.55 ? this.smileRelease+dt : 0;
           if (this.smileRelease>=.35) { this.autoSmiling = false; this.smileHold = 0; }
@@ -158,8 +158,8 @@
       const widthRatio = mouthWidth/(this.neutral.mouthWidth || mouthWidth || 1);
       const lipDelta = Math.max(0, aspect-(this.neutral.lipAspect || 0));
       if (this.mouthActive) {
-        if (jaw<.14 && lipDelta<.07) this.mouthActive = false;
-      } else if (jaw>.22 || lipDelta>.11) this.mouthActive = true;
+        if (jaw<.12 && lipDelta<.055) this.mouthActive = false;
+      } else if (jaw>.18 || lipDelta>.09) this.mouthActive = true;
       const wide = stretch>.40 || widthRatio>1.15;
       const spread = stretch>.25 || widthRatio>1.08;
       const tall = jaw>.56 || aspect>.36;
@@ -171,8 +171,8 @@
       else this.mouthCandidateFrames++;
       if (this.mouthCandidateFrames>=3) this.mouthForm = desired;
       this.m.setParam('MouthForm',this.mouthForm);
-      const baseOpen = this.mouthActive ? clamp((jaw-.16)/(.60-.16),0,1) : 0;
-      const lipOpen = this.mouthActive ? clamp((lipDelta-.07)/.23,0,1) : 0;
+      const baseOpen = this.mouthActive ? clamp((jaw-.13)/(.55-.13),0,1) : 0;
+      const lipOpen = this.mouthActive ? clamp((lipDelta-.055)/.205,0,1) : 0;
       t.MouthOpen = this.mouthForm===0 ? baseOpen : Math.max(baseOpen,lipOpen);
       t.EyeBallX = clamp(((g('eyeLookOutRight') + g('eyeLookInLeft')) - (g('eyeLookOutLeft') + g('eyeLookInRight'))) / 1.2, -1, 1);
       t.EyeBallY = clamp(((g('eyeLookUpLeft') + g('eyeLookUpRight')) - (g('eyeLookDownLeft') + g('eyeLookDownRight'))) / 1.2, -1, 1);
