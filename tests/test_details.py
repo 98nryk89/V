@@ -45,6 +45,36 @@ class DetailTest(unittest.TestCase):
                 self.assertGreater(alpha[iris[1],iris[0]], .9)
                 self.assertEqual(alpha[350,560], 0)  # central bang
 
+    def test_iris_masks_keep_the_dark_coloured_rim_and_leave_lower_lids_fixed(self):
+        for side, rim, lid in [('L',(508,385),(481,396)),('R',(649,374),(632,389))]:
+            a = cv2.imread(str(P / f'iris_{side}_alpha.png'),0)
+            self.assertGreater(a[rim[1],rim[0]],240)
+            self.assertEqual(a[lid[1],lid[0]],0)
+
+    def test_white_backing_covers_old_irises_without_touching_brows_or_skin(self):
+        for kind, points in [('normal',[(481,384),(632,379)]),('surprise',[(483,382),(631,374)])]:
+            ref = cv2.imread(str(P / f'{kind}_eye_white_backing.png'),-1)
+            self.assertEqual(ref.shape, (1374,1145,4))
+            for x,y in points:
+                self.assertEqual(ref[y,x,3],255)
+                self.assertGreater(float(ref[y,x,:3].min()),170)
+            for x,y in [(480,349),(609,346),(560,430),(482,450),(550,605)]:
+                self.assertEqual(ref[y,x,3],0)
+
+    def test_surprise_backing_changes_only_hidden_iris_colour_not_the_patch_mask(self):
+        import json, copy
+        from live2d_ai.synth import render
+        src = cv2.imread(str(ROOT / 'samples/ref12.png'))[..., ::-1].copy()
+        parts = json.loads((P / 'parts_spec.json').read_text())['parts']
+        part = next(p for p in parts if p['id']=='eyeL_surprise')
+        original = copy.deepcopy(part);original['synthetic'].pop('fill_layer')
+        rgb,a = render(part,src.shape[:2],src,str(P))
+        before,b = render(original,src.shape[:2],src,str(P))
+        np.testing.assert_array_equal(a,b)
+        mask = cv2.imread(str(P / 'surprise_eye_white_backing.png'),-1)[...,3] > 0
+        np.testing.assert_array_equal(rgb[~mask],before[~mask])
+        self.assertGreater(float(rgb[382,483].mean()), float(before[382,483].mean())+100)
+
     def test_only_two_small_existing_tips_are_split_out(self):
         original = cv2.imread(str(P / 'hair_complete_alpha.png'), 0)
         extent = cv2.imread(str(P / 'hair_detail_extent.png'), 0)

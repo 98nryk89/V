@@ -157,6 +157,12 @@ def ref_patch(shape, spec, rgb, proj_dir):
     import os, cv2 as _cv
     ref = _cv.imread(os.path.join(proj_dir, spec["ref"]), _cv.IMREAD_UNCHANGED)[..., :3][..., ::-1].astype(np.float32)
     src = rgb.astype(np.float32)
+    if spec.get("fill_layer"):
+        layer = _cv.imread(os.path.join(proj_dir,spec["fill_layer"]),_cv.IMREAD_UNCHANGED)
+        if layer is None or layer.shape != (*shape,4):
+            raise ValueError("ref_patch fill_layer must be aligned RGBA")
+        alpha = layer[...,3:4].astype(np.float32)/255
+        ref = ref*(1-alpha) + layer[...,2::-1].astype(np.float32)*alpha
     if spec.get("detail"):
         detail = spec["detail"]
         low = _cv.GaussianBlur(ref, (0, 0), float(detail.get("sigma", .7)))

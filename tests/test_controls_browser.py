@@ -170,11 +170,34 @@ class ViewerControlsTest(unittest.TestCase):
           });
         }''')
         self.assertTrue(all(a > 230 for a in collar_alpha), collar_alpha)
-        # All parts must translate together, without shearing the ears or neck.
+        # Iris motion is deliberately small relative to its eye, and clipped.
+        gaze = page.evaluate("""()=>{
+          return ['eyeL_iris','eyeR_iris','eyeL_surprise_iris','eyeR_surprise_iris'].map(id=>{
+            const p=M.byId[id];let dx=0,dy=0,restError=0;
+            const fixed={...p,_pos:new Float32Array(p._pos.length),effects:p.effects.filter(e=>!e.gaze)};
+            for(const sign of [-1,0,1]){
+              M.reset();M.setParams({AngleX:sign*5,AngleY:sign<0?-10:sign*5,BodyX:sign,BodyY:-sign});
+              M._deform(p);M._deform(fixed);
+              for(let i=0;i<p._pos.length;i+=2){
+                const x=Math.abs(p._pos[i]-fixed._pos[i]),y=Math.abs(p._pos[i+1]-fixed._pos[i+1]);
+                if(sign===0)restError=Math.max(restError,x,y);else{dx=Math.max(dx,x);dy=Math.max(dy,y)}
+              }
+            }
+            return {dx,dy,restError,clip:!!M.byId[p.clip]};
+          });
+        }""")
+        for iris in gaze:
+            self.assertGreater(iris['dx'], 2)
+            self.assertLess(iris['dx'], 3.5)
+            self.assertGreater(iris['dy'], 1)
+            self.assertLess(iris['dy'], 2)
+            self.assertLess(iris['restError'], .001)
+            self.assertTrue(iris['clip'])
+        # All parts share body motion; irises have the specified additional 1/.5px, without shearing the ears or neck.
         error = page.evaluate('''()=>{
           M.reset(); const before=M.parts.map(p=>{M._deform(p);return Array.from(p._pos)});
           M.setParams({BodyX:1,BodyY:-1});let error=0;
-          M.parts.forEach((p,n)=>{M._deform(p);p._pos.forEach((v,i)=>{error=Math.max(error,Math.abs(v-before[n][i]-(i%2?-70:90)))})});
+          M.parts.forEach((p,n)=>{M._deform(p);p._pos.forEach((v,i)=>{error=Math.max(error,Math.abs(v-before[n][i]-(i%2?-70-(p.id.endsWith("_iris")?.5:0):90+(p.id.endsWith("_iris")?1:0))))})});
           return error;
         }''')
         self.assertLess(error, .001)
@@ -184,10 +207,10 @@ class ViewerControlsTest(unittest.TestCase):
         page.evaluate('''()=>{
           const t=window.testTracker=new L2DTracker(M,{smooth:0,autoSmile:false,autoSurprise:false});let result;
           t.landmarker={detectForVideo:()=>result};
-          window.feedFace=(jaw,smile,stretch=0)=>{
+          window.feedFace=(jaw,smile,stretch=0,wide=0)=>{
             const l=Array.from({length:478},()=>({x:.5,y:.5}));
             for(const [i,x,y] of [[33,.4,.4],[263,.6,.4],[1,.5,.45],[152,.5,.65],[61,.46,.57],[291,.54,.57]])l[i]={x,y};
-            result={faceLandmarks:[l],faceBlendshapes:[{categories:[['jawOpen',jaw],['mouthSmileLeft',smile],['mouthSmileRight',smile],['mouthStretchLeft',stretch],['mouthStretchRight',stretch]].map(([categoryName,score])=>({categoryName,score}))}]};
+            result={faceLandmarks:[l],faceBlendshapes:[{categories:[['jawOpen',jaw],['mouthSmileLeft',smile],['mouthSmileRight',smile],['mouthStretchLeft',stretch],['mouthStretchRight',stretch],['eyeWideLeft',wide],['eyeWideRight',wide]].map(([categoryName,score])=>({categoryName,score}))}]};
             t.feed({},0);
           };feedFace(0,1);t.calibrate();feedFace(0,1);
         }''')
@@ -202,9 +225,21 @@ class ViewerControlsTest(unittest.TestCase):
         page.wait_for_function("document.getElementById('smile').getAttribute('aria-pressed')==='true'")
         page.evaluate('for(let i=0;i<14;i++)feedFace(0,.1)')
         self.assertEqual(page.evaluate('M.params.Smile'), 0)
+        self.assertTrue(page.locator('#a_surprise').is_checked())
+        page.evaluate('testTracker.setAutoSurprise(true);for(let i=0;i<20;i++)feedFace(0,0,0,.78)')
+        self.assertEqual(page.evaluate('M.params.Surprise'), 0)
+        page.evaluate('for(let i=0;i<8;i++)feedFace(0,0,0,.83)')
+        self.assertEqual(page.evaluate('M.params.Surprise'), 0)
+        page.evaluate('for(let i=0;i<13;i++)feedFace(0,.95,0,.83);M.render()')
+        self.assertEqual(page.evaluate('[M.params.Surprise,M.params.Smile]'), [1,0])
+        self.assertEqual(page.evaluate('M.byId.eyeL_surprise._opacity'), 1)
+        page.wait_for_function("document.getElementById('surprise').getAttribute('aria-pressed')==='true'")
+        page.evaluate('for(let i=0;i<14;i++)feedFace(0,0,0,0);testTracker.setAutoSurprise(false)')
+        self.assertEqual(page.evaluate('M.params.Surprise'), 0)
         page.evaluate('testTracker.setAutoSmile(false)')
         page.keyboard.press('1')
         self.assertFalse(page.locator('#a_smile').is_checked())
+        self.assertFalse(page.locator('#a_surprise').is_checked())
         self.assertEqual(page.evaluate('M.params.Smile'), 1)
         self.assertEqual(page.locator('#smile').get_attribute('aria-pressed'), 'true')
         page.evaluate('for(let i=0;i<12;i++)feedFace(.7,0)')

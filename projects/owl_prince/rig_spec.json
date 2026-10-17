@@ -799,6 +799,79 @@
   },
   "eyeL_iris": {
    "effects": [
+    {
+     "type": "translate",
+     "param": "AngleX",
+     "map": [
+      [
+       -5,
+       -2,
+       0
+      ],
+      [
+       5,
+       2,
+       0
+      ]
+     ],
+     "gaze": true
+    },
+    {
+     "type": "translate",
+     "param": "AngleY",
+     "map": [
+      [
+       -10,
+       0,
+       1
+      ],
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       5,
+       0,
+       -1
+      ]
+     ],
+     "gaze": true
+    },
+    {
+     "type": "translate",
+     "param": "BodyX",
+     "map": [
+      [
+       -1,
+       -1,
+       0
+      ],
+      [
+       1,
+       1,
+       0
+      ]
+     ],
+     "gaze": true
+    },
+    {
+     "type": "translate",
+     "param": "BodyY",
+     "map": [
+      [
+       -1,
+       0,
+       -0.5
+      ],
+      [
+       1,
+       0,
+       0.5
+      ]
+     ],
+     "gaze": true
+    },
     "@breath_head",
     "@head_eye",
     "@body_follow"
@@ -808,7 +881,7 @@
     "off": 3
    },
    "mesh_step": 6,
-   "clip": "eyeL_white"
+   "clip": "eyeL_gaze_mask"
   },
   "eyeL_lash": {
    "effects": [
@@ -836,6 +909,79 @@
   },
   "eyeR_iris": {
    "effects": [
+    {
+     "type": "translate",
+     "param": "AngleX",
+     "map": [
+      [
+       -5,
+       -2,
+       0
+      ],
+      [
+       5,
+       2,
+       0
+      ]
+     ],
+     "gaze": true
+    },
+    {
+     "type": "translate",
+     "param": "AngleY",
+     "map": [
+      [
+       -10,
+       0,
+       1
+      ],
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       5,
+       0,
+       -1
+      ]
+     ],
+     "gaze": true
+    },
+    {
+     "type": "translate",
+     "param": "BodyX",
+     "map": [
+      [
+       -1,
+       -1,
+       0
+      ],
+      [
+       1,
+       1,
+       0
+      ]
+     ],
+     "gaze": true
+    },
+    {
+     "type": "translate",
+     "param": "BodyY",
+     "map": [
+      [
+       -1,
+       0,
+       -0.5
+      ],
+      [
+       1,
+       0,
+       0.5
+      ]
+     ],
+     "gaze": true
+    },
     "@breath_head",
     "@head_eye",
     "@body_follow"
@@ -845,7 +991,7 @@
     "off": 3
    },
    "mesh_step": 6,
-   "clip": "eyeR_white"
+   "clip": "eyeR_gaze_mask"
   },
   "eyeR_lash": {
    "effects": [
@@ -2052,6 +2198,386 @@
     "off": 2
    },
    "mesh_step": 4
+  },
+  "eyeL_surprise_white": {
+   "effects": [
+    {
+     "type": "opacity",
+     "param": "Surprise",
+     "map": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       1
+      ]
+     ]
+    },
+    {
+     "type": "opacity",
+     "param": "EyeLOpen",
+     "map": [
+      [
+       0,
+       0
+      ],
+      [
+       0.875,
+       0
+      ],
+      [
+       1,
+       1
+      ]
+     ]
+    },
+    "@breath_head",
+    "@head_eye",
+    "@body_follow"
+   ],
+   "depth": {
+    "layer": "face",
+    "off": 4
+   },
+   "mesh_step": 5,
+   "maskOnly": true
+  },
+  "eyeL_surprise_iris": {
+   "effects": [
+    {
+     "type": "translate",
+     "param": "AngleX",
+     "map": [
+      [
+       -5,
+       -2,
+       0
+      ],
+      [
+       5,
+       2,
+       0
+      ]
+     ],
+     "gaze": true
+    },
+    {
+     "type": "translate",
+     "param": "AngleY",
+     "map": [
+      [
+       -10,
+       0,
+       1
+      ],
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       5,
+       0,
+       -1
+      ]
+     ],
+     "gaze": true
+    },
+    {
+     "type": "translate",
+     "param": "BodyX",
+     "map": [
+      [
+       -1,
+       -1,
+       0
+      ],
+      [
+       1,
+       1,
+       0
+      ]
+     ],
+     "gaze": true
+    },
+    {
+     "type": "translate",
+     "param": "BodyY",
+     "map": [
+      [
+       -1,
+       0,
+       -0.5
+      ],
+      [
+       1,
+       0,
+       0.5
+      ]
+     ],
+     "gaze": true
+    },
+    {
+     "type": "opacity",
+     "param": "Surprise",
+     "map": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       1
+      ]
+     ]
+    },
+    {
+     "type": "opacity",
+     "param": "EyeLOpen",
+     "map": [
+      [
+       0,
+       0
+      ],
+      [
+       0.875,
+       0
+      ],
+      [
+       1,
+       1
+      ]
+     ]
+    },
+    "@breath_head",
+    "@head_eye",
+    "@body_follow"
+   ],
+   "depth": {
+    "layer": "face",
+    "off": 4
+   },
+   "mesh_step": 5,
+   "clip": "eyeL_surprise_white"
+  },
+  "eyeR_surprise_white": {
+   "effects": [
+    {
+     "type": "opacity",
+     "param": "Surprise",
+     "map": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       1
+      ]
+     ]
+    },
+    {
+     "type": "opacity",
+     "param": "EyeROpen",
+     "map": [
+      [
+       0,
+       0
+      ],
+      [
+       0.875,
+       0
+      ],
+      [
+       1,
+       1
+      ]
+     ]
+    },
+    "@breath_head",
+    "@head_eye",
+    "@body_follow"
+   ],
+   "depth": {
+    "layer": "face",
+    "off": 4
+   },
+   "mesh_step": 5,
+   "maskOnly": true
+  },
+  "eyeR_surprise_iris": {
+   "effects": [
+    {
+     "type": "translate",
+     "param": "AngleX",
+     "map": [
+      [
+       -5,
+       -2,
+       0
+      ],
+      [
+       5,
+       2,
+       0
+      ]
+     ],
+     "gaze": true
+    },
+    {
+     "type": "translate",
+     "param": "AngleY",
+     "map": [
+      [
+       -10,
+       0,
+       1
+      ],
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       5,
+       0,
+       -1
+      ]
+     ],
+     "gaze": true
+    },
+    {
+     "type": "translate",
+     "param": "BodyX",
+     "map": [
+      [
+       -1,
+       -1,
+       0
+      ],
+      [
+       1,
+       1,
+       0
+      ]
+     ],
+     "gaze": true
+    },
+    {
+     "type": "translate",
+     "param": "BodyY",
+     "map": [
+      [
+       -1,
+       0,
+       -0.5
+      ],
+      [
+       1,
+       0,
+       0.5
+      ]
+     ],
+     "gaze": true
+    },
+    {
+     "type": "opacity",
+     "param": "Surprise",
+     "map": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       1
+      ]
+     ]
+    },
+    {
+     "type": "opacity",
+     "param": "EyeROpen",
+     "map": [
+      [
+       0,
+       0
+      ],
+      [
+       0.875,
+       0
+      ],
+      [
+       1,
+       1
+      ]
+     ]
+    },
+    "@breath_head",
+    "@head_eye",
+    "@body_follow"
+   ],
+   "depth": {
+    "layer": "face",
+    "off": 4
+   },
+   "mesh_step": 5,
+   "clip": "eyeR_surprise_white"
+  },
+  "eyeL_gaze_mask": {
+   "effects": [
+    {
+     "type": "scale",
+     "pivot": [
+      481,
+      384
+     ],
+     "map": [
+      [
+       0,
+       1,
+       1.1
+      ]
+     ]
+    },
+    "@breath_head",
+    "@head_eye",
+    "@body_follow"
+   ],
+   "depth": {
+    "layer": "face",
+    "off": 3
+   },
+   "mesh_step": 6,
+   "maskOnly": true
+  },
+  "eyeR_gaze_mask": {
+   "effects": [
+    {
+     "type": "scale",
+     "pivot": [
+      632,
+      379
+     ],
+     "map": [
+      [
+       0,
+       1,
+       1.1
+      ]
+     ]
+    },
+    "@breath_head",
+    "@head_eye",
+    "@body_follow"
+   ],
+   "depth": {
+    "layer": "face",
+    "off": 3
+   },
+   "mesh_step": 6,
+   "maskOnly": true
   }
  },
  "physics": [
