@@ -488,8 +488,8 @@
     "k": 0.5,
     "weight": {
      "mode": "y",
-     "from": 1700,
-     "to": 560,
+     "from": 760,
+     "to": 520,
      "pow": 2
     }
    }
@@ -1613,51 +1613,37 @@
      ],
      "weight": {
       "mode": "y",
-      "from": 1700,
-      "to": 560,
+      "from": 760,
+      "to": 520,
       "pow": 2
      }
     },
+    "@head_complete_hair",
     {
-     "type": "rotate",
-     "param": "PhysBangs",
+     "type": "scale",
+     "param": "Breath",
      "pivot": [
-      575,
-      230
+      570,
+      1374
      ],
      "map": [
       [
-       -1,
-       0.7
+       0,
+       1,
+       1
       ],
       [
        1,
-       -0.7
+       1.003,
+       1.008
       ]
      ],
      "weight": {
       "mode": "y",
-      "from": 1500,
-      "to": 400,
-      "excludeEllipses": [
-       [
-        478,
-        350,
-        65,
-        19,
-        1
-       ],
-       [
-        629,
-        341,
-        57,
-        19,
-        1
-       ]
-      ]
+      "from": 520,
+      "to": 760
      }
     },
-    "@head_complete_hair",
     "@body_follow"
    ],
    "depth": {
@@ -1701,35 +1687,37 @@
      ],
      "weight": {
       "mode": "y",
-      "from": 1700,
-      "to": 560,
+      "from": 760,
+      "to": 520,
       "pow": 2
      }
     },
+    "@head_complete_hair",
     {
-     "type": "rotate",
-     "param": "PhysBangs",
+     "type": "scale",
+     "param": "Breath",
      "pivot": [
-      575,
-      230
+      570,
+      1374
      ],
      "map": [
       [
-       -1,
-       0.7
+       0,
+       1,
+       1
       ],
       [
        1,
-       -0.7
+       1.003,
+       1.008
       ]
      ],
      "weight": {
       "mode": "y",
-      "from": 1500,
-      "to": 400
+      "from": 520,
+      "to": 760
      }
     },
-    "@head_complete_hair",
     "@body_follow"
    ],
    "depth": {
@@ -1740,79 +1728,7 @@
   },
   "hair_tip_L": {
    "effects": [
-    {
-     "type": "rotate",
-     "param": "PhysHairL",
-     "pivot": [
-      328,
-      1010
-     ],
-     "map": [
-      [
-       -1,
-       3
-      ],
-      [
-       1,
-       -3
-      ]
-     ],
-     "weight": {
-      "mode": "dist",
-      "pivot": [
-       328,
-       1010
-      ],
-      "len": 120,
-      "pow": 1.6
-     }
-    },
-    {
-     "type": "translate",
-     "param": "Breath",
-     "map": [
-      [
-       0,
-       0,
-       0
-      ],
-      [
-       1,
-       0,
-       -6
-      ]
-     ],
-     "weight": {
-      "mode": "y",
-      "from": 1700,
-      "to": 560,
-      "pow": 2
-     }
-    },
-    {
-     "type": "rotate",
-     "param": "PhysBangs",
-     "pivot": [
-      575,
-      230
-     ],
-     "map": [
-      [
-       -1,
-       0.7
-      ],
-      [
-       1,
-       -0.7
-      ]
-     ],
-     "weight": {
-      "mode": "y",
-      "from": 1500,
-      "to": 400
-     }
-    },
-    "@head_complete_hair",
+    "@breath_body",
     "@body_follow"
    ],
    "depth": {
@@ -1823,79 +1739,7 @@
   },
   "hair_tip_R": {
    "effects": [
-    {
-     "type": "rotate",
-     "param": "PhysHairR",
-     "pivot": [
-      782,
-      1088
-     ],
-     "map": [
-      [
-       -1,
-       3
-      ],
-      [
-       1,
-       -3
-      ]
-     ],
-     "weight": {
-      "mode": "dist",
-      "pivot": [
-       782,
-       1088
-      ],
-      "len": 120,
-      "pow": 1.6
-     }
-    },
-    {
-     "type": "translate",
-     "param": "Breath",
-     "map": [
-      [
-       0,
-       0,
-       0
-      ],
-      [
-       1,
-       0,
-       -6
-      ]
-     ],
-     "weight": {
-      "mode": "y",
-      "from": 1700,
-      "to": 560,
-      "pow": 2
-     }
-    },
-    {
-     "type": "rotate",
-     "param": "PhysBangs",
-     "pivot": [
-      575,
-      230
-     ],
-     "map": [
-      [
-       -1,
-       0.7
-      ],
-      [
-       1,
-       -0.7
-      ]
-     ],
-     "weight": {
-      "mode": "y",
-      "from": 1500,
-      "to": 400
-     }
-    },
-    "@head_complete_hair",
+    "@breath_body",
     "@body_follow"
    ],
    "depth": {

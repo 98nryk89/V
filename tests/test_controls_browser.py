@@ -108,13 +108,17 @@ class ViewerControlsTest(unittest.TestCase):
         }""")
         self.assertGreater(brow_attachment['count'], 10)
         self.assertLess(brow_attachment['error'], .01)
-        # A continuous hair mesh must move below the ears without dragging body/owl.
+        # Experimental fixed long hair stays with the body; the face still moves.
         hair_motion = page.evaluate('''()=>{
           const hair=M.byId.hair_head;
           const area=(v,a,b,c)=>(v[2*b]-v[2*a])*(v[2*c+1]-v[2*a+1])-(v[2*b+1]-v[2*a+1])*(v[2*c]-v[2*a]);
-          let minRatio=Infinity,maxRatio=0,lowerShift=0,bodyError=0;
+          let minRatio=Infinity,maxRatio=0,lowerShift=0,bodyError=0,faceShift=0;
           for(const sign of [-1,1]){
-            M.reset();M.setParams({AngleX:sign*5,AngleY:-10,AngleZ:sign*5});M._deform(hair);
+            M.reset();M.setParams({AngleX:sign*5,AngleY:-10,AngleZ:sign*5,Breath:1});M._deform(hair);
+            const body={...M.byId.body,_rest:hair._rest,_pos:new Float32Array(hair._pos.length)};
+            M._deform(body);
+            for(let i=0;i<hair._rest.length;i+=2)if(hair._rest[i+1]>=760)
+              lowerShift=Math.max(lowerShift,Math.hypot(hair._pos[i]-body._pos[i],hair._pos[i+1]-body._pos[i+1]));
             const t=hair.mesh.tris;
             for(let i=0;i<t.length;i+=3){const a=area(hair._rest,t[i],t[i+1],t[i+2]);
               if(Math.abs(a)>1){const r=area(hair._pos,t[i],t[i+1],t[i+2])/a;minRatio=Math.min(minRatio,r);maxRatio=Math.max(maxRatio,r)}}
@@ -122,13 +126,15 @@ class ViewerControlsTest(unittest.TestCase):
             const a=at(hair,350,1100),b=at(M.byId.body,350,1100),c=at(M.byId.owl,350,1100);
             lowerShift=Math.max(lowerShift,Math.hypot(a[0]-b[0],a[1]-b[1]));
             bodyError=Math.max(bodyError,Math.hypot(b[0]-c[0],b[1]-c[1]));
+            const f=at(M.byId.face,562,405),fb=at(M.byId.body,562,405);
+            faceShift=Math.max(faceShift,Math.hypot(f[0]-fb[0],f[1]-fb[1]));
           }
-          return {minRatio,maxRatio,lowerShift,bodyError};
+          return {minRatio,maxRatio,lowerShift,bodyError,faceShift};
         }''')
         self.assertGreater(hair_motion['minRatio'], .6)
         self.assertLess(hair_motion['maxRatio'], 1.5)
-        self.assertGreater(hair_motion['lowerShift'], 1)
-        self.assertLess(hair_motion['lowerShift'], 20)
+        self.assertLess(hair_motion['lowerShift'], .001)
+        self.assertGreater(hair_motion['faceShift'], 1)
         self.assertLess(hair_motion['bodyError'], .001)
         # Owl blinking continues when camera tracking disables human auto-blink.
         detail_motion = page.evaluate('''()=>{
@@ -140,7 +146,7 @@ class ViewerControlsTest(unittest.TestCase):
           M.auto.owlBlink=false;M.setParam('OwlEyeOpen',.3);M._drive(.01);const held=M.params.OwlEyeOpen;
           M.reset();const ids=['hair_head','body','earL','earR_skin','hair_tip_L','hair_tip_R'];
           const rest=ids.map(id=>{M._deform(M.byId[id]);return Array.from(M.byId[id]._pos)});
-          M.setParams({PhysHairL:1,PhysHairR:1});
+          M.setParams({PhysHairL:1,PhysHairR:1,PhysBangs:1});
           const shifts=ids.map((id,k)=>{M._deform(M.byId[id]);return Math.max(...M.byId[id]._pos.map((v,i)=>Math.abs(v-rest[k][i])))});
           const stages=[.9,.75,.5,.25,0].map(v=>{M.reset();M.setParam('EyeLOpen',v);return [1,2,3,4].map(k=>{const p=M.byId['eyeL_k'+k];M._deform(p);return p._opacity})});
           M.auto={blink:false,owlBlink:false,breath:false,idle:false,physics:false};M.reset();
@@ -151,10 +157,7 @@ class ViewerControlsTest(unittest.TestCase):
         self.assertEqual(detail_motion['finalOpen'], 1)
         self.assertEqual(detail_motion['human'], [.43, .72])
         self.assertEqual(detail_motion['held'], .3)
-        self.assertTrue(all(v < .001 for v in detail_motion['shifts'][:4]))
-        for shift in detail_motion['shifts'][4:]:
-            self.assertGreater(shift, 1)
-            self.assertLess(shift, 9)
+        self.assertTrue(all(v < .001 for v in detail_motion['shifts']))
         # At each quarter state the top visible drawing is opaque, never a ghosted blend.
         for row, stage in zip(detail_motion['stages'], [0,1,2,3,4]):
             self.assertEqual(row, [1 if i < stage else 0 for i in range(4)])
