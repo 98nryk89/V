@@ -7,6 +7,10 @@
 - 動き = 頭部の擬似3D回転、まばたき、視線、口、呼吸、ばね物理(髪・リボン・耳飾り・房)。
 - 出力 = `rig.json` + パーツ PNG。WebGL2 ビューア(`viewer/`)、または単一 HTML(`dist/owl_prince.html`)。
 
+## 別キャラ制作・メンバーへの共有
+
+[制作指示書](docs/character-production-guide.md) に必要な画像・制作手順・OBSでの確認方法をまとめています。[制作依頼シート](docs/character-request-template.md) をコピーして素材と一緒に渡してください。下記の古い操作例より、指示書とAGENTS.md末尾の最新仕様を優先してください。
+
 ## すぐ試す
 
 `dist/owl_prince.html` をブラウザで開く(サンプル。スライダーで動かせる。マウス追従、Web カメラ追跡つき)。

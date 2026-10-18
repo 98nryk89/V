@@ -143,3 +143,7 @@ python tools/fidelity.py projects/owl_prince/out samples/ref12.png /tmp/err.png 
 - ユーザー指定で前髪・毛先の揺れを停止。頭髪の顔への追従は残し、y520→760で二乗減衰し、胸元以降は体に固定する。切り抜き画像は維持する。以前の長髪追従・毛先物理の仕様は比較用の旧版。
 - 顔・耳・口・目・表情判定の設定は維持。物理ドライバ本体は変更しない。
 - 直前の確定版は af92aabfd565876cb2afecfeb6b74cf128469d33。試験は1コミットでソース・HTMLをまとめてrevert可能。比較画像・復元方法は docs/hair-fixed-experiment.md。
+
+## 別キャラ制作の共有資料（2026-10-18）
+
+メンバーへの指示書は docs/character-production-guide.md、記入式依頼は docs/character-request-template.md。座標・色条件・マスク・頭部形状はキャラ専用で、画像の単純置換では流用できない。新キャラは別プロジェクトに分離し、既存モデルを保持する。今回の追加は文書のみで動作仕様は変更しない。
