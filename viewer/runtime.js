@@ -126,7 +126,7 @@ void main(){ vec4 c = texture(uTex, vUV); if (uCut > 0.0 && c.a < uCut) discard;
       this.params[id] = clamp(v, d.min, d.max);
     }
     setParams(o) { for (const k in o) this.setParam(k, o[k]); }
-    reset() { for (const p of this.rig.params) this.params[p.id] = p.default; for (const s of this.phys) { s.a = 0; s.av = 0; } }
+    reset() { for (const p of this.rig.params) this.params[p.id] = p.default; for (const s of this.phys) { s.a = 0; s.av = 0; } this._sleeveState = null; }
 
     // ---- animation drivers ------------------------------------------------
     _drive(dt) {
@@ -159,6 +159,23 @@ void main(){ vec4 c = texture(uTex, vUV); if (uCut > 0.0 && c.a < uCut) discard;
       } else { P.IdleX = 0; P.IdleY = 0; }
       if (this.auto.physics) this._physics(dt);
       else for (const s of this.phys) { P[s.d.output] = 0; }
+      if (this.paramDefs.PhysSleeve) this._sleeveFlutter(dt);
+    }
+
+    _sleeveFlutter(dt) {
+      const P = this.params;
+      if (!this.auto.physics) { this._sleeveState = null; P.PhysSleeve = 0; return; }
+      if (!this._sleeveState) this._sleeveState = { y: P.BodyY || 0, a: 0, v: 0 };
+      const s = this._sleeveState, y = P.BodyY || 0;
+      const elapsed = clamp(dt, .001, .05);
+      const force = -clamp((y - s.y) / elapsed, -8, 8) * 22;
+      s.y = y;
+      const steps = Math.ceil(elapsed / .008), h = elapsed / steps;
+      for (let i = 0; i < steps; i++) {
+        s.v += (force - 64 * s.a - 12 * s.v) * h;
+        s.a = clamp(s.a + s.v * h, -1, 1);
+      }
+      P.PhysSleeve = s.a;
     }
 
     _physics(dt) {

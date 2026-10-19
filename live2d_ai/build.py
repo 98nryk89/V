@@ -216,7 +216,25 @@ def build(proj_dir, out_dir=None, verbose=True):
                view=rspec.get("view"))
     if pspec.get('frame_extension'):
         extend_frame(rig, proj_dir, out_dir, pspec['frame_extension'],
-                     expand_effects(rspec['parts']['body']['effects'], templates))
+                     expand_effects(rspec['parts'].get('frame_extension', rspec['parts']['body'])['effects'], templates))
+        for spec in pspec['frame_extension'].get('attachments', []):
+            image = cv2.imread(os.path.join(proj_dir, spec['image']), cv2.IMREAD_UNCHANGED)
+            if image is None or image.ndim != 3 or image.shape[2] != 4:
+                raise ValueError('frame attachment requires an RGBA image')
+            alpha = image[..., 3] / 255.
+            bb = bbox_of(alpha, pad=3)
+            if bb is None:
+                raise ValueError('frame attachment image is empty')
+            x0, y0, x1, y1 = bb
+            ox, oy = spec['origin']
+            fn = f"parts/{spec['id']}.png"
+            tex = image[y0:y1, x0:x1].copy()
+            tex[..., :3] = np.clip(push_pull_fill(tex[..., :3].astype(float), tex[..., 3] > 127), 0, 255).astype(np.uint8)
+            cv2.imwrite(os.path.join(out_dir, fn), tex)
+            part = dict(id=spec['id'], tex=fn, z=spec['z'], bbox=[x0+ox, y0+oy, x1-x0, y1-y0],
+                        mesh=make_mesh(alpha[y0:y1, x0:x1], x0+ox, y0+oy, 8),
+                        effects=expand_effects(rspec['parts'][spec['id']]['effects'], templates))
+            rig['parts'] = [p for p in rig['parts'] if p['id'] != spec['id']] + [part]
     json.dump(rig, open(os.path.join(out_dir, "rig.json"), "w"), separators=(",", ":"))
     return out_dir, layers
 

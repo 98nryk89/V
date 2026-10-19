@@ -194,6 +194,33 @@ class ViewerControlsTest(unittest.TestCase):
         self.assertLess(frame['error'], .001)
         self.assertGreater(frame['leftMargin'], 5)
         self.assertGreater(frame['rightMargin'], 5)
+        # Sleeve flutter responds to vertical translation only, settles after
+        # stopping, and leaves the face, long hair and body core fixed.
+        flutter = page.evaluate("""()=>{
+          M.reset();M.auto={blink:false,owlBlink:false,breath:false,idle:false,physics:true};
+          let lateral=0,vertical=0;
+          for(let i=0;i<90;i++){M.setParams({BodyX:Math.sin(i/8),BodyY:0});M._drive(1/60);lateral=Math.max(lateral,Math.abs(M.params.PhysSleeve))}
+          for(let i=0;i<90;i++){M.setParam('BodyY',Math.sin(i/9));M._drive(1/60);vertical=Math.max(vertical,Math.abs(M.params.PhysSleeve))}
+          for(let i=0;i<240;i++)M._drive(1/60);
+          const settled=Math.abs(M.params.PhysSleeve);
+          M.reset();const ids=['face','hair_head','body','frame_extension'];
+          const rest=ids.map(id=>{M._deform(M.byId[id]);return Array.from(M.byId[id]._pos)});
+          M.setParam('PhysSleeve',1);
+          const shifts=ids.map((id,k)=>{const p=M.byId[id];M._deform(p);let d=0;for(let i=0;i<p._pos.length;i++)d=Math.max(d,Math.abs(p._pos[i]-rest[k][i]));return d});
+          M.auto.physics=false;M._drive(1/60);const disabled=M.params.PhysSleeve;
+          M.reset();const hanging=M.byId.hangR3;M._deform(hanging);
+          let bottom=-Infinity;for(let i=1;i<hanging._pos.length;i+=2)bottom=Math.max(bottom,hanging._pos[i]);
+          return {lateral,vertical,settled,shifts,disabled,bottom};
+        }""")
+        self.assertLess(flutter['lateral'], .001)
+        self.assertGreater(flutter['vertical'], .1)
+        self.assertLessEqual(flutter['vertical'], 1)
+        self.assertLess(flutter['settled'], .001)
+        self.assertTrue(all(v < .001 for v in flutter['shifts'][:3]))
+        self.assertGreater(flutter['shifts'][3], 2)
+        self.assertLess(flutter['shifts'][3], 15)
+        self.assertEqual(flutter['disabled'], 0)
+        self.assertGreater(flutter['bottom'], 1450)
         # Iris motion is deliberately small relative to its eye, and clipped.
         gaze = page.evaluate("""()=>{
           return ['eyeL_iris','eyeR_iris','eyeL_surprise_iris','eyeR_surprise_iris'].map(id=>{

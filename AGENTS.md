@@ -153,3 +153,10 @@ python tools/fidelity.py projects/owl_prince/out samples/ref12.png /tmp/err.png 
 - 元画像の外に存在する腕・腰まわりを、提供wide_frame_ref.pngから追加。顔・髪・表情・既存51パーツのメッシュと動きは維持し、52番目のframe_extensionをbodyと同じ呼吸/共通移動で描画する。
 - tools/extend_frame.py → build → export。元絵・既存マスクの再生成は不要。parts_spec.frame_extension指定時のみ旧画像の左右・下端45pxを透過して追加層につなぐ。viewは[-430,-110,2000,1730]。
 - 比較・再生成・戻し方はdocs/full-frame.md。直前の版はecf98c9f5e9d2ac2f238426d400fa8ed4a2dab11。Python27件＋Node19件。実機カメラ/OBSの確認は利用者PCで行う。
+
+## 衣装の小修正（腕追加後）
+
+- 仮面のリボン/鎖に混ざった肩の銀髪を専用マスクで除外。胴の追加層は境界色をなじませ、固定されたタッセルの残像を除く。
+- hangR3は既存の房の画素で先まで補った一体のRGBAへ差し替え、キャンバス外まで同じメッシュで小さく揺らす。52パーツ。
+- BodyYの変化にだけ反応するPhysSleeveを追加し、袖の外側のみ最大5px/1度。顔・長髪は揺らさない。既存physicsと_physics本体は維持し、_sleeveFlutterを別に追加。
+- 再生成: tools/extend_frame.py → tools/polish_costume.py → build → export。加工済み追加画像へpolishだけを繰り返さない。詳細・比較はdocs/costume-polish.md。Python29件＋Node19件。戻す基準はe43e15724691463c2d3269f978f2c74188ff417b。
