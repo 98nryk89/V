@@ -9,30 +9,23 @@
     "mask": "body_detail_extent.png"
    },
    "extent_in_figure": true,
-   "fade_exposed": [
-    [
-     [
-      806,
-      560
-     ],
-     [
-      960,
-      560
-     ],
-     [
-      960,
-      700
-     ],
-     [
-      806,
-      700
-     ]
-    ]
-   ],
+   "fade_exposed": {
+    "mask": "body_no_backfill.png"
+   },
    "known_erode": 3,
    "fill_smooth": 3,
    "fill_layer": {
-    "mask": "collar_underlap.png"
+    "mask": "costume_body_backing.png",
+    "include_partial": true
+   },
+   "trim_islands": {
+    "box": [
+     730,
+     270,
+     905,
+     665
+    ],
+    "max_area": 256
    }
   },
   {
@@ -278,37 +271,26 @@
   {
    "id": "ribbon",
    "z": 9,
-   "bleed": 1,
+   "bleed": 0,
    "zone": {
     "mask": "ribbon_only_alpha.png"
+   },
+   "trim_islands": {
+    "box": [
+     730,
+     270,
+     905,
+     665
+    ],
+    "max_area": 128
    }
   },
   {
    "id": "orn_chain",
    "z": 10,
-   "bleed": 1,
+   "bleed": 0,
    "zone": {
     "mask": "orn_chain_only_alpha.png"
-   },
-   "color": {
-    "far": [
-     [
-      42,
-      35,
-      85
-     ],
-     [
-      60,
-      50,
-      110
-     ],
-     [
-      35,
-      30,
-      60
-     ]
-    ],
-    "tol": 22
    }
   },
   {
@@ -857,7 +839,7 @@
   {
    "id": "tasselL",
    "z": 7,
-   "bleed": 4,
+   "bleed": 0,
    "zone": [
     [
      163,
@@ -902,7 +884,7 @@
   {
    "id": "tasselR1",
    "z": 7,
-   "bleed": 4,
+   "bleed": 0,
    "zone": [
     [
      956,
@@ -939,7 +921,7 @@
   {
    "id": "tasselR2",
    "z": 7,
-   "bleed": 4,
+   "bleed": 0,
    "zone": [
     [
      942,
@@ -1780,6 +1762,18 @@
     "mask": "earring_hair_backing.png",
     "include_partial": true,
     "extend_alpha": true
+   },
+   "fade_exposed": {
+    "mask": "ornament_no_backfill.png"
+   },
+   "trim_islands": {
+    "box": [
+     730,
+     270,
+     905,
+     665
+    ],
+    "max_area": 256
    }
   },
   {

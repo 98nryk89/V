@@ -7,7 +7,7 @@ import unittest
 import cv2
 import numpy as np
 
-from live2d_ai.build import extend_frame
+from live2d_ai.build import extend_frame, trim_alpha_islands
 
 
 class FrameExtensionTest(unittest.TestCase):
@@ -50,3 +50,19 @@ class FrameExtensionTest(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'RGBA'):
                 extend_frame(dict(size=[4,4], parts=[]), directory, directory,
                              dict(image='rgb.png', origin=[0,0]), [])
+
+
+class LocalAlphaCleanupTest(unittest.TestCase):
+    def test_only_detached_small_fragments_in_the_box_are_removed(self):
+        alpha=np.zeros((30,30),np.float32)
+        alpha[2:20,2:7]=1  # genuine hair crossing the box boundary
+        alpha[12:15,12:15]=1  # detached debris inside the box
+        alpha[22:24,22:24]=1  # small detail outside the cleanup area
+        alpha[10:18,18:22]=1  # a complete larger decoration
+        before=alpha.copy()
+        result=trim_alpha_islands({'alpha':alpha},dict(box=[5,5,25,20],max_area=12))['alpha']
+        self.assertFalse(np.any(result[12:15,12:15]))
+        np.testing.assert_array_equal(result[2:20,2:7],before[2:20,2:7])
+        np.testing.assert_array_equal(result[22:24,22:24],before[22:24,22:24])
+        np.testing.assert_array_equal(result[10:18,18:22],before[10:18,18:22])
+        np.testing.assert_array_equal(alpha,before)  # original data is preserved

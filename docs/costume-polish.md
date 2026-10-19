@@ -54,3 +54,5 @@ node --test tests/tracking.test.cjs
 今回の衣装の小修正を1コミットにまとめ、`git revert <今回のコミットSHA>`でソースと配布HTMLを戻せるようにする。
 
 [変更前のHTML](https://github.com/98nryk89/V/blob/e43e15724691463c2d3269f978f2c74188ff417b/dist/owl_prince.html) を保存して開き直しても比較できる。元絵・提供した広い画像・元の髪マスクを上書きしない。
+
+最新のリボン裏の補完・透過縁の追加修正は [背景とタッセルの透過調整](ornament-alpha-cleanup.md) を優先する。

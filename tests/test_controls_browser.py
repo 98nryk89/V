@@ -194,6 +194,21 @@ class ViewerControlsTest(unittest.TestCase):
         self.assertLess(frame['error'], .001)
         self.assertGreater(frame['leftMargin'], 5)
         self.assertGreater(frame['rightMargin'], 5)
+        # Moving the ribbon must reveal transparency, not its reconstructed
+        # silver silhouette. Hide both decorations to probe the backing itself.
+        revealed = page.evaluate("""()=>{
+          M.reset();const ids=['ribbon','orn_chain'];const saved=ids.map(id=>M.byId[id].opacity);
+          ids.forEach(id=>M.byId[id].opacity=0);M.render();
+          const c=M.canvas,v=M.opts.view||M.rig.view,s=Math.min(c.width/v[2],c.height/v[3]);
+          const ox=(c.width-v[2]*s)/2,oy=(c.height-v[3]*s)/2,gl=M.gl;
+          const result=[[800,400],[755,545]].map(([x,y])=>{
+            const rgba=new Uint8Array(4),px=Math.round(ox+(x-v[0])*s),py=Math.round(oy+(y-v[1])*s);
+            gl.readPixels(px,c.height-1-py,1,1,gl.RGBA,gl.UNSIGNED_BYTE,rgba);return rgba[3];
+          });
+          ids.forEach((id,i)=>{if(saved[i]===undefined)delete M.byId[id].opacity;else M.byId[id].opacity=saved[i]});
+          return result;
+        }""")
+        self.assertTrue(all(a<10 for a in revealed),revealed)
         # Sleeve flutter responds to vertical translation only, settles after
         # stopping, and leaves the face, long hair and body core fixed.
         flutter = page.evaluate("""()=>{

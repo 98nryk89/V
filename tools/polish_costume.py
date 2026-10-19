@@ -23,6 +23,50 @@ def main():
         mask=poly_mask(shape,r[key])
         cv2.imwrite(str(P/(name+'.png')),np.rint(mask*255).astype(np.uint8))
 
+    # Only the source metal links and gem contours belong to the hanging chain.
+    # Purple ribbon patterns inside the old broad chain envelope are not links.
+    lab=cv2.cvtColor(src[...,:3],cv2.COLOR_BGR2LAB)
+    gems=np.maximum.reduce([poly_mask(shape,points) for points in r['chain_gems']])
+    links=np.maximum.reduce([poly_mask(shape,points) for points in r['chain_links']])
+    metal=np.clip((lab[...,0].astype(float)-110)/35,0,1)
+    chain=np.maximum(gems,links*metal)
+    cv2.imwrite(str(P/'orn_chain_only_alpha.png'),np.rint(chain*255).astype(np.uint8))
+    # The original artist hair mask also contains the ornament. Return leftover
+    # purple/gold cloth pixels to the ribbon, not to hair or the stationary body.
+    yy,xx=np.mgrid[:shape[0],:shape[1]]
+    hsv=cv2.cvtColor(src[...,:3],cv2.COLOR_BGR2HSV)
+    skin=cv2.imread(str(P/'face_skin_mask.png'),0)>10
+    ear=cv2.imread(str(P/'ear_R_rigid_mask.png'),0)>10
+    roi=(xx>735)&(xx<880)&(yy>275)&(yy<630)&~skin&~ear
+    ornament=(hsv[...,1]>85)|((lab[...,2]>126)&(lab[...,0]>65))
+    ornament|=(xx>750)&(xx<805)&(yy>300)&(lab[...,0]<85)
+    extra=roi&ornament&(src[...,3]>0)
+    ribbon=np.maximum(poly_mask(shape,r['ribbon']),extra.astype(np.float32))
+    cv2.imwrite(str(P/'ribbon_only_alpha.png'),np.rint(ribbon*255).astype(np.uint8))
+    # Do not reconstruct a hair-coloured silhouette under a moving ornament.
+    no_fill=poly_mask(shape,[[730,270],[905,270],[905,665],[730,665]])
+    cv2.imwrite(str(P/'ornament_no_backfill.png'),np.rint(no_fill*255).astype(np.uint8))
+    body_no_fill=np.maximum(no_fill,poly_mask(shape,[[806,560],[960,560],[960,700],[806,700]]))
+    cv2.imwrite(str(P/'body_no_backfill.png'),np.rint(body_no_fill*255).astype(np.uint8))
+    # Fill only the hidden costume beneath tassels with nearby dark cloth, not
+    # with white fibres left at the edge of their former position.
+    specs=json.loads((P/'parts_spec.json').read_text())['parts']
+    zone=np.zeros(shape,np.float32)
+    for part in specs:
+        if part['id'] in ['tasselL','tasselR1','tasselR2']:
+            zone=np.maximum(zone,poly_mask(shape,part['zone']))
+    zone=np.maximum(zone,poly_mask(shape,r['hang']))
+    target=ndi.binary_dilation(zone>.1,iterations=3)
+    nearby=ndi.binary_dilation(target,iterations=35)
+    known=nearby&(lab[...,0]<130)&(src[...,3]>240)&~target
+    _,indices=ndi.distance_transform_edt(~known,return_indices=True)
+    cloth=src[...,:3][indices[0],indices[1]]
+    cloth=cv2.GaussianBlur(cloth,(0,0),1)
+    backing=cv2.imread(str(P/'collar_underlap.png'),-1)
+    backing[target,:3]=cloth[target]
+    backing[target,3]=255
+    cv2.imwrite(str(P/'costume_body_backing.png'),backing)
+
     # Keep the original chain, gems and cap. Complete its skirt using the same
     # character's intact neighbouring tassel, instead of drawing a new design.
     origin=(995,950)
@@ -39,7 +83,15 @@ def main():
     poly=[[28,0],[37,0],[42,40],[57,135],[63,148],[52,151],[39,147],[27,151],[14,148],[3,141],[19,45]]
     mask=poly_mask(template.shape[:2],poly)
     template[...,3]=np.rint(template[...,3]*mask).astype(np.uint8)
-    skirt=cv2.resize(template,(91,260),interpolation=cv2.INTER_CUBIC)
+    skirt=cv2.resize(template,(91,260),interpolation=cv2.INTER_LANCZOS4)
+    # A mild local sharpen restores fibres softened by enlargement; keep alpha
+    # edges narrow so the skirt has no translucent glowing border.
+    detail=skirt[...,:3].astype(np.float32)
+    detail=np.clip(detail+.5*(detail-cv2.GaussianBlur(detail,(0,0),.65)),0,255)
+    skirt[...,:3]=detail.astype(np.uint8)
+    coverage=skirt[...,3].astype(np.float32)/255
+    coverage=np.clip((coverage-.12)/.76,0,1)
+    skirt[...,3]=np.rint(coverage*255).astype(np.uint8)
     # White neck at model (1041,1238). Full scalloped hem ends near y1498.
     yy,xx=288,0
     existing=canvas[yy:yy+260,xx:xx+91].astype(np.float32)

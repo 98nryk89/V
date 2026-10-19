@@ -94,6 +94,22 @@ def _apply_edge(L, pid, ctx, edge):
     return dict(L, rgb=rgb, alpha=a)
 
 
+def trim_alpha_islands(layer, spec):
+    """Remove only small, detached alpha fragments wholly inside a chosen box."""
+    alpha = layer['alpha'].copy()
+    labels, count = ndi.label(alpha > 1 / 255)
+    sizes = np.bincount(labels.ravel())
+    x0, y0, x1, y1 = spec['box']
+    for label, slices in enumerate(ndi.find_objects(labels), 1):
+        if slices is None or sizes[label] > spec['max_area']:
+            continue
+        ys, xs = slices
+        if xs.start >= x0 and xs.stop <= x1 and ys.start >= y0 and ys.stop <= y1:
+            region = alpha[slices]
+            region[labels[slices] == label] = 0
+    return dict(layer, alpha=alpha)
+
+
 def extend_frame(rig, proj_dir, out_dir, spec, effects):
     """Attach an RGBA costume extension outside the original source canvas.
 
@@ -184,6 +200,11 @@ def build(proj_dir, out_dir=None, verbose=True):
         if edge_ctx is not None and "synthetic" not in ps:
             L = _apply_edge(L, pid, edge_ctx, edge)
             bb = bbox_of(L["alpha"], pad=3)
+        if ps.get('trim_islands'):
+            L = trim_alpha_islands(L, ps['trim_islands'])
+            bb = bbox_of(L['alpha'], pad=3)
+            if bb is None:
+                continue
         x0, y0, x1, y1 = bb
         a = L["alpha"][y0:y1, x0:x1]
         col = L["rgb"][y0:y1, x0:x1]

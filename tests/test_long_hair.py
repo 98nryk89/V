@@ -31,7 +31,10 @@ class LongHairTest(unittest.TestCase):
         active = [p for p in parts if p['id'].startswith('hair')]
         self.assertEqual([p['id'] for p in active], ['hair_head', 'hair_under_face', 'hair_tip_L', 'hair_tip_R'])
         self.assertEqual(active[0]['zone'], {'mask': 'hair_detail_alpha.png'})
-        self.assertEqual(next(p for p in parts if p['id'] == 'body')['fill_layer'], {'mask': 'collar_underlap.png'})
+        # Costume backing includes the unchanged collar plus local dark cloth
+        # beneath tassels; test_costume verifies the collar pixels are preserved.
+        self.assertEqual(next(p for p in parts if p['id'] == 'body')['fill_layer'],
+                         {'mask': 'costume_body_backing.png', 'include_partial': True})
 
 
 if __name__ == '__main__':

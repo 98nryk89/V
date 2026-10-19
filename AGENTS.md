@@ -160,3 +160,10 @@ python tools/fidelity.py projects/owl_prince/out samples/ref12.png /tmp/err.png 
 - hangR3は既存の房の画素で先まで補った一体のRGBAへ差し替え、キャンバス外まで同じメッシュで小さく揺らす。52パーツ。
 - BodyYの変化にだけ反応するPhysSleeveを追加し、袖の外側のみ最大5px/1度。顔・長髪は揺らさない。既存physicsと_physics本体は維持し、_sleeveFlutterを別に追加。
 - 再生成: tools/extend_frame.py → tools/polish_costume.py → build → export。加工済み追加画像へpolishだけを繰り返さない。詳細・比較はdocs/costume-polish.md。Python29件＋Node19件。戻す基準はe43e15724691463c2d3269f978f2c74188ff417b。
+
+## リボン裏の補完停止・背景片とタッセルの透過調整（最新）
+
+- リボン裏の銀髪色の再構成をfade_exposedで停止。見えている実際の髪は残す。布・金属の低透明度の縁もリボンへ戻し、鎖は宝石とリンクの範囲だけに限定。
+- リボン周辺の小さな独立片だけをtrim_islandsで除く。領域を横切る毛束・大きな飾り・細い鎖は消さない。
+- タッセルのbleedを0、房のclose=2を維持。背後は局所の暗い衣装色、元の襟補完は保存。大きい房は補間と輪郭を軽く調整。
+- 生成順は従来どおりextend_frame→polish_costume→build→export。比較と復元はdocs/ornament-alpha-cleanup.md。52パーツ、Python32件＋Node19件。動きの設定とランタイム/追跡コードは変更しない。戻す基準は15526746be45360a16b3c1c5fd98de30e30a7926。
