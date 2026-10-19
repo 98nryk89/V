@@ -2913,5 +2913,13 @@
   "no_sharpen": [
    "orn_mask"
   ]
+ },
+ "frame_extension": {
+  "image": "frame_extension.png",
+  "origin": [
+   -500,
+   -50
+  ],
+  "blend": 45
  }
 }

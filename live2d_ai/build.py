@@ -94,6 +94,48 @@ def _apply_edge(L, pid, ctx, edge):
     return dict(L, rgb=rgb, alpha=a)
 
 
+def extend_frame(rig, proj_dir, out_dir, spec, effects):
+    """Attach an RGBA costume extension outside the original source canvas.
+
+    Keep original geometry and image coordinates; feather only the old left,
+    right and lower crop edges. The extension shares the body's transforms.
+    """
+    image = cv2.imread(os.path.join(proj_dir, spec['image']), cv2.IMREAD_UNCHANGED)
+    if image is None or image.ndim != 3 or image.shape[2] != 4:
+        raise ValueError('frame_extension requires an RGBA image')
+    width = float(spec.get('blend', 45))
+    if width <= 0:
+        raise ValueError('frame_extension blend must be positive')
+    alpha = image[..., 3] / 255.
+    bb = bbox_of(alpha, pad=3)
+    if bb is None:
+        raise ValueError('frame_extension image is empty')
+    W, H = rig['size']
+    for part in rig['parts']:
+        if part.get('maskOnly'):
+            continue
+        path = os.path.join(out_dir, part['tex'])
+        tex = cv2.imread(path, cv2.IMREAD_UNCHANGED)
+        x, y, w, h = part['bbox']
+        yy, xx = np.mgrid[:h, :w]
+        distance = np.minimum(np.minimum(xx + x, W - 1 - xx - x), H - 1 - yy - y)
+        fade = _smoothstep(distance, 0, width)
+        tex[..., 3] = np.round(tex[..., 3] * fade).astype(np.uint8)
+        cv2.imwrite(path, tex)
+    x0, y0, x1, y1 = bb
+    ox, oy = spec['origin']
+    tex = image[y0:y1, x0:x1]
+    # Fill invisible texels to prevent white fringes with WebGL linear filtering.
+    a = tex[..., 3] / 255.
+    tex = tex.copy()
+    tex[..., :3] = np.clip(push_pull_fill(tex[..., :3].astype(float), a > .5), 0, 255).astype(np.uint8)
+    fn = 'parts/frame_extension.png'
+    cv2.imwrite(os.path.join(out_dir, fn), tex)
+    rig['parts'].append(dict(id='frame_extension', tex=fn, z=-1,
+        bbox=[x0+ox, y0+oy, x1-x0, y1-y0],
+        mesh=make_mesh(alpha[y0:y1, x0:x1], x0+ox, y0+oy, 20), effects=effects))
+
+
 def build(proj_dir, out_dir=None, verbose=True):
     proj_dir = os.path.abspath(proj_dir)
     out_dir = out_dir or os.path.join(proj_dir, "out")
@@ -172,6 +214,9 @@ def build(proj_dir, out_dir=None, verbose=True):
             print(f"  {pid:14s} bbox={x1-x0}x{y1-y0} verts={len(part['mesh']['verts'])//2}")
     rig = dict(size=[W, H], params=rspec["params"], parts=rig_parts, physics=rspec.get("physics", []),
                view=rspec.get("view"))
+    if pspec.get('frame_extension'):
+        extend_frame(rig, proj_dir, out_dir, pspec['frame_extension'],
+                     expand_effects(rspec['parts']['body']['effects'], templates))
     json.dump(rig, open(os.path.join(out_dir, "rig.json"), "w"), separators=(",", ":"))
     return out_dir, layers
 

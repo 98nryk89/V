@@ -147,3 +147,9 @@ python tools/fidelity.py projects/owl_prince/out samples/ref12.png /tmp/err.png 
 ## 別キャラ制作の共有資料（2026-10-18）
 
 メンバーへの指示書は docs/character-production-guide.md、記入式依頼は docs/character-request-template.md。座標・色条件・マスク・頭部形状はキャラ専用で、画像の単純置換では流用できない。新キャラは別プロジェクトに分離し、既存モデルを保持する。今回の追加は文書のみで動作仕様は変更しない。
+
+## 腕・衣装の外側追加（2026-10-19、最新）
+
+- 元画像の外に存在する腕・腰まわりを、提供wide_frame_ref.pngから追加。顔・髪・表情・既存51パーツのメッシュと動きは維持し、52番目のframe_extensionをbodyと同じ呼吸/共通移動で描画する。
+- tools/extend_frame.py → build → export。元絵・既存マスクの再生成は不要。parts_spec.frame_extension指定時のみ旧画像の左右・下端45pxを透過して追加層につなぐ。viewは[-430,-110,2000,1730]。
+- 比較・再生成・戻し方はdocs/full-frame.md。直前の版はecf98c9f5e9d2ac2f238426d400fa8ed4a2dab11。Python27件＋Node19件。実機カメラ/OBSの確認は利用者PCで行う。

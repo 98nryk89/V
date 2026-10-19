@@ -173,6 +173,27 @@ class ViewerControlsTest(unittest.TestCase):
           });
         }''')
         self.assertTrue(all(a > 230 for a in collar_alpha), collar_alpha)
+        # The appended sleeves share body breathing/movement and fit horizontally
+        # even at combined maximum movement, rotation and idle values.
+        frame = page.evaluate("""()=>{
+          const ext=M.byId.frame_extension,body=M.byId.body;
+          if(!ext)return null;
+          let error=0,left=Infinity,right=-Infinity;
+          const q={...body,_rest:ext._rest,_pos:new Float32Array(ext._pos.length)};
+          for(const x of [-1,1])for(const y of [-1,1])for(const z of [-1,1])for(const b of [0,1]){
+            M.reset();M.setParams({BodyX:x,BodyY:y,AngleX:x*5,AngleY:y<0?-10:5,AngleZ:z*5,Breath:b,IdleX:x,IdleY:y});
+            M._deform(ext);M._deform(q);
+            for(let i=0;i<ext._pos.length;i++)error=Math.max(error,Math.abs(ext._pos[i]-q._pos[i]));
+            for(const p of M.parts){if(p.maskOnly)continue;M._deform(p);
+              for(let i=0;i<p._pos.length;i+=2){left=Math.min(left,p._pos[i]);right=Math.max(right,p._pos[i])}}
+          }
+          const v=M.opts.view||M.rig.view;
+          return {error,leftMargin:left-v[0],rightMargin:v[0]+v[2]-right};
+        }""")
+        self.assertIsNotNone(frame)
+        self.assertLess(frame['error'], .001)
+        self.assertGreater(frame['leftMargin'], 5)
+        self.assertGreater(frame['rightMargin'], 5)
         # Iris motion is deliberately small relative to its eye, and clipped.
         gaze = page.evaluate("""()=>{
           return ['eyeL_iris','eyeR_iris','eyeL_surprise_iris','eyeR_surprise_iris'].map(id=>{
