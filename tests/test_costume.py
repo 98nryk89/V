@@ -39,6 +39,12 @@ class CostumeTest(unittest.TestCase):
         for x,y in [(800,400),(755,545)]:
             self.assertEqual(image[y-oy,x-ox,3],0)
         self.assertGreater(image[590-oy,740-ox,3],240)  # real adjacent hair stays
+        # The strand under the lowest fold must remain connected when it swings.
+        hsv=cv2.cvtColor(image[...,:3],cv2.COLOR_BGR2HSV)
+        for x,y in [(738,553),(740,560),(742,566)]:
+            with self.subTest(tip_hair=(x,y)):
+                self.assertGreater(image[y-oy,x-ox,3],240)
+                self.assertLess(hsv[y-oy,x-ox,1],60)  # silver, not purple cloth
 
     def test_hidden_tassel_backing_is_cloth_and_preserves_the_collar(self):
         backing=cv2.imread(str(P/'costume_body_backing.png'),-1)

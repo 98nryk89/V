@@ -1759,7 +1759,7 @@
     "mask": "hair_detail_extent.png"
    },
    "fill_layer": {
-    "mask": "earring_hair_backing.png",
+    "mask": "ornament_tip_hair_backing.png",
     "include_partial": true,
     "extend_alpha": true
    },

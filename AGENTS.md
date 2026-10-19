@@ -167,3 +167,7 @@ python tools/fidelity.py projects/owl_prince/out samples/ref12.png /tmp/err.png 
 - リボン周辺の小さな独立片だけをtrim_islandsで除く。領域を横切る毛束・大きな飾り・細い鎖は消さない。
 - タッセルのbleedを0、房のclose=2を維持。背後は局所の暗い衣装色、元の襟補完は保存。大きい房は補間と輪郭を軽く調整。
 - 生成順は従来どおりextend_frame→polish_costume→build→export。比較と復元はdocs/ornament-alpha-cleanup.md。52パーツ、Python32件＋Node19件。動きの設定とランタイム/追跡コードは変更しない。戻す基準は15526746be45360a16b3c1c5fd98de30e30a7926。
+
+## 最新: リボン先端に接する銀髪の補完（2026-10-19）
+
+リボン裏の一括補完停止が、最下段に潜る実際の毛束まで落としていた。polish_costume.pyのtip_hairの小範囲だけ、hair_headの補完禁止から除外する。body側・上段リボンの透過は維持し、リボンに髪を割り当てない。docs/ribbon-tip-hair.md参照。顔・物理・表情は変更しない。

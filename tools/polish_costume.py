@@ -45,7 +45,20 @@ def main():
     cv2.imwrite(str(P/'ribbon_only_alpha.png'),np.rint(ribbon*255).astype(np.uint8))
     # Do not reconstruct a hair-coloured silhouette under a moving ornament.
     no_fill=poly_mask(shape,[[730,270],[905,270],[905,665],[730,665]])
-    cv2.imwrite(str(P/'ornament_no_backfill.png'),np.rint(no_fill*255).astype(np.uint8))
+    # A short hair strand continues underneath the lowest front fold. Keep
+    # that underlap attached to the real hair; the rest of the cloth stays empty.
+    tip_hair=poly_mask(shape,[[723,495],[734,495],[736,520],[739,541],
+                             [742,552],[746,564],[750,576],[753,594],
+                             [741,604],[723,590]])
+    # Use neighbouring original strand pixels, never cloth-coloured inpainting.
+    # Retain the existing ear underlap in the same reference image.
+    backing=cv2.imread(str(P/'earring_hair_backing.png'),-1)
+    tip=tip_hair>0
+    backing[tip,:3]=src[yy,np.maximum(xx-20,0),:3][tip]
+    backing[tip,3]=np.rint(tip_hair[tip]*255).astype(np.uint8)
+    cv2.imwrite(str(P/'ornament_tip_hair_backing.png'),backing)
+    hair_no_fill=no_fill*(1-tip_hair)
+    cv2.imwrite(str(P/'ornament_no_backfill.png'),np.rint(hair_no_fill*255).astype(np.uint8))
     body_no_fill=np.maximum(no_fill,poly_mask(shape,[[806,560],[960,560],[960,700],[806,700]]))
     cv2.imwrite(str(P/'body_no_backfill.png'),np.rint(body_no_fill*255).astype(np.uint8))
     # Fill only the hidden costume beneath tassels with nearby dark cloth, not
