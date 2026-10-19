@@ -175,3 +175,7 @@ python tools/fidelity.py projects/owl_prince/out samples/ref12.png /tmp/err.png 
 ## 最新: 先端の銀髪を自然につなぐ（2026-10-19）
 
 20pxずらしただけの補完は毛筋・明暗がずれ、輪郭も角張った。polish_costume.pyのribbon_tip_underlapで曲線の輪郭と、元の髪を境界条件とする局所Poisson補間に変更。リボン先端の暗い縁を布へ戻し、髪に紫線を残さない。旧補完参照のリボン裏の平面は消すが耳裏は保つ。docs/ribbon-tip-blend.mdを最新とする。物理・顔・表情・衣装は維持。
+
+## 最新: 左上腕の半透明を修正（2026-10-19）
+
+元の腕と追加画像の輪郭の差で、追加層が存在しない上腕まで旧画像端のフェードがかかっていた。tools/extend_frame.pyで左上腕の追加層だけを局所的に位置合わせし直す。旧画像の切り取り・フェードは維持し、元画像端の切れた布を露出させない。docs/sleeve-opacity.md参照。頭部・表情・物理・元の全パーツは維持。

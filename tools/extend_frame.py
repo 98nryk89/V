@@ -61,6 +61,14 @@ def make_extension():
     inside = np.minimum.reduce([xx, 1144 - xx, 1373 - yy])
     keep = 1 - smooth((inside - 45) / 25)
     aligned[:, :, 3] = (aligned[:, :, 3] * keep).astype(np.uint8)
+    # Match the left upper sleeve to the original shoulder. Its old position
+    # left a transparent gap beneath the feathered trim. Keep the old crop
+    # fade intact; shifting only this added area avoids exposing cut-off cloth.
+    shoulder = (smooth((xx - 1030) / 60) * smooth((yy - 760) / 60)
+                * (1 - smooth((yy - 920) / 90)))
+    aligned = cv2.remap(aligned, (xx - origin[0]).astype(np.float32),
+                        (yy - origin[1] + 30 * shoulder).astype(np.float32),
+                        cv2.INTER_CUBIC, borderMode=cv2.BORDER_CONSTANT)
     path = PROJECT / 'frame_extension.png'
     cv2.imwrite(str(path), aligned)
     print('Wrote', path)

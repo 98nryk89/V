@@ -209,6 +209,19 @@ class ViewerControlsTest(unittest.TestCase):
           return result;
         }""")
         self.assertTrue(all(a<10 for a in revealed),revealed)
+        # The left upper sleeve must cover the old crop fade in the actual
+        # composite; source clothing alpha alone missed the exposed gap.
+        sleeve_alpha = page.evaluate("""()=>{
+          M.reset();M.render();
+          const c=M.canvas,v=M.opts.view||M.rig.view,s=Math.min(c.width/v[2],c.height/v[3]);
+          const ox=(c.width-v[2]*s)/2,oy=(c.height-v[3]*s)/2,gl=M.gl;
+          return [[1110,850],[1113,855],[1105,840]].map(([x,y])=>{
+            const rgba=new Uint8Array(4),px=Math.round(ox+(x-v[0])*s),py=Math.round(oy+(y-v[1])*s);
+            gl.readPixels(px,c.height-1-py,1,1,gl.RGBA,gl.UNSIGNED_BYTE,rgba);return rgba[3];
+          });
+        }""")
+        self.assertTrue(all(a>250 for a in sleeve_alpha),sleeve_alpha)
+
         # Sleeve flutter responds to vertical translation only, settles after
         # stopping, and leaves the face, long hair and body core fixed.
         flutter = page.evaluate("""()=>{
