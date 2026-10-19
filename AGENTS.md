@@ -179,3 +179,7 @@ python tools/fidelity.py projects/owl_prince/out samples/ref12.png /tmp/err.png 
 ## 最新: 左上腕の半透明を修正（2026-10-19）
 
 元の腕と追加画像の輪郭の差で、追加層が存在しない上腕まで旧画像端のフェードがかかっていた。tools/extend_frame.pyで左上腕の追加層だけを局所的に位置合わせし直す。旧画像の切り取り・フェードは維持し、元画像端の切れた布を露出させない。docs/sleeve-opacity.md参照。頭部・表情・物理・元の全パーツは維持。
+
+## iPhoneトラッキング中継の追加（2026-10-20）
+
+kamikan-bridge/は独立したNode.js 22以上のUDP→WebSocket中継。config.jsonのiphoneIpとhtmlDirを設定し、初回npm ci、以後npm start。UDP 21412へ毎秒要求、UDP 11125受信、HTTP/WSはlocalhost:8765。公式のBlendShapes配列と未知フィールドを原文のまま転送する。npm testで中継9件を検証。既存HTML・モデル・追跡コードは変更しておらず、HTML側のiPhone接続はまだ未実装。README.mdを参照。

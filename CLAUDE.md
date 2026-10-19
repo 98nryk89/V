@@ -335,3 +335,7 @@ ribbon/orn_chainの大きい領域が銀髪を取り、飾りを振ると肩の�
 ## Codex: 左上腕の衣装が透ける原因
 
 追加衣装の上腕の輪郭が元絵より内側・下側にあり、背面の追加層がない箇所でも旧画像端のフェードを適用していた。追加層の左上腕だけを局所的に位置合わせし、不透明な布が下に入るようにする。元の透明度を単純に戻すと元画像端で切れた布まで露出するため、旧パーツのアルファと切り取りは維持する。docs/sleeve-opacity.md参照。
+
+## Codex: iOS VTube Studioの独立中継（2026-10-20）
+
+kamikan-bridge/を追加。PC版APIとは別のiOS UDP方式で、BlendShapesは{k,v}配列、公式名はEyeBlinkLeft/JawOpen。未知フィールドやFaceFound=falseも削除せず転送し、通信断でも毎秒の要求を続ける。既存HTMLは読み取り専用で配信し、モデル側のWebSocket接続や角度・口・表情への変換はまだ追加しない。手順と制約はkamikan-bridge/README.md。
