@@ -7,12 +7,59 @@ from pathlib import Path
 import cv2
 import numpy as np
 from scipy import ndimage as ndi
+from scipy.interpolate import PchipInterpolator
+from scipy.sparse import coo_matrix
+from scipy.sparse.linalg import spsolve
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from live2d_ai.decompose import poly_mask
 
 ROOT=Path(__file__).resolve().parents[1]
 P=ROOT/'projects/owl_prince'
+
+
+def ribbon_tip_underlap(src):
+    """Continue local strand gradients, anchored to the original silver hair.
+
+    The outside is a smooth continuation of the visible contour. A small Poisson
+    solve matches the donor's strand detail to the actual hair on the inner and
+    lower joins; empty background does not impose a black boundary condition.
+    """
+    h,w=src.shape[:2]
+    ys=np.arange(520,611,dtype=float)
+    outer=PchipInterpolator([520,535,550,565,580,595,610],
+                            [733,737,741,744,748,752,758])(ys)
+    points=np.vstack([np.c_[outer,ys],[[714,610],[714,520]]])
+    large=np.zeros((h*4,w*4),np.uint8)
+    cv2.fillPoly(large,[np.rint(points*4).astype(np.int32)],255)
+    matte=cv2.resize(large,(w,h),interpolation=cv2.INTER_AREA).astype(float)/255
+    # Only use uncontaminated, opaque silver hair as boundary pixels.
+    hsv=cv2.cvtColor(src[...,:3],cv2.COLOR_BGR2HSV)
+    lab=cv2.cvtColor(src[...,:3],cv2.COLOR_BGR2LAB)
+    support=matte>0
+    clean=support&(src[...,3]>240)&(hsv[...,1]<65)&(lab[...,0]>110)
+    clean=ndi.binary_erosion(clean,iterations=1)
+    unknown=support&~clean
+    yy,xx=np.mgrid[:h,:w]
+    donor=src[yy,np.maximum(xx-18,0),:3].astype(float)
+    # Solve u-donor with zero normal derivative at the outside hair silhouette.
+    # At the original hair, its RGB provides a Dirichlet boundary condition.
+    indices=np.full((h,w),-1,int);indices[unknown]=np.arange(unknown.sum())
+    rows=[];cols=[];values=[];rhs=np.zeros((unknown.sum(),3))
+    for y,x in zip(*np.nonzero(unknown)):
+        i=indices[y,x];degree=0
+        for dy,dx in [(0,-1),(0,1),(-1,0),(1,0)]:
+            ny,nx=y+dy,x+dx
+            if not(0<=ny<h and 0<=nx<w and support[ny,nx]):continue
+            degree+=1;rhs[i]+=donor[y,x]-donor[ny,nx]
+            if unknown[ny,nx]:
+                rows.append(i);cols.append(indices[ny,nx]);values.append(-1)
+            else:rhs[i]+=src[ny,nx,:3]
+        rows.append(i);cols.append(i);values.append(degree)
+    matrix=coo_matrix((values,(rows,cols)),shape=(unknown.sum(),unknown.sum())).tocsr()
+    colour=src[...,:3].copy()
+    colour[unknown]=np.rint(np.clip(spsolve(matrix,rhs),0,255)).astype(np.uint8)
+    return matte,colour
 
 
 def main():
@@ -41,20 +88,23 @@ def main():
     ornament=(hsv[...,1]>85)|((lab[...,2]>126)&(lab[...,0]>65))
     ornament|=(xx>750)&(xx<805)&(yy>300)&(lab[...,0]<85)
     extra=roi&ornament&(src[...,3]>0)
+    # The source cloth edge sits 1-3px outside the older polygon at the tip.
+    # Its dark purple rim belongs to the ribbon, never to the silver underlap.
+    rim=poly_mask(shape,[[739,515],[742,515],[741,540],[740,561],
+                         [738,576],[732,576],[733,552],[735,530]])
+    extra|=(rim>.1)&(hsv[...,1]>70)&(src[...,3]>0)
     ribbon=np.maximum(poly_mask(shape,r['ribbon']),extra.astype(np.float32))
     cv2.imwrite(str(P/'ribbon_only_alpha.png'),np.rint(ribbon*255).astype(np.uint8))
     # Do not reconstruct a hair-coloured silhouette under a moving ornament.
     no_fill=poly_mask(shape,[[730,270],[905,270],[905,665],[730,665]])
     # A short hair strand continues underneath the lowest front fold. Keep
     # that underlap attached to the real hair; the rest of the cloth stays empty.
-    tip_hair=poly_mask(shape,[[723,495],[734,495],[736,520],[739,541],
-                             [742,552],[746,564],[750,576],[753,594],
-                             [741,604],[723,590]])
-    # Use neighbouring original strand pixels, never cloth-coloured inpainting.
+    tip_hair,tip_colour=ribbon_tip_underlap(src)
     # Retain the existing ear underlap in the same reference image.
     backing=cv2.imread(str(P/'earring_hair_backing.png'),-1)
+    backing[no_fill>.5]=0  # no legacy flat ear backing behind this ornament
     tip=tip_hair>0
-    backing[tip,:3]=src[yy,np.maximum(xx-20,0),:3][tip]
+    backing[tip,:3]=tip_colour[tip]
     backing[tip,3]=np.rint(tip_hair[tip]*255).astype(np.uint8)
     cv2.imwrite(str(P/'ornament_tip_hair_backing.png'),backing)
     hair_no_fill=no_fill*(1-tip_hair)

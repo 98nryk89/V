@@ -16,6 +16,9 @@ class CostumeTest(unittest.TestCase):
             for x,y in [(747,640),(760,638),(745,619),(740,590),(725,490)]:
                 with self.subTest(name=name,x=x,y=y):
                     self.assertEqual(mask[y,x],0)
+        ribbon=cv2.imread(str(P/'ribbon_only_alpha.png'),0)
+        for x,y in [(735,550),(734,570),(735,572),(734,574)]:
+            self.assertGreater(ribbon[y,x],240)  # dark cloth rim moves with cloth
         chain=cv2.imread(str(P/'orn_chain_only_alpha.png'),0)
         self.assertGreater(chain[580,775],240)
 
@@ -41,7 +44,7 @@ class CostumeTest(unittest.TestCase):
         self.assertGreater(image[590-oy,740-ox,3],240)  # real adjacent hair stays
         # The strand under the lowest fold must remain connected when it swings.
         hsv=cv2.cvtColor(image[...,:3],cv2.COLOR_BGR2HSV)
-        for x,y in [(738,553),(740,560),(742,566)]:
+        for x,y in [(738,553),(740,560),(742,566),(735,550),(734,570),(735,572),(734,574)]:
             with self.subTest(tip_hair=(x,y)):
                 self.assertGreater(image[y-oy,x-ox,3],240)
                 self.assertLess(hsv[y-oy,x-ox,1],60)  # silver, not purple cloth

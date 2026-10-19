@@ -171,3 +171,7 @@ python tools/fidelity.py projects/owl_prince/out samples/ref12.png /tmp/err.png 
 ## 最新: リボン先端に接する銀髪の補完（2026-10-19）
 
 リボン裏の一括補完停止が、最下段に潜る実際の毛束まで落としていた。polish_costume.pyのtip_hairの小範囲だけ、hair_headの補完禁止から除外する。body側・上段リボンの透過は維持し、リボンに髪を割り当てない。docs/ribbon-tip-hair.md参照。顔・物理・表情は変更しない。
+
+## 最新: 先端の銀髪を自然につなぐ（2026-10-19）
+
+20pxずらしただけの補完は毛筋・明暗がずれ、輪郭も角張った。polish_costume.pyのribbon_tip_underlapで曲線の輪郭と、元の髪を境界条件とする局所Poisson補間に変更。リボン先端の暗い縁を布へ戻し、髪に紫線を残さない。旧補完参照のリボン裏の平面は消すが耳裏は保つ。docs/ribbon-tip-blend.mdを最新とする。物理・顔・表情・衣装は維持。
