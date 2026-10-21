@@ -1,0 +1,47 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>フクロウの王子｜Mac・iPhone起動セットの使い方</title>
+<style>body{max-width:850px;margin:30px auto;padding:0 20px;color:#26222c;font:16px/1.85 system-ui,sans-serif}h1{font-size:27px}h2{margin-top:2em;border-bottom:1px solid #ddd;font-size:21px}code{background:#f1edf7;padding:2px 5px}li{margin:.5em 0}.note{background:#f1edf7;padding:16px;border-radius:10px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #ddd;padding:10px;text-align:left}a{color:#62418d}</style></head><body>
+<h1>フクロウの王子<br>Mac＋iPhoneのVTube Studio 起動セット</h1>
+<p>2026年10月22日 / 接続画面 1.0.0。前回のiPhone試験モデルをそのまま使い、起動とIP設定を簡単にした版です。</p>
+<div class="note"><strong>ZIPを解凍 →「起動.command」をダブルクリック → ブラウザでiPhoneのIPを保存 →「モデル画面を開く」→ 正面でCキー。</strong><br>npmやJSONの手作業は不要です。ターミナルは自動で開きますが、コマンドを入力する必要はありません。</div>
+<h2>1．初回の準備</h2>
+<ul><li>Google Chrome、iPhoneのVTube Studio、同じWi-Fiへ接続したMacとiPhoneが必要です。</li>
+<li><strong>Node.js 22以上がMacへインストール済みである必要があります。</strong>以前の中継でnpm startを使えたMacは通常そのまま使えます。Node.js自体はこのZIPへ内蔵していません。</li>
+<li>Node.jsがない場合、「起動.command」が<a href="https://nodejs.org/ja/download">Node.jsの公式ページ</a>を開きます。LTS版のMac用インストーラ（.pkg）を画面の案内に沿って入れ、起動ファイルを開き直します。ターミナルへインストール用のコマンドを貼る必要はありません。</li>
+<li>以前のkamikan-bridgeが起動中なら、そちらのターミナルで<strong>Control＋C</strong>を一度押して終了します。古い中継を動かしたままだと同じポートを使えません。</li></ul>
+<h2>2．起動する</h2>
+<ol><li>受け取ったZIPをダブルクリックして解凍し、<code>Lunaris_iPhone</code> フォルダ全体をデスクトップなどへ保存します。中のファイルだけをばらばらに移動しません。</li>
+<li><strong>「起動.command」</strong>をダブルクリックします。Chromeで「フクロウの王子｜iPhone接続」が自動で開きます。</li>
+<li>Macが初回の実行許可を求めた場合は、画面に出る正規の許可手順で、この配布ファイルを確認して許可してください。「システム設定 → プライバシーとセキュリティ」に個別の「このまま開く」などが出る場合もあります。セキュリティ機能を全体で無効にする必要はありません。</li>
+<li>黒い文字のターミナル画面が出るのは正常です。<strong>入力せず、利用中は閉じずに置いてください。</strong></li></ol>
+<p>自動で開かなかった場合は、Chromeのアドレス欄で <code>http://localhost:8765/</code> を開きます。同じセットを再びダブルクリックしたときは、起動済みの接続画面を開きます。</p>
+<h2>3．iPhoneと接続する</h2>
+<ol><li>iPhoneでVTube Studioを開き、顔を映してトラッキングを開始します。</li>
+<li>VTube Studioの設定で<strong>「3rd Party PC Clients」</strong>を有効にし、要求先UDPポートを<strong>21412</strong>にします。iPhoneのローカルネットワーク許可が出たら許可します。</li>
+<li>iPhoneの「設定 → Wi-Fi → 接続中のネットワークの ⓘ → IPアドレス」でIPv4を確認します。例は192.168.1.100です。MacのIPやアプリのポート番号とは別です。</li>
+<li>Macの接続画面へそのIPを入力し、<strong>「保存して接続」</strong>を押します。設定ファイルを開く必要はありません。</li>
+<li>「接続済み・顔を検出しています」と受信fpsが表示されるか確認します。次回は保存済みのIPへ自動で要求します。Wi-FiなどでIPが変わったときだけ入力し直します。</li></ol>
+<p>iPhoneはVTube Studioを前面表示したまま使ってください。Macのファイアウォール等が接続許可を求めたら、Node.js/中継の通信を利用環境に応じて許可します。UDP受信は11125番、ブラウザのHTTP/WebSocketはMac内の8765番です。</p>
+<h2>4．モデルの動きを確認する</h2>
+<ol><li>接続画面の<strong>「モデル画面を開く」</strong>を押します。キャラクターが別タブで開きます。以前と同じiPhone試験モデルです。</li>
+<li>正面・真顔・閉じ口になり、モデル画面をクリックして<strong>Cキー</strong>か「正面・真顔を記録」を押します。</li>
+<li>左右を見る、上・下を向く、首をかしげる、横・縦へ移動する、左右の瞬き、口「あ・い・え」を確認してください。眉は肌に固定、髪の独立した揺れは止めてあります。</li>
+<li>笑顔は自動です。驚きは<strong>iPhoneのホットキー2</strong>でON。iPhoneの3で真顔、4で自動笑顔へ戻します。Macのモデル画面にフォーカスがある状態では、1=笑顔、2=驚きの切り替え、0=真顔も使えます。</li>
+<li>動きが逆ならモデル画面の「左右/上下/傾き反転」、動きが大きければ各感度を調整します。「滑らかさ」を増やすと揺れが減り、追従は遅くなります。口形は近似判定で音声の母音識別ではありません。</li></ol>
+<p>顔を見失ったり通信が切れたりするとゆっくり真顔・正面へ戻ります。通信要求とWebSocketの再接続は続けます。ブラウザのページを更新したら、Cキーで基準を合わせ直してください。</p>
+<h2>5．OBSへ取り込む</h2>
+<ol><li>モデルのタブを別のChromeウィンドウへ移すと、設定画面と分けて取り込みやすくなります。</li><li>OBSの「ソース → ＋ → macOSスクリーンキャプチャ」で、モデルを表示したChromeのウィンドウを選びます。</li><li>一覧が空の場合、Macの「プライバシーとセキュリティ → 画面収録」または「画面とシステムオーディオの収録」でOBSを許可し、OBSを再起動します。</li><li>「クロップ／パッド」で操作パネルやChromeの枠を除き、モデルに動く余白を残します。</li><li>モデルの背景切替で緑にし、OBSの「クロマキー」のカスタム色に<strong>#00ff00</strong>を指定します。このiPhone試験版の緑は、旧Webカメラ完成版の#6fcf97とは異なります。</li><li>短く録画し、髪・宝石の抜け、口・瞬き・動き、負荷を確認します。Chromeは最小化しません。マイクはOBSで別に設定します。</li></ol>
+<h2>6．終了・更新・設定の保存</h2>
+<p>接続画面の<strong>「中継を終了する」</strong>を押して、モデル画面も閉じます。次回は「起動.command」を開きます。モデル側の「停止」はモデルへの入力を止めるだけで、中継そのものの終了とは別です。</p>
+<p>更新版を受け取ったら旧中継を終了し、新しいフォルダを解凍して起動します。IPはMacの <code>~/Library/Application Support/KamikanBridge/owl-prince/connection.json</code> へ自動保存されるため、同じユーザーのMacなら更新後も残ります。このファイルを自分で編集する必要はありません。モデル画面の感度・較正は今回の版ではページを開き直すと初期状態に戻ります。</p>
+<h2>7．困ったとき</h2>
+<table><tr><th>症状</th><th>対処</th></tr>
+<tr><td>ポートが使用中／EADDRINUSE</td><td>以前の中継や別の同時起動を終了します。旧版は元のターミナルでControl＋C。別の作業中のプロセスを勝手に終了する必要はありません。</td></tr>
+<tr><td>設定画面は開くが受信0</td><td>同じWi-Fiか、iPhoneの現在のIPか、VTube Studioの送信設定がONか、21412番かを確認。ゲストWi-Fiでは端末間通信が遮断される場合があります。</td></tr>
+<tr><td>受信しているがFaceFound=false</td><td>iPhoneのカメラに顔全体を明るく映します。VTube Studioを前面にし、顔追跡を開始します。</td></tr>
+<tr><td>接続画面で顔検出中だがモデルが動かない</td><td>セット内のモデルを「モデル画面を開く」から開いてください。古いowl_prince.htmlはWebカメラ方式です。モデル画面の入力がiPhoneか確認し、停止していれば開始します。</td></tr>
+<tr><td>設定を保存できない</td><td>表示されたエラー文を配布者へ伝えます。ZIP内を編集したり、IPをターミナルへ入力する必要はありません。</td></tr>
+<tr><td>重い</td><td>モデル画面を複数開かず、まずOBSなしで確認。Chromeの表示を小さくする、不要な物理等をOFFにする方法で比較します。本セットは新しい描画軽量化版ではありません。</td></tr>
+</table>
+<p>この配布物はMac向けです。クラウドでは模擬iPhoneのUDP→WebSocket→Chromiumで検証しますが、実Macのダブルクリック許可・実iPhone・OBSの最終確認は利用するPCで行ってください。</p>
+</body></html>

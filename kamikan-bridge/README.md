@@ -1,5 +1,7 @@
 # KamikanBridge：iPhoneのVTube Studio → ブラウザ中継
 
+**Macの簡単起動版を追加しました。** [配布ZIP](../dist/lunaris_iphone_mac.zip)を解凍して「起動.command」を開くと、ブラウザでiPhoneのIPを保存できます。npmの実行・JSON編集は不要です（Node.js 22以上はMacへ初回導入が必要）。[使い方](../docs/iphone-mac-start-guide.html)を参照してください。以下は従来の手動起動方式です。
+
 iPhoneへ1秒ごとに追跡データを要求し、UDPで受けたJSONをローカルWebSocketへ転送するNode.jsサーバーです。同じサーバーから既存HTMLも配信します。
 
 **既存HTMLは変更せず、別ファイルのiPhone連携試験版を追加しました。** 最新の使い方は[試験版の手順](../docs/iphone-tracking-test.md)を参照してください。中継を起動したまま `http://localhost:8765/owl_prince_iphone_test.html` をChromeで開くとiPhoneへ追従します。従来版 `owl_prince.html` は以前のWebカメラ方式のままです。

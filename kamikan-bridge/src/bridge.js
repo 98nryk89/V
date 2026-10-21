@@ -108,14 +108,16 @@ function blendshape(data, name) {
 }
 
 export function createBridge({ iphoneIp, htmlDir, iphonePort = 21412, udpPort = 11125,
-  httpPort = 8765, httpHost = '127.0.0.1', requestIntervalMs = 1000, statusIntervalMs = 1000 },
-  { log = console.log } = {}) {
+  httpPort = 8765, httpHost = '127.0.0.1', requestIntervalMs = 1000, statusIntervalMs = 1000,
+  requestsEnabled = true },
+  { log = console.log, httpHandler } = {}) {
   if (!isIPv4(iphoneIp)) throw new Error('iPhoneのIPv4アドレスが必要です。');
   const udp = dgram.createSocket('udp4');
   const wss = new WebSocketServer({ noServer: true, perMessageDeflate: false, maxPayload: 65536 });
   let server, requestTimer, statusTimer, heartbeatTimer;
   let running = false, stopped = false, started = false, actualUdpPort, actualHttpPort;
   let frameCount = 0, invalidCount = 0, latest;
+  let receivedTotal = 0, lastFrameAt = null, reportedFps = 0;
   let lastStatusAt = performance.now(), lastErrorAt = -Infinity;
 
   function warn(error) {
@@ -128,7 +130,7 @@ export function createBridge({ iphoneIp, htmlDir, iphonePort = 21412, udpPort = 
   }
   udp.on('error', error => { if (running) warn(error); });
   udp.on('message', (message, remote) => {
-    if (!running || remote.address !== iphoneIp) return;
+    if (!running || !requestsEnabled || remote.address !== iphoneIp) return;
     const text = message.toString('utf8').replace(/^\uFEFF/, '');
     let data;
     try {
@@ -137,6 +139,7 @@ export function createBridge({ iphoneIp, htmlDir, iphonePort = 21412, udpPort = 
     } catch { invalidCount++; return; }
     latest = data;
     frameCount++;
+    receivedTotal++; lastFrameAt = performance.now();
     for (const client of wss.clients) {
       // Do not accumulate old tracking frames behind a slow browser.
       if (client.readyState === WebSocket.OPEN && client.bufferedAmount < 256 * 1024) {
@@ -146,7 +149,7 @@ export function createBridge({ iphoneIp, htmlDir, iphonePort = 21412, udpPort = 
   });
 
   function requestTracking() {
-    if (!running) return;
+    if (!running || !requestsEnabled) return;
     const message = JSON.stringify({ messageType: 'iOSTrackingDataRequest', time: 5,
       sentBy: 'KamikanBridge', ports: [actualUdpPort] });
     try { udp.send(message, iphonePort, iphoneIp, error => { if (error && running) warn(error); }); }
@@ -156,6 +159,7 @@ export function createBridge({ iphoneIp, htmlDir, iphonePort = 21412, udpPort = 
   function printStatus() {
     const now = performance.now();
     const fps = frameCount * 1000 / (now - lastStatusAt);
+    reportedFps = fps;
     const data = frameCount > 0 ? latest : undefined;
     const face = typeof data?.FaceFound === 'boolean' ? String(data.FaceFound) : '--';
     log(`受信fps=${fps.toFixed(1)} FaceFound=${face} eyeBlinkLeft=${blendshape(data, 'eyeBlinkLeft')}`
@@ -191,7 +195,10 @@ export function createBridge({ iphoneIp, htmlDir, iphonePort = 21412, udpPort = 
         let host;
         try { host = new URL(`http://${req.headers.host}`).hostname; } catch { /* rejected below */ }
         if (!localHosts.has(host)) { reply(res, 403, 'Local access only'); return; }
-        serveFolder(root, req, res).catch(error => {
+        (async () => {
+          if (httpHandler && await httpHandler(req, res)) return;
+          await serveFolder(root, req, res);
+        })().catch(error => {
           log(`[HTTP] ${error.code || error.message}`);
           if (!res.headersSent) reply(res, 500, 'Internal server error'); else res.destroy();
         });
@@ -240,5 +247,21 @@ export function createBridge({ iphoneIp, htmlDir, iphonePort = 21412, udpPort = 
       return { udpPort: actualUdpPort, httpPort: actualHttpPort };
     } catch (error) { await stop(); throw error; }
   }
-  return { start, stop };
+  function setIphoneIp(address) {
+    if (address !== null && !isIPv4(address)) throw new Error('iPhoneのIPv4アドレスを入力してください。');
+    requestsEnabled = address !== null;
+    if (address !== null) iphoneIp = address;
+    latest = undefined; lastFrameAt = null; frameCount = 0; reportedFps = 0;
+    requestTracking();
+  }
+  function getStatus() {
+    const age = lastFrameAt === null ? null : Math.max(0, performance.now() - lastFrameAt);
+    const fresh = age !== null && age < 2000;
+    return { running, iphoneIp: requestsEnabled ? iphoneIp : '', httpPort: actualHttpPort,
+      udpPort: actualUdpPort, receivedTotal, lastFrameAgeMs: age,
+      fps: fresh ? reportedFps : 0, faceFound: fresh && typeof latest?.FaceFound === 'boolean' ? latest.FaceFound : null,
+      eyeBlinkLeft: fresh ? blendshape(latest, 'eyeBlinkLeft') : '--',
+      jawOpen: fresh ? blendshape(latest, 'jawOpen') : '--' };
+  }
+  return { start, stop, setIphoneIp, getStatus };
 }

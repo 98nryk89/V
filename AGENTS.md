@@ -201,3 +201,12 @@ kamikan-bridge/は独立したNode.js 22以上のUDP→WebSocket中継。config.
 ## 別キャラ用Codex共有キット（2026-10-21）
 
 dist/codex_character_creation_kit.zipを追加。docs/codex-character-kit/が指示書原本、tools/package_codex_character_kit.pyで再作成。初回/修正プロンプト、素材・依頼・検品・環境・引継ぎ書式を同梱。starterに共通Python/描画/追跡/プレビュー/追跡単体検証をそのまま収録し、元リポジトリ権限なしでも別キャラに着手できる。referenceの完成HTMLは旧版と同じ画素・コード。元キャラの専用画像・マスク・Git履歴は未同梱で、referenceの仕様JSONは読解用。initだけで完成しない点、キャラ別の切り抜き/頭部形状/素材が必要な点、Webカメラ標準とネット依存を明示。既存モデルと追跡・描画コードは変更しない。
+
+## Mac・iPhoneのダブルクリック配布セット（2026-10-22、最新）
+
+- dist/lunaris_iphone_mac.zip。HTML・中継・実行権限付き起動.command・接続GUI・日本語説明・ws 8.22.0（LICENSE含む）を同梱。Node.js本体は含めず、Macに既存の22以上を使用。利用者はnpm/JSON編集不要。未導入なら公式LTSのpkgを初回だけ案内。
+- kamikan-bridge/portable/が原本。CLI実行の旧server.js/config.json方式も維持。既存createBridgeに任意のHTTPハンドラ、IP再設定、状態取得を追加し、初回IP未設定ではUDP要求しない。設定GUIから保存すると受信ソケットを保ったまま接続先を更新。HTTP/WS8765、UDP受信11125、iPhone要求21412。
+- Macの設定は~/Library/Application Support/KamikanBridge/owl-prince/connection.jsonへ保存し、フォルダ差し替え後も保持。OriginとJSON POSTを確認し、設定はモデルのHTTPフォルダ外へ保存。モデル画面の感度/較正は従来通りページ内だけ。
+- 前回のdist/owl_prince_iphone_test.htmlをそのまま複製。完成版3HTML・画像・viewer/runtime.js/tracking.js/tracking-input.jsは変更しない。自動笑顔、驚きホットキー2、C較正を維持。OBSの背景色はiPhone試験版の#00ff00。
+- 再出力はpython tools/package_iphone_mac.py。node_modules/wsがない場合のみ制作者がkamikan-bridgeでnpm ci。新旧中継14件、追跡31件、旧ブラウザ3件、解凍ZIP→GUI保存→模擬iPhone→実モデル→終了1件、合計49件成功。抽出した実行ファイルでもスペースを含むパスから起動、二重起動時再利用、API終了・正常終了を確認。ZIPの実行権限と全ファイルハッシュを照合。画像は/workspace/iphone-portable-check/。
+- 今回はLinuxで起動ファイルとChromiumを検証。実Macでのダブルクリック許可、実iPhoneからの入力、OBS録画は利用者が次に確認。既存中継が残っていれば先にControl+Cで終了し、ポート競合を避ける。Node内蔵・iPhone自動検出・新規軽量化・透明OBS専用画面は未実装。
