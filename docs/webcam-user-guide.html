@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ルナリス HTML＋Webカメラ版・操作説明</title>
+<style>
+body{max-width:860px;margin:32px auto;padding:0 20px;color:#24232a;background:#fff;font:16px/1.85 system-ui,sans-serif}h1{font-size:26px}h2{margin-top:2em;font-size:21px;border-bottom:1px solid #ddd}code{background:#f2f1f6;padding:2px 5px;border-radius:4px}li{margin:.5em 0}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ddd;padding:8px;text-align:left}a{color:#4939b5}.note{padding:14px;background:#f2f1fa;border-radius:8px}@media print{body{margin:0;max-width:none}h2{break-after:avoid}table{break-inside:avoid}}
+</style></head><body>
+<h1>ルナリス HTML＋Webカメラ版<br>起動・操作・OBS取り込みの説明</h1>
+<p>配布日：2026年10月21日。対象は、このZIPに同梱した <code>owl_prince.html</code> です。iPhone連携の試験版とは別の、Webカメラで使う完成版です。</p>
+<div class="note"><strong>まず試す：</strong>ZIPを解凍 → <code>owl_prince.html</code> をChromeで開く → 右の「Webカメラ追跡」の「開始」 → カメラを許可 → 正面・閉じ口で「正面を較正」。</div>
+
+<h2>1．必要なもの</h2>
+<ul><li>MacまたはWindowsのPCと、更新済みのGoogle Chrome。</li><li>内蔵またはUSB接続のWebカメラ。明るい場所で顔全体が映る状態にしてください。</li><li>インターネット接続。キャラクター画像はHTML内に入っていますが、顔認識に必要なライブラリとモデルは「開始」時にインターネットから取得します。完全オフライン版ではありません。</li><li>配信・録画する場合のみOBS Studio。iPhone、VTube Studio、Node.js、npm、kamikan-bridgeの設定は不要です。</li></ul>
+
+<h2>2．Macで起動する</h2>
+<ol>
+<li>受け取ったZIPをダブルクリックして解凍します。ZIPの中から直接起動せず、解凍後のフォルダを使ってください。</li>
+<li>Finderで <code>owl_prince.html</code> を右クリックし、「このアプリケーションで開く」→「Google Chrome」を選びます。ダブルクリックでSafariが開いた場合も、この操作でChromeを選べます。</li>
+<li>キャラクターと操作パネルが表示されるまで待ちます。この段階では、Webカメラはまだ使っていません。</li>
+<li>右側の「Webカメラ追跡 (MediaPipe)」にある<strong>「開始」</strong>を押し、Chromeのカメラ使用許可で「許可」を選びます。初回は顔認識データの読み込みに時間がかかることがあります。</li>
+<li>追跡が始まったら、画面を正面から見て口を閉じ、真顔で<strong>「正面を較正」</strong>を押します。席やカメラの位置を変えたときも押し直してください。この完成版の較正はボタン操作です。</li>
+<li>終了時は「停止」を押し、Chromeのタブを閉じます。</li>
+</ol>
+<p>Windowsでも、ZIPを「すべて展開」して、同じHTMLをChromeで開きます。HTMLをテキストエディタで開く必要はありません。配布する人は、このフォルダをZIPのまま渡せます。</p>
+
+<h2>3．表情・動きの操作</h2>
+<table><tr><th>操作</th><th>動作</th></tr>
+<tr><td>カメラの前で顔を動かす</td><td>顔の回転と体の上下左右の移動を反映します。左右・首かしげは±5度、上5度・下10度です。</td></tr>
+<tr><td>口・瞬き</td><td>口の開きと左右の瞬きを追跡します。開いている口は「あ・い・え」の一つを近似判定し、複数の形を同時に混ぜません。音声の母音認識ではありません。</td></tr>
+<tr><td>1 ／「笑顔」</td><td>笑顔のON/OFF。先にキャラクター画面をクリックしてChromeへキー入力してください。</td></tr>
+<tr><td>2 ／「驚き」</td><td>驚きのON/OFF。笑顔とは同時に表示しません。</td></tr>
+<tr><td>0 ／「真顔」</td><td>手動で真顔へ戻します。</td></tr>
+<tr><td>「笑顔を自動判定」「驚きを自動判定」</td><td>このWebカメラ完成版は両方とも初期ONです。不要な方はチェックを外してください。驚きをキー2だけで操作したい場合は、自動の驚きをOFFにします。</td></tr>
+<tr><td>手動で表情を指定</td><td>笑顔・驚きの自動判定を両方停止して、手動の表情を優先します。自動へ戻すときは各チェックをONにします。</td></tr>
+<tr><td>「リセット」</td><td>パラメータを初期値に戻し、自動笑顔・自動驚きを両方ONに戻します。追跡中の姿勢はカメラ入力で再び更新されます。</td></tr>
+<tr><td>「正面を較正」／反転／感度</td><td>正面の基準を合わせ、左右・上下・傾きの反転や、移動の大きさを調整します。</td></tr>
+<tr><td>フクロウの瞬き・呼吸・物理</td><td>各チェックで切り替えます。髪だけの物理的な揺れは止めてある完成版です。顔の動きへの追従は残っています。</td></tr>
+</table>
+<p>設定はページを開き直すと初期状態になります。カメラは一つのモデル画面だけで使用してください。「マウス追従」はカメラ追跡と競合するため、カメラ使用中はOFFを推奨します。</p>
+
+<h2>4．重い場合</h2>
+<ol><li>モデルを開くタブを一つにし、使っていないiPhone中継や別のモデル画面を終了します。</li><li>Chromeのウィンドウを少し小さくして、表示の重さが変わるか確認します。</li><li>必要に応じて「物理」「ゆらぎ」「フクロウの瞬き」などをOFFにします。軽くなる程度はPCによって異なります。</li><li>まずOBSなしで動きを確認し、その後OBSで短い録画を試します。OBSは最初に720p・30fps程度で試すと負荷を比較しやすくなります。</li></ol>
+<p>このZIPは現在の完成版をそのまま収録しています。描画の軽量化を新たに施した版ではないため、すべてのPCで滑らかに動く保証はありません。配信前に使用するPCで確認してください。</p>
+
+<h2>5．OBSで重ねて使う（Mac）</h2>
+<ol>
+<li>Chromeでモデルを表示し、カメラ追跡を開始したままにします。</li>
+<li>OBSの「ソース」の「＋」から<strong>「macOSスクリーンキャプチャ」</strong>を追加します。OBS・macOSのバージョンにより表記が異なります。「ウィンドウキャプチャ（非推奨）」ではなく、利用できる場合はこちらを使います。</li>
+<li>キャプチャ方法でウィンドウを選び、モデルを表示しているChromeのウィンドウを指定します。ウィンドウが空の場合は、Macの「システム設定」→「プライバシーとセキュリティ」→「画面収録」または「画面とシステムオーディオの収録」でOBSを許可し、OBSを再起動します。</li>
+<li>追加したソースを右クリックし、「フィルタ」の「エフェクトフィルタ」で「クロップ／パッド」を追加します。Chromeの枠・操作パネル・下の文字を除き、キャラクターを表示する範囲だけに切り取ります。動いたときの左右・上の余白を残してください。</li>
+<li>モデルの「背景切替」を押して緑背景にします。この版の緑は<strong><code>#6fcf97</code></strong>です。</li>
+<li>同じOBSソースの「フィルタ」で「クロマキー」を追加します。キーカラーを「カスタム色」にして<strong><code>#6fcf97</code></strong>を指定するか、OBSの色選択で背景の緑を取得します。髪や宝石まで消える場合は類似性などを下げます。</li>
+<li>キャラクターのソースをゲーム画面や背景より上に置きます。マイク音声はOBS側で別途設定します。</li>
+<li>30秒程度録画し、口・瞬き・左右・下向き・袖の端・髪・宝石が正常に映るか確認します。Chromeは最小化せず使ってください。</li>
+</ol>
+<p>WindowsではOBSの「ウィンドウキャプチャ」でChromeを選び、同じように切り取りとクロマキーを設定します。OBSの「ブラウザソース」での直接カメラ利用は、この配布版の手順の対象外です。このHTMLはCubismのmoc3モデルではなく、VTube Studioへモデルとして読み込むファイルではありません。</p>
+
+<h2>6．困ったとき</h2>
+<table><tr><th>症状</th><th>確認すること</th></tr>
+<tr><td>カメラが起動しない</td><td>HTMLをChromeで開いているか、「開始」を押したか確認します。Chrome側のカメラ許可と、Macの「プライバシーとセキュリティ」→「カメラ」でChromeを許可します。他のアプリがカメラを使用していれば終了します。</td></tr>
+<tr><td>顔認識の読み込みで止まる</td><td>インターネット接続を確認します。会社・学校などで <code>cdn.jsdelivr.net</code> や <code>storage.googleapis.com</code> が遮断されると認識データを取得できません。エラー文を配布者へ伝えてください。</td></tr>
+<tr><td>カメラ映像は出るが顔が動かない</td><td>顔全体を明るく映し、「トラッキング中」の表示を確認します。正面で「正面を較正」を押します。眉だけは動かさず、顔の肌に固定してあります。</td></tr>
+<tr><td>表情が意図せず変わる</td><td>自動判定のチェックを外し、数字キーまたは表情ボタンで指定します。口形は近似判定なので、照明・話し方で変わります。</td></tr>
+<tr><td>OBSの一覧が空</td><td>OBSの画面収録許可を確認してOBSを再起動し、Chromeを表示したまま「macOSスクリーンキャプチャ」のウィンドウ指定を試します。改善しない場合はOBS/macOSのバージョンと設定画面を配布者へ伝えます。</td></tr>
+</table>
+<p>配布者へ問い合わせる際は、Mac/Windowsの別・OSとChromeのバージョン・表示されたエラー文・問題が起きる操作を添えてください。</p>
+</body></html>

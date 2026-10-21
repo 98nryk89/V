@@ -346,3 +346,7 @@ kamikan-bridge/を追加。PC版APIとは別のiOS UDP方式で、BlendShapesは
 公式生JSONから度差/位置差/瞬き/排他的A-I-E/自動笑顔へ変換。ARKitは母音ラベルを持たないので横伸びと顎開きで近似し、その制約を明示。形を平滑化すると複数の口素材を混ぜるためMouthFormは整数のまま、MouthOpenと姿勢だけ時間基準で平滑化する。瞬きと通常の表情切り替えは鮮明なまま。FaceFound=falseと通信停止は別の復帰時定数で正面・真顔へ戻す。Cは受信中のみ較正し、最後の古い顔では較正しない。
 ホットキーは同じ番号が60fpsで繰り返されるので毎回toggleせず命令として扱う。2は驚きON、3は真顔、4は自動へ戻す。Chrome側の数字1/2によるtoggleと0の真顔は残す。笑顔は自動、驚きの自動認識は新試験版でのみ無効。JSONで1〜8を再割当可能。旧版の表情設定は維持。
 43件の関連検証通過。5姿勢で旧版とWebGL描画のハッシュが一致し、元HTML3ファイルと画像/旧追跡/描画の113ファイルはハッシュ不変。試験版の表示も目視。実iPhoneから中継の受信は利用者確認済みだが、新HTMLとの実機の方向・感度・口判定と実カメラ/OBSはMacでの検証が必要。docs/iphone-tracking-test.mdを参照。旧owl_prince.htmlを開くだけで戻せる。
+
+## Codex: Webカメラ版をそのまま配布（2026-10-21）
+
+iPhone試験版の設定手順と混ざらないよう、既存owl_prince.htmlそのものをZIPに収録し、日本語の開始手順・表情操作・MacのOBS取り込み・負荷時の対処を添付。docs/webcam-user-guide.htmlとtools/package_webcam_distribution.pyが原本。顔認識依存は開始時にCDNから取得するので完全オフラインと説明しない。OBSの緑は#6fcf97、旧完成版の自動笑顔/驚きは初期ON。HTML・画像・動作は変更しない。

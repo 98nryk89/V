@@ -193,3 +193,7 @@ kamikan-bridge/は独立したNode.js 22以上のUDP→WebSocket中継。config.
 - 再出力はpython tools/export_iphone_test.pyのみ。完成HTML内の52パーツrigをそのまま複製する。モデルbuildや画像加工は不要。試験版JSONは再出力でも上書きしない。
 - 検証: 新旧追跡Node31件、中継9件、実UDP→中継→Chromiumと遅延カメラ/5姿勢の旧版描画完全一致3件、合計43件成功。元HTML/追跡/描画と既存画像113ファイルのハッシュ不変。表示画像/workspace/iphone-integration-check/iphone-test.pngを目視。手順はdocs/iphone-tracking-test.md。
 - 未完了優先順: 利用者Macで実iPhone→新HTMLの方向/位置感度/母音判定を確認し必要なら新しい設定だけ調整、実Webカメラ/OBSの確認。実iPhone→中継までの受信は利用者が確認済み。Claude担当physicsと_physicsには触らず、同じブランチへpushしない。
+
+## Webカメラ完成版の配布パッケージ（2026-10-21）
+
+配布用dist/lunaris_webcam_distribution.zipは、完成版dist/owl_prince.htmlをバイト変更せず収録したもの。Lunaris_Webcam/内にHTML、はじめに.txt、操作説明.html、VERSION.txtを同梱。受取側は解凍してChromeでHTMLを開きWebカメラ開始。iPhone/Node/npm/中継は不要、顔認識データ取得にネット接続が必要。再作成はpython tools/package_webcam_distribution.py。ユーザー向け説明原本はdocs/webcam-user-guide.html。MacのOBSはmacOSスクリーンキャプチャ、クロマキーは実装の緑#6fcf97を指定。旧Webカメラ完成版は自動笑顔/驚きが初期ON、Cキー較正ではなく「正面を較正」ボタン。iPhone試験版と混同しない。新規軽量化やモデル変更は行っていない。
