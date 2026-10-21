@@ -197,3 +197,7 @@ kamikan-bridge/は独立したNode.js 22以上のUDP→WebSocket中継。config.
 ## Webカメラ完成版の配布パッケージ（2026-10-21）
 
 配布用dist/lunaris_webcam_distribution.zipは、完成版dist/owl_prince.htmlをバイト変更せず収録したもの。Lunaris_Webcam/内にHTML、はじめに.txt、操作説明.html、VERSION.txtを同梱。受取側は解凍してChromeでHTMLを開きWebカメラ開始。iPhone/Node/npm/中継は不要、顔認識データ取得にネット接続が必要。再作成はpython tools/package_webcam_distribution.py。ユーザー向け説明原本はdocs/webcam-user-guide.html。MacのOBSはmacOSスクリーンキャプチャ、クロマキーは実装の緑#6fcf97を指定。旧Webカメラ完成版は自動笑顔/驚きが初期ON、Cキー較正ではなく「正面を較正」ボタン。iPhone試験版と混同しない。新規軽量化やモデル変更は行っていない。
+
+## 別キャラ用Codex共有キット（2026-10-21）
+
+dist/codex_character_creation_kit.zipを追加。docs/codex-character-kit/が指示書原本、tools/package_codex_character_kit.pyで再作成。初回/修正プロンプト、素材・依頼・検品・環境・引継ぎ書式を同梱。starterに共通Python/描画/追跡/プレビュー/追跡単体検証をそのまま収録し、元リポジトリ権限なしでも別キャラに着手できる。referenceの完成HTMLは旧版と同じ画素・コード。元キャラの専用画像・マスク・Git履歴は未同梱で、referenceの仕様JSONは読解用。initだけで完成しない点、キャラ別の切り抜き/頭部形状/素材が必要な点、Webカメラ標準とネット依存を明示。既存モデルと追跡・描画コードは変更しない。

@@ -350,3 +350,7 @@ kamikan-bridge/を追加。PC版APIとは別のiOS UDP方式で、BlendShapesは
 ## Codex: Webカメラ版をそのまま配布（2026-10-21）
 
 iPhone試験版の設定手順と混ざらないよう、既存owl_prince.htmlそのものをZIPに収録し、日本語の開始手順・表情操作・MacのOBS取り込み・負荷時の対処を添付。docs/webcam-user-guide.htmlとtools/package_webcam_distribution.pyが原本。顔認識依存は開始時にCDNから取得するので完全オフラインと説明しない。OBSの緑は#6fcf97、旧完成版の自動笑顔/驚きは初期ON。HTML・画像・動作は変更しない。
+
+## Codex: 友人向けの別キャラ制作キット（2026-10-21）
+
+指示書だけでは友人が元リポジトリを読めない場合に進められないため、共通制作ソースと完成HTML見本をZIPへ同梱。新キャラ用のinit/build/exportが使えるstarterと、読解専用のルナリス仕様JSONを区別する。元キャラのマスク・原本・全履歴は含まず、再ビルドできる完全な元プロジェクトと誤解させない。今回の依頼プロンプトを履歴上の古い仕様より優先させ、耳・眉の固定、髪の連続追従、排他的口形、画像検品、戻せる作業単位を明記。docs/codex-character-kit/参照。既存画像・HTML・ランタイムは無変更。
