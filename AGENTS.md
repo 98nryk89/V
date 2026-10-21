@@ -183,3 +183,13 @@ python tools/fidelity.py projects/owl_prince/out samples/ref12.png /tmp/err.png 
 ## iPhoneトラッキング中継の追加（2026-10-20）
 
 kamikan-bridge/は独立したNode.js 22以上のUDP→WebSocket中継。config.jsonのiphoneIpとhtmlDirを設定し、初回npm ci、以後npm start。UDP 21412へ毎秒要求、UDP 11125受信、HTTP/WSはlocalhost:8765。公式のBlendShapes配列と未知フィールドを原文のまま転送する。npm testで中継9件を検証。既存HTML・モデル・追跡コードは変更しておらず、HTML側のiPhone接続はまだ未実装。README.mdを参照。
+
+## iPhone入力を別HTMLで試験（2026-10-21、最新）
+
+- 完成HTML3ファイルと全画像・rig・runtime.js・tracking.jsは変更禁止のまま。新しいdist/owl_prince_iphone_test.htmlだけに入力を追加。旧版owl_prince.htmlを開くだけで即復帰できる。専用ブランチcodex/iphone-tracking-test、単一目的コミット。
+- viewer/tracking-input.jsがiPhone/既存Webカメラを抽象化。?source=iphoneが初期値、?source=webcamは開始時にだけdist/tracking_webcam_legacy.jsを取得しMediaPipeを起動。iPhone時はカメラ処理・外部顔認識依存を取得しない。
+- ws://localhost:8765の公式生JSONを使用。Cで正面/真顔/顎開きの基準を記録、時間基準の平滑化は設定可。FaceFound=falseまたは750ms無受信で滑らかに正面・真顔へ。WebSocketは毎秒再接続。
+- 自動笑顔、驚きはホットキー2。iOSホットキー1〜8の割当はdist/owl_prince_tracking_config.json。既存の数字1/2/0・表情ボタンは維持。A/I/Eは近似判定し排他、眉・髪・物理は変更しない。独立眼球回転など未対応の動きは増やさない。
+- 再出力はpython tools/export_iphone_test.pyのみ。完成HTML内の52パーツrigをそのまま複製する。モデルbuildや画像加工は不要。試験版JSONは再出力でも上書きしない。
+- 検証: 新旧追跡Node31件、中継9件、実UDP→中継→Chromiumと遅延カメラ/5姿勢の旧版描画完全一致3件、合計43件成功。元HTML/追跡/描画と既存画像113ファイルのハッシュ不変。表示画像/workspace/iphone-integration-check/iphone-test.pngを目視。手順はdocs/iphone-tracking-test.md。
+- 未完了優先順: 利用者Macで実iPhone→新HTMLの方向/位置感度/母音判定を確認し必要なら新しい設定だけ調整、実Webカメラ/OBSの確認。実iPhone→中継までの受信は利用者が確認済み。Claude担当physicsと_physicsには触らず、同じブランチへpushしない。

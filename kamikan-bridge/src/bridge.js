@@ -82,7 +82,7 @@ async function serveFolder(root, req, res) {
         .filter(e => e.isFile() && /\.html$/i.test(e.name)).map(e => e.name).sort();
       const links = names.map(name => `<li><a href="/${encodeURIComponent(name)}">${escapeHtml(name)}</a></li>`).join('');
       const body = '<!doctype html><meta charset="utf-8"><title>KamikanBridge</title>'
-        + '<h1>KamikanBridge</h1><p>既存HTMLを配信中です。モデル側のiPhone接続はまだ追加していません。</p>'
+        + '<h1>KamikanBridge</h1><p>表示するHTMLを選んでください。iPhone連携の試験版は owl_prince_iphone_test.html です。</p>'
         + (links ? `<ul>${links}</ul>` : '<p>このフォルダにはHTMLファイルがありません。config.json の htmlDir を確認してください。</p>');
       res.writeHead(200, { 'Content-Type': mimeTypes['.html'], 'Cache-Control': 'no-store' });
       res.end(req.method === 'HEAD' ? undefined : body);

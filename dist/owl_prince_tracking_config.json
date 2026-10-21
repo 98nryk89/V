@@ -1,0 +1,23 @@
+{
+  "wsUrl": "ws://localhost:8765",
+  "smoothingMs": 80,
+  "lostReturnMs": 500,
+  "staleMs": 750,
+  "gainX": 1,
+  "gainY": 1,
+  "gainMove": 1,
+  "positionScale": 10,
+  "invX": false,
+  "invY": false,
+  "invZ": false,
+  "hotkeys": {
+    "1": "smile",
+    "2": "surprise",
+    "3": "neutral",
+    "4": "auto",
+    "5": "none",
+    "6": "none",
+    "7": "none",
+    "8": "none"
+  }
+}

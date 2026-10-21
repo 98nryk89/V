@@ -339,3 +339,10 @@ ribbon/orn_chainの大きい領域が銀髪を取り、飾りを振ると肩の�
 ## Codex: iOS VTube Studioの独立中継（2026-10-20）
 
 kamikan-bridge/を追加。PC版APIとは別のiOS UDP方式で、BlendShapesは{k,v}配列、公式名はEyeBlinkLeft/JawOpen。未知フィールドやFaceFound=falseも削除せず転送し、通信断でも毎秒の要求を続ける。既存HTMLは読み取り専用で配信し、モデル側のWebSocket接続や角度・口・表情への変換はまだ追加しない。手順と制約はkamikan-bridge/README.md。
+
+## Codex: 完成版を保護したiPhone連携試験（2026-10-21）
+
+既存HTMLを改変すると試験中の旧方式へ戻りにくいため、viewer/iphone-test.htmlと専用exportを追加しdist/owl_prince_iphone_test.htmlへ分離。完成HTMLの埋め込みrigを完全複製し、画像・メッシュ・髪の固定・眉の肌との固定・耳・襟・既存物理には触らない。Webカメラ用処理は別JSへそのまま複製し、Webカメラを選んで開始したときのみ取得。iPhone入力ではMediaPipeやカメラを起動しない。
+公式生JSONから度差/位置差/瞬き/排他的A-I-E/自動笑顔へ変換。ARKitは母音ラベルを持たないので横伸びと顎開きで近似し、その制約を明示。形を平滑化すると複数の口素材を混ぜるためMouthFormは整数のまま、MouthOpenと姿勢だけ時間基準で平滑化する。瞬きと通常の表情切り替えは鮮明なまま。FaceFound=falseと通信停止は別の復帰時定数で正面・真顔へ戻す。Cは受信中のみ較正し、最後の古い顔では較正しない。
+ホットキーは同じ番号が60fpsで繰り返されるので毎回toggleせず命令として扱う。2は驚きON、3は真顔、4は自動へ戻す。Chrome側の数字1/2によるtoggleと0の真顔は残す。笑顔は自動、驚きの自動認識は新試験版でのみ無効。JSONで1〜8を再割当可能。旧版の表情設定は維持。
+43件の関連検証通過。5姿勢で旧版とWebGL描画のハッシュが一致し、元HTML3ファイルと画像/旧追跡/描画の113ファイルはハッシュ不変。試験版の表示も目視。実iPhoneから中継の受信は利用者確認済みだが、新HTMLとの実機の方向・感度・口判定と実カメラ/OBSはMacでの検証が必要。docs/iphone-tracking-test.mdを参照。旧owl_prince.htmlを開くだけで戻せる。

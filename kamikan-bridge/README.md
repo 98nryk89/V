@@ -2,7 +2,7 @@
 
 iPhoneへ1秒ごとに追跡データを要求し、UDPで受けたJSONをローカルWebSocketへ転送するNode.jsサーバーです。同じサーバーから既存HTMLも配信します。
 
-**この段階では既存HTML・モデルの処理は変更していません。HTMLを開くだけではiPhone追従へ切り替わりません。今回できるのはデータの受信・中継とHTML配信までです。**
+**既存HTMLは変更せず、別ファイルのiPhone連携試験版を追加しました。** 最新の使い方は[試験版の手順](../docs/iphone-tracking-test.md)を参照してください。中継を起動したまま `http://localhost:8765/owl_prince_iphone_test.html` をChromeで開くとiPhoneへ追従します。従来版 `owl_prince.html` は以前のWebカメラ方式のままです。
 
 ## 1．初回だけの準備（Mac）
 
