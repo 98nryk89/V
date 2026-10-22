@@ -1,0 +1,146 @@
+[
+  {
+    "input": "right",
+    "expected": [
+      3.65,
+      0,
+      0
+    ],
+    "target": {
+      "AngleX": 3.6499999999999972,
+      "AngleY": -0.0,
+      "AngleZ": 0
+    },
+    "actual": {
+      "AngleX": 3.6499999999999972,
+      "AngleY": -0.0,
+      "AngleZ": 0
+    }
+  },
+  {
+    "input": "left",
+    "expected": [
+      -3.65,
+      0,
+      0
+    ],
+    "target": {
+      "AngleX": -3.650000000000006,
+      "AngleY": -0.0,
+      "AngleZ": 0
+    },
+    "actual": {
+      "AngleX": -3.650000000000006,
+      "AngleY": -0.0,
+      "AngleZ": 0
+    }
+  },
+  {
+    "input": "down",
+    "expected": [
+      0,
+      -3.65,
+      0
+    ],
+    "target": {
+      "AngleX": 0,
+      "AngleY": -3.6500000000000017,
+      "AngleZ": 0
+    },
+    "actual": {
+      "AngleX": 0,
+      "AngleY": -3.6500000000000017,
+      "AngleZ": 0
+    }
+  },
+  {
+    "input": "up",
+    "expected": [
+      0,
+      3.65,
+      0
+    ],
+    "target": {
+      "AngleX": 0,
+      "AngleY": 3.6500000000000035,
+      "AngleZ": 0
+    },
+    "actual": {
+      "AngleX": 0,
+      "AngleY": 3.6500000000000035,
+      "AngleZ": 0
+    }
+  },
+  {
+    "input": "tilt",
+    "expected": [
+      0,
+      0,
+      3.65
+    ],
+    "target": {
+      "AngleX": 0,
+      "AngleY": -0.0,
+      "AngleZ": 3.6500000000000017
+    },
+    "actual": {
+      "AngleX": 0,
+      "AngleY": -0.0,
+      "AngleZ": 3.6500000000000017
+    }
+  },
+  {
+    "input": "max_sideways",
+    "expected": [
+      5,
+      0,
+      0
+    ],
+    "target": {
+      "AngleX": 5,
+      "AngleY": -0.0,
+      "AngleZ": 0
+    },
+    "actual": {
+      "AngleX": 5,
+      "AngleY": -0.0,
+      "AngleZ": 0
+    }
+  },
+  {
+    "input": "max_tilt",
+    "expected": [
+      0,
+      0,
+      5
+    ],
+    "target": {
+      "AngleX": 0,
+      "AngleY": -0.0,
+      "AngleZ": 5
+    },
+    "actual": {
+      "AngleX": 0,
+      "AngleY": -0.0,
+      "AngleZ": 5
+    }
+  },
+  {
+    "input": "front",
+    "expected": [
+      0,
+      0,
+      0
+    ],
+    "target": {
+      "AngleX": 0,
+      "AngleY": -0.0,
+      "AngleZ": 0
+    },
+    "actual": {
+      "AngleX": 0,
+      "AngleY": -0.0,
+      "AngleZ": 0
+    }
+  }
+]

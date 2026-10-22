@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ルナリス iPhone動作設定版 v3</title>
+<style>
+:root{--bg:#1d1b24;--fg:#e8e6f0;--mut:#9b97ad;--ac:#8f7dff}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font:14px/1.4 system-ui,"Hiragino Sans","Noto Sans JP",sans-serif}
+#app{display:grid;grid-template-columns:1fr 320px;height:100%}
+#stage{position:relative;background:var(--stagebg,#2b2836)}
+canvas{width:100%;height:100%;display:block}
+#panel{overflow:auto;padding:14px;border-left:1px solid #3a3648;background:#17151d}
+h2{font-size:13px;margin:14px 0 6px;color:var(--mut);letter-spacing:.04em}
+.row{display:grid;grid-template-columns:110px 1fr 38px;gap:6px;align-items:center;margin:3px 0}
+.row label{font-size:12px;color:var(--mut)}.row output{font-size:11px;text-align:right}
+input[type=range]{width:100%;accent-color:var(--ac)}
+button,.chk{background:#2a2738;color:var(--fg);border:1px solid #3d3950;border-radius:6px;padding:5px 9px;margin:2px;font-size:12px;cursor:pointer}
+button:hover{border-color:var(--ac)}
+.chk{display:inline-flex;gap:5px;align-items:center}
+#msg{position:absolute;left:10px;bottom:8px;font-size:12px;color:var(--mut)}
+@media(max-width:760px){#app{grid-template-columns:1fr;grid-template-rows:60% 40%}#panel{border-left:0;border-top:1px solid #3a3648}}
+</style></head><body>
+<div id="app"><div id="stage"><canvas id="c"></canvas><div id="msg">loading…</div></div>
+<div id="panel"><h2>iPhone動作設定版 v3</h2><p>初回は正面・下向き・右向き・首のかしげを順に記録します。</p>
+<h2>トラッキング入力</h2>
+<label>入力 <select id="source"><option value="iphone">iPhone（VTube Studio）</option><option value="webcam">Webカメラ（MediaPipe）</option></select></label>
+<div><button id="start">開始</button><button id="stop">停止</button><button id="calib">正面・真顔を記録 [C]</button></div>
+<p id="status" role="status">準備中</p><p id="notice"></p>
+<section id="motionSetup" style="border:1px solid #8f7dff;padding:10px;border-radius:6px">
+<strong>動きの向きを合わせる</strong>
+<p id="motionInstruction" role="status"></p>
+<button id="captureMotion">正面を記録</button><button id="redoMotion" hidden>動きの向きを合わせ直す</button>
+<p id="motionError" role="status"></p>
+<p style="font-size:12px">iPhoneを固定し、各姿勢で0.3秒ほど静止して記録します。記録はスペースキーでもできます。初回だけ設定し、このブラウザに保存します。</p>
+</section>
+<p id="directionValues" style="font-size:12px"></p>
+<div id="connectionHelp" style="padding:8px;border:1px solid #655578;border-radius:6px;margin:8px 0">
+<p id="connectionSummary" style="font-size:12px">接続状態を確認します。</p>
+<p><a id="openRelay" href="http://localhost:8765/" style="color:#c7b2ff">接続画面から開き直す</a></p>
+<button id="retryConnection">接続をやり直す</button>
+</div>
+<label class="chk"><input type="checkbox" id="invX">左右反転</label><label class="chk"><input type="checkbox" id="invY">上下反転</label><label class="chk"><input type="checkbox" id="invZ">傾き反転</label>
+<div id="settings"></div>
+<p id="calibrationStatus" role="status">iPhoneを固定し、正面で0.3秒ほど静止してCキーで基準を記録してください。</p>
+<details><summary>iPhone入力の確認</summary><pre id="poseDebug" style="white-space:pre-wrap;font-size:11px"></pre><button id="copyPose">診断値をコピー</button></details>
+<video id="vid" playsinline muted style="display:none;width:100%;transform:scaleX(-1)"></video>
+<h2>表情</h2><button id="smile">笑顔 [1]</button><button id="surprise">驚き [2]</button><button id="neutral">真顔 [0]</button><button id="auto">自動判定に戻す</button>
+<label class="chk"><input type="checkbox" id="autoSmile" checked>笑顔を自動判定</label><p>驚きは手動のみ。口は「あ・い・え」の一つを自動選択します。</p>
+<h2>表示</h2><button id="bg">背景切替</button><button id="reset">リセット</button>
+<label class="chk"><input type="checkbox" id="owlBlink" checked>フクロウの瞬き</label><label class="chk"><input type="checkbox" id="breath" checked>呼吸</label><label class="chk"><input type="checkbox" id="physics" checked>物理</label>
+<h2>パラメータ（追跡停止中に手動調整）</h2><div id="params"></div>
+</div></div>
+<script src="runtime.js"></script>
+<script src="iphone-motion.js"></script>
+<script src="tracking-input-v3.js"></script>
+<script>
+(async()=>{
+ const $=id=>document.getElementById(id),q=new URLSearchParams(location.search);
+ const source=q.get('source')||'iphone';
+ if(!['iphone','webcam'].includes(source)){$('status').textContent='source は iphone / webcam を指定してください';return}
+ $('source').value=source;
+ $('source').onchange=()=>{q.set('source',$('source').value);location.search=q.toString()};
+ const openingPlan=source==='iphone'?L2DInput.connectionPlan(location.href):null;
+ if(openingPlan&&!openingPlan.allowed){$('status').textContent=openingPlan.error;$('notice').textContent='HTMLのダブルクリックでは中継へ接続できません。下のリンクから接続画面を開いてください。';$('openRelay').href=openingPlan.setupUrl}
+ $('connectionHelp').hidden=source!=='iphone';
+ let config={};
+ try{if(source==='iphone'&&!openingPlan.allowed)throw Error('unsupported opening');const r=await fetch('./owl_prince_tracking_config_v3.json',{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);config=await r.json()}
+ catch(e){if(!openingPlan||openingPlan.allowed)$('notice').textContent='設定ファイルを取得できないため初期値で起動します。中継のHTTPから開いてください。'}
+ const motionStorageKey='lunaris.iphone.motion.v3';
+ if(source==='iphone')try{config.motionProfile=L2DMotion.validate(JSON.parse(localStorage.getItem(motionStorageKey)))}catch{/* optional storage; never reuse v2 guesses */}
+ $('motionSetup').hidden=source!=='iphone';
+ const base=window.__RIG__?'':(q.get('model')||'../projects/owl_prince/out')+'/';
+ const rig=window.__RIG__||await(await fetch(base+'rig.json')).json();
+ const m=window.M=new L2D.Model($('c'),rig,base,{view:rig.view,preserve:true});await m.load();
+ m.auto.blink=false;m.auto.idle=false;
+ const c=window.trackingController=new L2DInput.Controller(m,config);
+ const status=t=>$('status').textContent=t;
+ const input=window.trackingInput=source==='iphone'?new L2DInput.IphoneInput(c,status):new L2DInput.WebcamInput(c,$('vid'),status,window.__RIG__?'./tracking_webcam_legacy.js':'./tracking.js');
+ const syncOptions=()=>{if(input.mapper)input.mapper.opts=c.opts;if(input.tracker)Object.assign(input.tracker.opts,c.opts,{autoSurprise:false})};
+ for(const id of ['invX','invY','invZ']){$(id).checked=!!c.opts[id];$(id).onchange=()=>{c.opts[id]=$(id).checked;syncOptions()}}
+ for(const [key,label,min,max,step] of [['smoothingMs','滑らかさ (ms)',0,500,10],['gainX','左右の感度',.1,4,.1],['gainY','上下の感度',.1,4,.1],['gainMove','移動の感度',.1,3,.1]]){
+  const row=document.createElement('div');row.className='row';row.innerHTML=`<label for="${key}">${label}</label><input id="${key}" type="range" min="${min}" max="${max}" step="${step}"><output></output>`;
+  const slider=row.querySelector('input'),output=row.querySelector('output');slider.value=c.opts[key];output.value=c.opts[key];
+  slider.oninput=()=>{c.opts[key]=+slider.value;output.value=slider.value;syncOptions()};$('settings').append(row);
+ }
+ if(source==='iphone')for(const [key,label,min,max,step] of [['rotationDeadzone','角度の揺れ除外',0,2,.05],['positionDeadzone','位置の揺れ除外',0,1,.02]]){
+  const row=document.createElement('div');row.className='row';row.innerHTML=`<label for="${key}">${label}</label><input id="${key}" type="range" min="${min}" max="${max}" step="${step}"><output></output>`;
+  const slider=row.querySelector('input'),output=row.querySelector('output');slider.value=c.opts[key];output.value=c.opts[key];
+  slider.oninput=()=>{c.opts[key]=+slider.value;output.value=slider.value;syncOptions()};$('settings').append(row);
+ }
+ const motionInstructions={
+  front:['1 / 4：正面を向き、口を閉じて静止してください。','正面を記録'],
+  down:['2 / 4：首をかしげず、顔を軽く下へ向けて静止してください。','下向きを記録'],
+  right:['3 / 4：一度正面へ戻り、ご自身の右に顔を向けて静止してください。首はかしげません。','右向きを記録'],
+  tilt:['4 / 4：一度正面へ戻り、正面を向いたまま頭を右肩の方へかしげて静止してください。','右へのかしげを記録']};
+ function updateMotionUI(){
+  if(source!=='iphone')return;
+  const stage=input.mapper.motion.stage,ready=stage==='ready';
+  $('captureMotion').hidden=ready;$('redoMotion').hidden=!ready;$('calib').disabled=!ready;
+  $('motionInstruction').textContent=ready?'設定済みです。左右・上下・首のかしげを別々に動かして確認できます。正面を合わせ直すときはCキー。':motionInstructions[stage][0];
+  if(!ready)$('captureMotion').textContent=motionInstructions[stage][1];
+ }
+ $('redoMotion').onclick=()=>{input.beginMotion();$('motionError').textContent='設定中は顔の回転と位置移動を止めています。';updateMotionUI()};
+ $('captureMotion').onclick=()=>{
+  const result=input.captureMotion();
+  if(!result.ok){$('motionError').textContent=result.error;return}
+  $('motionError').textContent='';
+  if(result.stage==='ready'){
+   for(const id of ['invX','invY','invZ'])$(id).checked=false;
+   try{localStorage.setItem(motionStorageKey,JSON.stringify(result.profile));$('motionError').textContent='動きの向きを保存しました。正面に戻って動きを確認してください。'}catch{$('motionError').textContent='向きを設定しました。このブラウザでは保存できないため次回は再設定してください。'}
+  }
+  updateMotionUI();
+ };
+ updateMotionUI();
+ const calibrate=()=>{$('calibrationStatus').textContent=source==='iphone'&&input.mapper.motion.stage!=='ready'?'先に上の案内に沿って4つの姿勢を記録してください。':input.calibrate()?'正面・真顔を記録しました。':'顔を映して正面で0.3秒ほど静止してから、もう一度Cを押してください。'};
+ let relayStatus=null;
+ const poseSnapshot=()=>({version:'iphone-motion-v3',source,connection:input.getDiagnostics?.(),relay:relayStatus,raw:input.mapper?.latest,neutral:input.mapper?.neutral,calibrationSamples:input.mapper?.calibrationSamples,params:{AngleX:m.params.AngleX,AngleY:m.params.AngleY,AngleZ:m.params.AngleZ,BodyX:m.params.BodyX,BodyY:m.params.BodyY}});
+ $('copyPose').onclick=async()=>{try{await navigator.clipboard.writeText(JSON.stringify(poseSnapshot(),null,2));$('calibrationStatus').textContent='診断値をコピーしました（画像は含みません）。'}catch{$('calibrationStatus').textContent='コピーできません。「iPhone入力の確認」の値を伝えてください。'}};
+ $('calib').onclick=calibrate;
+ async function start(){
+  $('start').disabled=true;
+  try{await input.start()}catch(e){status('開始できません: '+e.message);console.error(e)}finally{$('start').disabled=input.phase==='blocked'}
+ }
+ $('start').onclick=start;$('stop').onclick=()=>input.stop();
+ $('retryConnection').onclick=()=>{if(input.phase==='blocked'){location.href=input.plan.setupUrl;return}input.stop();start()};
+ async function inspectRelay(){
+  if(source!=='iphone'||input.phase==='blocked')return;
+  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),2000);
+  try{const r=await fetch('/api/status',{cache:'no-store',signal:controller.signal});if(!r.ok){relayStatus={available:false,message:'この中継は状態APIに未対応です。'};return}
+   const data=await r.json();relayStatus={available:true,appId:data.appId,fps:data.fps,faceFound:data.faceFound,lastFrameAgeMs:data.lastFrameAgeMs};$('openRelay').href=location.origin+'/';
+  }catch(e){relayStatus={available:false,message:'中継の状態を取得できません: '+e.message}}finally{clearTimeout(timeout)}
+ }
+ const relayTimer=setInterval(()=>{if(input.phase!=='tracking')inspectRelay()},2000);
+ for(const action of ['smile','surprise','neutral','auto'])$(action).onclick=()=>{c.action(action,true);$('autoSmile').checked=c.autoSmile};
+ $('autoSmile').onchange=()=>{if($('autoSmile').checked)c.action('auto');else{c.action('neutral')}};
+ window.addEventListener('keydown',e=>{
+  if(e.repeat||e.isComposing||e.ctrlKey||e.metaKey||e.altKey||e.target?.isContentEditable||e.target?.closest?.('textarea,select,input:not([type=range]):not([type=checkbox])'))return;
+  if(e.code==='Space'&&source==='iphone'&&input.mapper.motion.stage!=='ready'){e.preventDefault();$('captureMotion').click();return}
+  if(e.key.toLowerCase()==='c'){e.preventDefault();calibrate()}
+  const action={'0':'neutral','1':'smile','2':'surprise'}[e.key];if(action){e.preventDefault();c.action(action,true)}
+ });
+ const bgs=['#2b2836','#fff','#101010','#00ff00'];let bi=0;
+ $('bg').onclick=()=>$('stage').style.setProperty('--stagebg',bgs[bi=(bi+1)%bgs.length]);
+ for(const key of ['owlBlink','breath','physics'])$(key).onchange=()=>m.auto[key]=$(key).checked;
+ $('reset').onclick=()=>{m.reset();m.auto.blink=false;m.auto.idle=false;c.recenter();if(input.mapper){input.mapper.neutral=null;input.mapper.resetTemporal();if(input.mapper.motion.stage!=='ready')input.beginMotion();updateMotionUI()}if(input.tracker)input.tracker.calibrate()};
+ for(const p of rig.params){if(p.hidden)continue;const row=document.createElement('div');row.className='row';
+  row.innerHTML=`<label>${p.label||p.id}</label><input type="range" min="${p.min}" max="${p.max}" step="${p.step||(p.max-p.min)/200}" value="${p.default}"><output>${p.default}</output>`;
+  const slider=row.querySelector('input'),o=row.querySelector('output');
+  slider.oninput=()=>{if(p.id==='Smile'||p.id==='Surprise')c.action(p.id==='Smile'?(+slider.value?'smile':'neutral'):(+slider.value?'surprise':'neutral'));else{c.values[p.id]=c.target[p.id]=+slider.value;m.setParam(p.id,+slider.value)}};
+  p._s=slider;p._o=o;$('params').append(row);
+ }
+ let lastUI=0;
+ function frame(time){
+  if(input.running)c.tick(time);
+  if(time-lastUI>100){lastUI=time;$('autoSmile').checked=c.autoSmile;
+   $('directionValues').textContent=`顔の向き：左右 ${m.params.AngleX.toFixed(2)}° ／ 上下 ${m.params.AngleY.toFixed(2)}° ／ 傾き ${m.params.AngleZ.toFixed(2)}°`;
+   if(source==='iphone'){const d=input.getDiagnostics(),state={0:'接続待ち',1:'開通',2:'切断処理中',3:'切断'}[d.readyState]||'未接続';$('connectionSummary').textContent=`画面→中継: ${state} ／ 受信 ${d.receivedMessages}件・反映 ${d.appliedFrames}件・処理エラー ${d.receiveErrors}件`+(relayStatus?.available?` ／ 中継の受信 ${Number(relayStatus.fps||0).toFixed(1)}fps・顔 ${relayStatus.faceFound===null?'未検出':relayStatus.faceFound}`:'')}
+   if($('poseDebug').parentElement.open)$('poseDebug').textContent=JSON.stringify(poseSnapshot(),null,2);
+   for(const id of ['smile','surprise'])$(id).setAttribute('aria-pressed',m.params[id==='smile'?'Smile':'Surprise']>.5?'true':'false');
+   for(const p of rig.params)if(p._s&&document.activeElement!==p._s){p._s.value=m.params[p.id];p._o.value=(+m.params[p.id]).toFixed(2)}
+   $('msg').textContent=source+' · '+(input.running?(c.found&&time-c.lastFrame<=c.opts.staleMs?'顔検出中':'顔データ待ち / 正面へ復帰'):'停止中');
+  }requestAnimationFrame(frame);
+ }
+ m.start();requestAnimationFrame(frame);window.READY=true;
+ window.addEventListener('pagehide',()=>{clearInterval(relayTimer);input.stop()});
+ if(source==='iphone'){await start();inspectRelay()}else status('開始を押すとWebカメラを起動します');
+})().catch(e=>{document.getElementById('status').textContent='起動失敗: '+e.message;console.error(e)});
+</script></body></html>
