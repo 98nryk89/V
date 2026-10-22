@@ -1,0 +1,29 @@
+[
+  {
+    "shape": "a",
+    "jaw": 0.04,
+    "stretch": 0,
+    "open": 0.08540553790726718,
+    "active": [
+      "mouth_vA"
+    ]
+  },
+  {
+    "shape": "i",
+    "jaw": 0.02,
+    "stretch": 0.08,
+    "open": 0.15553369934343136,
+    "active": [
+      "mouth_vI"
+    ]
+  },
+  {
+    "shape": "e",
+    "jaw": 0.1,
+    "stretch": 0.05,
+    "open": 0.2563126498126974,
+    "active": [
+      "mouth_vE"
+    ]
+  }
+]
