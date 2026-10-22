@@ -1,0 +1,19 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MOTION-4｜フクロウの王子 iPhone接続</title><style>
+body{max-width:760px;margin:36px auto;padding:0 20px;background:#191620;color:#f4f0fa;font:16px/1.7 system-ui,sans-serif}h1{font-size:26px}section{background:#262130;border:1px solid #494052;border-radius:12px;padding:20px;margin:18px 0}input,button,a.button{font:inherit;border-radius:7px;padding:10px;border:1px solid #8b77ab}input{width:min(100%,280px);background:#15121b;color:white}button,a.button{background:#7358a5;color:white;cursor:pointer;text-decoration:none;display:inline-block;margin:8px 8px 0 0}small{display:block;color:#c6b9d8}#message{white-space:pre-wrap}#state{font-weight:bold;color:#c7b2ff}button.secondary{background:#40384b}dt{font-weight:bold}dd{margin-left:0;margin-bottom:12px}
+</style></head><body><h1>フクロウの王子｜MOTION-4</h1><p>ターミナルへの入力・設定ファイルの編集は不要です。</p><p id="versionCheck">モデルの版を確認中です。</p>
+<section><h2>1．iPhoneを準備</h2><ol><li>MacとiPhoneを同じWi-Fiにつなぎます。</li><li>iPhoneでVTube Studioを開き、顔トラッキングを開始します。</li><li>VTube Studioの設定で「3rd Party PC Clients」をONにし、UDPポートを<strong>21412</strong>にします。</li></ol><small>iPhoneはVTube Studioを前面にしたまま使います。ローカルネットワークの許可が出たら許可してください。</small></section>
+<section><h2>2．iPhoneへ接続</h2><form id="connection"><label for="ip">iPhoneのIPアドレス</label><br><input id="ip" name="iphoneIp" placeholder="192.168.1.100" autocomplete="off" inputmode="decimal" required><br><small>iPhoneの「設定 → Wi-Fi → 接続中の ⓘ → IPアドレス」で確認できます。MacのIPではありません。</small><button id="save" type="submit">保存して接続</button></form><p id="message" role="status"></p><p id="state">接続状態を確認中…</p><small id="stats"></small></section>
+<section><h2>3．モデルを開く</h2><a id="model" class="button" href="/owl_prince_iphone_motion_v4.html?source=iphone" target="_blank" rel="noopener">MOTION-4のモデル画面を開く</a><p>初回はモデル画面の案内で<strong>正面→下向き→右向き→右へのかしげ</strong>を順番に記録します。設定が終わるまで顔の回転は固定されています。設定済みならCで正面だけ記録できます。</p><p>笑顔は自動、驚きはiPhoneのホットキー2です。モデル画面のキー1/2/0でも表情操作できます。</p><small>OBSではモデルのChrome画面を取り込んでください。</small></section>
+<section><h2>終了・困ったとき</h2><p>受信しない場合は、同じWi-Fi、iPhoneのIP、VTube Studioの送信設定を確認してください。以前の中継は停止しておきます。</p><button class="secondary" id="stop">中継を終了する</button><p><small>モデル画面も閉じてください。設定は次回も残ります。中継の起動中は、自動で開いたターミナルを閉じないでください。</small></p></section>
+<script>
+const $=id=>document.getElementById(id);let timer,loaded=false;
+async function poll(){try{const r=await fetch('/api/status',{cache:'no-store'});if(!r.ok)throw Error();const s=await r.json();if(!loaded){$('ip').value=s.iphoneIp;loaded=true;if(s.warning)$('message').textContent=s.warning}
+ $('versionCheck').textContent=`起動モデル：${s.modelVersion} ／ フォルダ：${s.folderName} ／ 識別 ${s.modelSha256.slice(0,12)}`;
+ $('state').textContent=!s.iphoneIp?'iPhoneのIPを入力してください':s.lastFrameAgeMs===null||s.lastFrameAgeMs>2000?'受信待ち・自動で再要求しています':s.faceFound===true?'接続済み・顔を検出しています':'接続済み・顔を映してください';
+ $('stats').textContent=`受信 ${s.fps.toFixed(1)} fps ／ FaceFound: ${s.faceFound===null?'未受信':s.faceFound} ／ 瞬きL: ${s.eyeBlinkLeft} ／ 口: ${s.jawOpen}`;
+ }catch{$('state').textContent='中継は停止中です。「起動.command」を開き直してください。'}}
+$('connection').onsubmit=async e=>{e.preventDefault();$('save').disabled=true;try{const r=await fetch('/api/connection',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({iphoneIp:$('ip').value})});const data=await r.json();if(!r.ok)throw Error(data.error);$('message').textContent='設定を保存しました。VTube Studioからのデータを待っています。';await poll()}catch(e){$('message').textContent=e.message}finally{$('save').disabled=false}};
+$('stop').onclick=async()=>{try{const r=await fetch('/api/stop',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});if(!r.ok)throw Error();clearInterval(timer);$('state').textContent='終了しました。モデル画面も閉じてください。';$('stop').disabled=true}catch{$('message').textContent='すでに終了している場合は、そのまま画面を閉じてください。'}};
+poll();timer=setInterval(poll,1000);
+</script></body></html>
