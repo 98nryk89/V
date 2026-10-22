@@ -210,3 +210,11 @@ dist/codex_character_creation_kit.zipを追加。docs/codex-character-kit/が指
 - 前回のdist/owl_prince_iphone_test.htmlをそのまま複製。完成版3HTML・画像・viewer/runtime.js/tracking.js/tracking-input.jsは変更しない。自動笑顔、驚きホットキー2、C較正を維持。OBSの背景色はiPhone試験版の#00ff00。
 - 再出力はpython tools/package_iphone_mac.py。node_modules/wsがない場合のみ制作者がkamikan-bridgeでnpm ci。新旧中継14件、追跡31件、旧ブラウザ3件、解凍ZIP→GUI保存→模擬iPhone→実モデル→終了1件、合計49件成功。抽出した実行ファイルでもスペースを含むパスから起動、二重起動時再利用、API終了・正常終了を確認。ZIPの実行権限と全ファイルハッシュを照合。画像は/workspace/iphone-portable-check/。
 - 今回はLinuxで起動ファイルとChromiumを検証。実Macでのダブルクリック許可、実iPhoneからの入力、OBS録画は利用者が次に確認。既存中継が残っていれば先にControl+Cで終了し、ポート競合を避ける。Node内蔵・iPhone自動検出・新規軽量化・透明OBS専用画面は未実装。
+
+## iPhoneの回転・正面安定化v2（2026-10-22、最新）
+
+- 利用者の実機確認で下向きが回転しない/正面付近がずれると判明。公式受信例のUnity Euler(-Rotation.y,-Rotation.x,Rotation.z)を確認し、旧版で左右/上下軸を逆に解釈していたことを特定。新V2はAngleX=-Rotation.x差、AngleY=Rotation.y差、AngleZ=Rotation.z差。旧版の入力表の軸説明は既知の誤りとして扱う。
+- sourceはviewer/tracking-input-v2.js / iphone-v2.html、新出力はdist/owl_prince_iphone_v2.htmlとtracking_config_v2。位置倍率の初期値10→.2、微小除外は位置.1/角度.35度。Cは約.3秒の安定した複数フレームの中央値、記録成功を表示。静止基準を自動で動かす方式にはしない。
+- 配布はdist/lunaris_iphone_pose_v2_update.zip。実行ファイルなし。現在のMacセットを複製して旧版保管後、html内のモデルHTMLと新設定の2ファイルだけを交換する。既に許可済みの起動.command・中継・Node・旧設定を取り替えない。再読み込み後Cで合わせる。
+- 旧Webカメラ/旧iPhoneの全HTML・入力コード・旧ZIP・画像・中継は変更しない。新入力17件＋旧入力31件、旧配布ZIPへ2ファイル更新した実経路のブラウザ2件、計50件通過。下向きのみ/左右のみ/正面復帰/微小ノイズ/表情を検査し、5姿勢で旧描画とハッシュ一致。画像は/workspace/iphone-pose-v2-check/で目視。
+- docs/iphone-pose-v2.mdを参照。再生成はtools/export_iphone_pose_v2.py→tools/package_iphone_pose_v2_update.py。実iPhoneでなお大きくずれるかの確認は次。生入力のドリフトやiPhone自身の移動まで全て消えたとは主張せず、必要なら画面の診断値コピーで正面のraw/neutral/paramsを確認する。

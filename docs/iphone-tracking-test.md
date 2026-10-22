@@ -1,5 +1,7 @@
 # iPhone連携・別ファイルの試験版
 
+**2026-10-22追記：** 実機確認で回転軸と位置倍率の問題が判明したため、[回転・正面安定化v2](iphone-pose-v2.md)を別ファイルで追加しました。以下は比較用の旧版の説明です。旧版のRotation.x/yの軸解釈は誤りで、現在はxが左右・yが上下として変換します。起動ファイルを交換せずHTMLと設定だけを更新できます。
+
 現在の完成版 `dist/owl_prince.html` と `dist/owl_prince_artifact.html`、`viewer/index.html`、画像素材は変更していません。旧版は従来どおり利用できます。iPhone連携は新しい `dist/owl_prince_iphone_test.html` にのみ追加しました。
 
 ## Macで試す

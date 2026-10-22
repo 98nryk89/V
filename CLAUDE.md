@@ -359,3 +359,8 @@ iPhone試験版の設定手順と混ざらないよう、既存owl_prince.html�
 
 利用者がnpmの実行場所やhtmlDirの相対パスで迷ったため、同梱のhtmlフォルダへ配信先を固定し、起動.commandで中継と接続画面を開く。iPhoneのIPはGUIから保存し、モデル/ソースのHTTP配信先の外でユーザー別に保持する。依存wsはLICENSEごと同梱しnpm操作を不要にするが、Node.js 22以上はMacへ初回導入が必要と明記。古い中継を勝手に終了せず競合時は説明を出し、同じ配布セットが起動中なら画面だけ開く。
 既存モデルとiPhone入力の品質を変えないため、旧HTMLとJSはそのまま複製する。createBridgeの新APIは任意のGUI用途で追加し、従来のCLIも回帰検証。49件と抽出ランチャーの実起動が成功、起動ファイルの権限・依存・モデルのバイト一致を確認。実Macの許可画面/ダブルクリックと実iPhone/OBSは利用者の確認事項。手順はdocs/iphone-mac-start-guide.html、原本はkamikan-bridge/portable/、再作成はtools/package_iphone_mac.py。
+
+## Codex: iPhoneの上下/左右軸と過剰な位置倍率（2026-10-22）
+
+公式VTubeStudioReceiveDataExample.csのQuaternion.Euler(-Rotation.y,-Rotation.x,Rotation.z)を確認。旧iPhoneMapperはRotation.yを左右、xを上下と解釈しており、実機でうつむきが正しい上下回転に反映されなかった。新V2はx=左右、y=上下とし、モデルのAngleYは上が正なので上下の符号も合わせる。位置倍率10はraw差.1でBodyが最大になっていたため初期.2へ下げ、位置.1/角度.35度の連続したデッドゾーンを追加。Cは単一フレームでなく約.3秒の安定窓の中央値にし、角度の循環も扱う。
+旧版を保持してV2の入力/HTML/設定を別名で作る。配布はHTMLと設定の更新だけにし、ユーザーが許可済みの起動ファイルを再配布し直さない。旧HTML・素材・中継はバイト変更なし。50件の関連検証が通過し、下向き・左右・正面の画像を確認、5姿勢の旧描画一致も維持。実機で生値が変動する大きなドリフトまですべて直ったとは断定せず、V2の診断値で次の切り分けを可能にする。docs/iphone-pose-v2.md参照。
